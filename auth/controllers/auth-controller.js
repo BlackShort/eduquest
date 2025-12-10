@@ -3,9 +3,9 @@ import userModel from '../models/user-model.js';
 import sessionModel from '../models/session-model.js';
 import { generateAccessToken, generateRefreshToken, getTokenExpiry, verifyAccessToken } from '../utils/token-utils.js';
 
-/**
+/*
  * Register a new user
- */
+*/
 export const register = async (req, res) => {
     try {
         const { username, email, password, role = 'user' } = req.body;
@@ -66,9 +66,9 @@ export const register = async (req, res) => {
     }
 };
 
-/**
+/*
  * Login user and create session
- */
+*/
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -180,9 +180,9 @@ export const login = async (req, res) => {
     }
 };
 
-/**
+/*
  * Refresh access token
- */
+*/
 export const refreshAccessToken = async (req, res) => {
     try {
         const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
@@ -258,9 +258,9 @@ export const refreshAccessToken = async (req, res) => {
     }
 };
 
-/**
+/*
  * Logout user and invalidate session
- */
+*/
 export const logout = async (req, res) => {
     try {
         const token = req.headers.authorization?.split(' ')[1] || req.cookies.accessToken;
@@ -292,9 +292,9 @@ export const logout = async (req, res) => {
     }
 };
 
-/**
+/*
  * Get current user info (requires authentication)
- */
+*/
 export const getCurrentUser = async (req, res) => {
     try {
         const user = await userModel.findById(req.user.userId).select('-password');
@@ -314,9 +314,9 @@ export const getCurrentUser = async (req, res) => {
     }
 };
 
-/**
+/*
  * Get all active sessions for a user
- */
+*/
 export const getUserSessions = async (req, res) => {
     try {
         const sessions = await sessionModel.find({
@@ -339,9 +339,9 @@ export const getUserSessions = async (req, res) => {
     }
 };
 
-/**
+/*
  * Logout from specific session
- */
+*/
 export const logoutSession = async (req, res) => {
     try {
         const { sessionId } = req.params;
@@ -366,9 +366,9 @@ export const logoutSession = async (req, res) => {
     }
 };
 
-/**
+/*
  * Logout from all sessions
- */
+*/
 export const logoutAllSessions = async (req, res) => {
     try {
         await sessionModel.updateMany(
@@ -394,9 +394,9 @@ export const logoutAllSessions = async (req, res) => {
     }
 };
 
-/**
+/*
  * Verify token endpoint for other microservices
- */
+*/
 export const verifyUserToken = async (req, res) => {
     try {
         // req.user is already set by verifyToken middleware
