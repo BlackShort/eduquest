@@ -1,0 +1,5 @@
+test_id,subject_id,question_text
+TST-020,SUB-301,Explain the concept of polymorphism.
+TST-020,SUB-301,Write short notes on the OSI model layers.
+TST-021,SUB-302,Describe the working of a compiler.
+TST-021,SUB-302,Differentiate between stack and queue.
