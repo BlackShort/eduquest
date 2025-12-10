@@ -1,0 +1,4 @@
+test_id,subject_id,question_text,test_cases
+TST-010,SUB-201,Write a program to add two numbers.,"{""input"":""2 3"",""output"":""5""}|{""input"":""10 20"",""output"":""30""}"
+TST-010,SUB-201,Write a program to find factorial of a number.,"{""input"":""5"",""output"":""120""}|{""input"":""3"",""output"":""6""}"
+TST-011,SUB-202,Check if a number is prime.,"{""input"":""11"",""output"":""true""}|{""input"":""10"",""output"":""false""}"
