@@ -1,6 +1,0 @@
-test_id,subject_id,question_text,options,correct_answer
-TST-001,SUB-101,What is the capital of India?,Delhi|Mumbai|Kolkata|Chennai,Delhi
-TST-001,SUB-101,Which number is even?,1|3|7|8,8
-TST-001,SUB-101,What is 2+2?,2|3|4|5,4
-TST-002,SUB-102,Which animal is known as the king of the jungle?,Tiger|Lion|Elephant|Giraffe,Lion
-TST-002,SUB-102,What color is the sky?,Blue|Green|Yellow|Black,Blue

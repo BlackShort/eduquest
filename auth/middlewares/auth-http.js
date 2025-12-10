@@ -2,15 +2,14 @@ import axios from 'axios';
 
 const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:4000';
 
-/**
- * Verify JWT token via HTTP call to auth service
- * 
- * This middleware will:
- * 1. Extract token from headers or cookies
- * 2. Make HTTP call to auth service /verify-token endpoint
- * 3. Auth service validates JWT + session in its database
- * 4. Returns user info if valid
- * 5. Attach user info to req.user
+/*
+ Verify JWT token via HTTP call to auth service
+ This middleware will:
+ 1. Extract token from headers or cookies
+ 2. Make HTTP call to auth service /verify-token endpoint
+ 3. Auth service validates JWT + session in its database
+ 4. Returns user info if valid
+ 5. Attach user info to req.user
  */
 export const verifyTokenHTTP = async (req, res, next) => {
     try {
@@ -74,9 +73,8 @@ export const verifyTokenHTTP = async (req, res, next) => {
     }
 };
 
-/**
+/*
  * Verify user role for role-based access control
- * 
  * Usage:
  * router.get('/admin', verifyToken, verifyRole('admin'), handler);
  * router.post('/teach', verifyToken, verifyRole('faculty', 'admin'), handler);
@@ -101,9 +99,8 @@ export const verifyRole = (...allowedRoles) => {
     };
 };
 
-/**
+/*
  * Optional token verification - doesn't fail if token is missing
- * 
  * Use this for routes that work better with user context but don't require it.
  * For example: public content that shows personalized recommendations if logged in.
  */

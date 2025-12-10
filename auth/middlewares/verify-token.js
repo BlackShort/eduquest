@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import sessionModel from '../models/session-model.js';
 import userModel from '../models/user-model.js';
 
-/**
+/*
  * Verify JWT token and validate session
  * This middleware is used by all microservices to verify user authentication
  */
@@ -76,7 +76,7 @@ export const verifyToken = async (req, res, next) => {
     }
 };
 
-/**
+/*
  * Verify user role for role-based access control
  */
 export const verifyRole = (...allowedRoles) => {
@@ -99,7 +99,7 @@ export const verifyRole = (...allowedRoles) => {
     };
 };
 
-/**
+/*
  * Optional token verification - doesn't fail if token is missing
  */
 export const verifyTokenOptional = async (req, res, next) => {
