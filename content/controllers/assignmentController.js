@@ -2,9 +2,7 @@ const { v4: uuidv4 } = require("uuid");
 const Assignment = require("../models/Assignment");
 const parseCSV = require("../utils/fileParser");
 
-// ----------------------------------------------------
-// UPLOAD ASSIGNMENT CSV — GROUPED DOCUMENT STRUCTURE
-// ----------------------------------------------------
+
 exports.uploadAssignment = async (req, res) => {
   try {
     if (!req.file) {
@@ -23,17 +21,14 @@ exports.uploadAssignment = async (req, res) => {
       });
     }
 
-    // All rows follow same test_id and subject_id
     const test_id = rows[0].test_id;
     const subject_id = rows[0].subject_id;
 
-    // Convert rows into question objects
     const questions = rows.map((row) => ({
       question_id: uuidv4(),
       question_text: row.question_text
     }));
 
-    // Check if test already exists
     let test = await Assignment.findOne({ test_id });
 
     if (test) {
@@ -69,9 +64,7 @@ exports.uploadAssignment = async (req, res) => {
 };
 
 
-// ----------------------------------------------------
-// GET ASSIGNMENT QUESTIONS BY TEST ID (GROUPED)
-// ----------------------------------------------------
+
 exports.getAssignmentByTestId = async (req, res) => {
   try {
     const { test_id } = req.params;
