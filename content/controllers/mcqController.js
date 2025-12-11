@@ -2,9 +2,7 @@ const { v4: uuidv4 } = require("uuid");
 const Mcq = require("../models/Mcq");
 const parseCSV = require("../utils/fileParser");
 
-// ----------------------------------------------------
-// UPLOAD MCQ CSV — STORE ALL QUESTIONS IN ONE DOCUMENT
-// ----------------------------------------------------
+
 exports.uploadMCQ = async (req, res) => {
   try {
     if (!req.file) {
@@ -22,7 +20,6 @@ exports.uploadMCQ = async (req, res) => {
       });
     }
 
-    // Extract test_id & subject_id from first row
     const test_id = rows[0].test_id;
     const subject_id = rows[0].subject_id;
 
@@ -34,7 +31,6 @@ exports.uploadMCQ = async (req, res) => {
       correct_answer: row.correct_answer
     }));
 
-    // Check if this test already exists → update
     let test = await Mcq.findOne({ test_id });
 
     if (test) {
@@ -43,7 +39,6 @@ exports.uploadMCQ = async (req, res) => {
       test.num_questions = test.questions.length;
       await test.save();
     } else {
-      // Create new grouped test document
       test = await Mcq.create({
         test_id,
         subject_id,
@@ -69,8 +64,6 @@ exports.uploadMCQ = async (req, res) => {
 };
 
 
-// ----------------------------------------------------
-// GET MCQs (GROUPED) BY TEST ID
 // ----------------------------------------------------
 exports.getMCQsByTestId = async (req, res) => {
   try {

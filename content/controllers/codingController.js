@@ -2,9 +2,7 @@ const { v4: uuidv4 } = require("uuid");
 const Coding = require("../models/Coding");
 const parseCSV = require("../utils/fileParser");
 
-// ----------------------------------------------------
-// UPLOAD CODING — GROUPED BY TEST_ID
-// ----------------------------------------------------
+
 exports.uploadCoding = async (req, res) => {
   try {
     if (!req.file) {
@@ -22,11 +20,9 @@ exports.uploadCoding = async (req, res) => {
       });
     }
 
-    // Determine grouping info from the first row
     const test_id = rows[0].test_id;
     const subject_id = rows[0].subject_id;
 
-    // Convert each CSV row → coding question object
     const questions = rows.map((row) => {
       let parsedCases = [];
 
@@ -45,16 +41,13 @@ exports.uploadCoding = async (req, res) => {
       };
     });
 
-    // Check if test already exists (similar to MCQ behavior)
     let test = await Coding.findOne({ test_id });
 
     if (test) {
-      // Append new questions
       test.questions.push(...questions);
       test.num_questions = test.questions.length;
       await test.save();
     } else {
-      // Create new document
       test = await Coding.create({
         test_id,
         subject_id,
@@ -79,9 +72,7 @@ exports.uploadCoding = async (req, res) => {
   }
 };
 
-// ----------------------------------------------------
-// GET CODING QUESTIONS BY TEST_ID (GROUPED)
-// ----------------------------------------------------
+
 exports.getCodingByTestId = async (req, res) => {
   try {
     const { test_id } = req.params;

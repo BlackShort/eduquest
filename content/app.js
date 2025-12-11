@@ -1,24 +1,3 @@
-// const express = require("express");
-// const cors = require("cors");
-// const morgan = require("morgan");
-
-// const app = express();
-
-// // Middlewares
-// app.use(cors());
-// app.use(express.json());
-// app.use(morgan("dev"));
-
-// // Health check route
-// app.get("/", (req, res) => {
-//   res.json({ success: true, message: "Content Microservice is running" });
-// });
-
-// // Route mounting will be added later:
-// // const mcqRoutes = require("./routes/mcqRoute");
-// // app.use("/mcq", mcqRoutes);
-
-// module.exports = app;
 
 
 const express = require("express");
