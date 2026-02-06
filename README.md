@@ -64,10 +64,6 @@ EduQuest follows a **microservices** design for flexibility and scalability.
 * TailwindCSS
 * Monaco Code Editor
   
-### **Mobile Frontend**
-* Flutter
-
-
 ### **Backend / Microservices**
 
 * Node.js (Nest.js / Express) or Python FastAPI
