@@ -1,25 +1,35 @@
 import { Link, NavLink } from 'react-router'
 import { User } from 'lucide-react';
-import eduquest from '@/assets/logo/eduquest-invert.png'
+import eduquest from '@/assets/logo/eduquest.png'
+import eduquestLight from '@/assets/logo/eduquest-invert.png'
 import { useContextAPI } from '@/hooks/useContext';
 
 interface HeaderProps {
     variant?: "default" | "sticky";
+    theme?: "light" | "dark";
 }
 
-export function Header({ variant = "default" }: HeaderProps) {
+export function Header({ variant = "default", theme = "light" }: HeaderProps) {
     const { isLoggedIn, user } = useContextAPI();
 
+    const links = [
+        { name: "Problems", path: "/problemset" },
+        { name: "Contests", path: "/contest" },
+        { name: "Leaderboard", path: "/leaderboard" },
+        { name: "Discuss", path: "/discuss" },
+    ];
+
+
     return (
-        <header className={`${variant === "sticky" ? "sticky top-0 z-50" : ""} w-full border-b border-gray-200 bg-white/95 backdrop-blur-md shadow-sm`}>
+        <header className={`${variant === "sticky" ? "sticky top-0 z-50" : ""} w-full border-b ${theme === "light" ? "border-gray-200 bg-white/95" : "border-neutral-500 bg-neutral-800"} backdrop-blur-md shadow-sm`}>
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-14">
                     <Link to="/" className="flex items-center gap-2 group">
-                        <div className="w-full h-10 rounded-lg flex items-center justify-center group-hover:scale-105 transition-all duration-300">
+                        <div className="w-full h-8 rounded-lg flex items-center justify-center group-hover:scale-105 transition-all duration-300">
                             <img
-                                src={eduquest}
+                                src={theme === "light" ? eduquestLight : eduquest}
                                 alt="EduQuest"
-                                className="w-full h-10 object-cover"
+                                className="w-full h-8 object-cover"
                             />
                         </div>
                     </Link>
@@ -36,25 +46,40 @@ export function Header({ variant = "default" }: HeaderProps) {
                     </div> */}
 
                     {/* Navigation */}
-                    <nav className="hidden lg:flex items-center gap-8">
-                        <NavLink to="/problemset" className="text-gray-700 hover:text-gray-900 font-normal">Problems</NavLink>
-                        <NavLink to="/contest" className="text-gray-700 hover:text-gray-900 font-normal">Contests</NavLink>
-                        <NavLink to="/leaderboard" className="text-gray-700 hover:text-gray-900 font-normal">Leaderboard</NavLink>
-                        <NavLink to="/discuss" className="text-gray-700 hover:text-gray-900 font-normal">Discuss</NavLink>
+                    <nav
+                        className={`hidden lg:flex items-center gap-8 font-normal ${theme === "light" ? "text-gray-700" : "text-neutral-400"
+                            }`}
+                    >
+                        {links.map((link, index) => (
+                            <NavLink
+                                key={index}
+                                to={link.path}
+                                className={({ isActive }) =>
+                                    `transition-colors duration-300 ${isActive && "text-neutral-200"} hover:text-neutral-200`
+                                }
+                            >
+                                {link.name}
+                            </NavLink>
+                        ))}
                     </nav>
 
 
+
                     <div className="flex items-center gap-2">
-                        {isLoggedIn && user?._id ? (
-                            <Link to={`/profile/${user._id}/me`} className="border border-slate-500 flex items-center gap-2 bg-neutral-500/50 rounded-full px-2 md:px-3 py-1 cursor-pointer">
+                        {isLoggedIn && user ? (
+                            <button
+                                type="button"
+                                className="cursor-pointer flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-orange-500 border border-orange-600/60 bg-orange-50/30 rounded-full hover:bg-orange-500 hover:text-white transition-all duration-200"
+                            >
                                 <User size={18} />
-                                <span className="text-sm md:text-base font-medium cursor-pointer select-none" id="user">Profile</span>
-                            </Link>
+                                <span className="select-none">Profile</span>
+                            </button>
+
                         ) : (
                             <Link to={'/login'}>
                                 <button
                                     type="button"
-                                    className="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-full hover:bg-orange-600 transition-all hover:shadow-md hover:shadow-orange-300"
+                                    className="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-full hover:bg-orange-600 transition-all hover:shadow-orange-300"
                                 >
                                     Get Started
                                 </button>

@@ -1,12 +1,13 @@
 import { createBrowserRouter } from "react-router";
-import { AssignmentLayout, CodeLayout, DashboardLayout, ProblemListLayout, RootLayout, SiteLayout } from "@/layouts";
+import { AssignmentLayout, DashboardLayout, EditorLayout, ProblemSetLayout, RootLayout, SiteLayout } from "@/layouts";
 import { Home, About, Privacy, Terms, Cookies, Contact, Login } from "@/app/site";
 import { DashboardHome, DashboardSettings } from "@/app/dashboard";
-import { ContestHome, ContestDetails, ProblemHome, ProblemList } from "@/app/code";
+import { ContestDetails, ProblemHome, ProblemList } from "@/app/code";
 import { ErrorPage } from "@/app/error/error";
 import { Assignment, AssignmentDetail } from "@/app/assignment";
 // test
 import { ProctorTestPage } from "@/app/proctortest";
+import { ContestHome } from "@/app/code/contest/contest-home";
 
 export const router = createBrowserRouter([
     {
@@ -43,6 +44,7 @@ export const router = createBrowserRouter([
                 path: "assignments",
                 Component: AssignmentLayout,
                 children: [
+                    { index: true, Component: Assignment },
                     { path: ":assignmentId", Component: AssignmentDetail },
                 ],
             },
@@ -51,7 +53,7 @@ export const router = createBrowserRouter([
                 children: [
                     { index: true, Component: ContestHome },
                     { path: ":contestId", Component: ContestDetails },
-                    { path: ":contestId/:problemId", Component: CodeLayout },
+                    { path: ":contestId/:problemId", Component: EditorLayout },
                 ],
             },
             {
@@ -62,18 +64,19 @@ export const router = createBrowserRouter([
                 path: "problems",
                 children: [
                     { index: true, Component: ProblemHome },
-                    { path: ":problemId", Component: CodeLayout },
+                    { path: ":problemId", Component: EditorLayout },
                 ],
             },
             {
                 path: "problem-list",
-                Component: ProblemListLayout,
+                Component: ProblemSetLayout,
                 children: [
                     { path: ":category", Component: ProblemList },
                 ],
             },
-            { path: "proctor-test", 
-                Component: ProctorTestPage, 
+            {
+                path: "proctor-test",
+                Component: ProctorTestPage,
             },
         ]
     }

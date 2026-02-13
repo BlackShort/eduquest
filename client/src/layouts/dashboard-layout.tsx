@@ -5,9 +5,7 @@ import { Outlet } from "react-router";
 export const DashboardLayout = () => {
   return (
     <div className='flex flex-col min-h-screen w-full'>
-      <div className="sticky top-0 z-50">
-        <Header />
-      </div>
+      <Header variant="sticky" />
 
       <div className="flex flex-1">
         <aside className="sticky top-14 h-[calc(100vh-3.5rem)] shrink-0">

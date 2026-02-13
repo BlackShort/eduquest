@@ -96,7 +96,7 @@ interface TestResult {
   runtime: string;
 }
 
-export const CodeLayout = () => {
+export const EditorLayout = () => {
   const { problemId } = useParams();
   const [currentCode, setCurrentCode] = useState("");
   const [currentLanguage, setCurrentLanguage] = useState("javascript");
