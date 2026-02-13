@@ -59,3 +59,13 @@ export interface Mcq {
     createdAt: string;
     updatedAt: string;
 }
+
+export interface Question {
+    question_id: string;
+    number: number;
+    question_text: string;
+    difficulty: string;
+    acceptance: string;
+    isPremium: boolean;
+    category: string;
+}
