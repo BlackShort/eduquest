@@ -5,7 +5,8 @@ import { DashboardHome, DashboardSettings } from "@/app/dashboard";
 import { ContestHome, ContestDetails, ProblemHome, ProblemList } from "@/app/code";
 import { ErrorPage } from "@/app/error/error";
 import { Assignment, AssignmentDetail } from "@/app/assignment";
-
+// test
+import { ProctorTestPage } from "@/app/proctortest";
 
 export const router = createBrowserRouter([
     {
@@ -70,6 +71,9 @@ export const router = createBrowserRouter([
                 children: [
                     { path: ":category", Component: ProblemList },
                 ],
+            },
+            { path: "proctor-test", 
+                Component: ProctorTestPage, 
             },
         ]
     }
