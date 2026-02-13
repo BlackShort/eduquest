@@ -1,10 +1,13 @@
 const mongoose = require("mongoose");
 
 // Sub-schema for individual assignment question
-const AssignmentQuestionSchema = new mongoose.Schema({
-  question_id: { type: String, required: true },
-  question_text: { type: String, required: true }
-}, { _id: false });
+const AssignmentQuestionSchema = new mongoose.Schema(
+  {
+    question_id: { type: String, required: true },
+    question_text: { type: String, required: true },
+  },
+  { _id: false },
+);
 
 // MAIN GROUPED SCHEMA
 const AssignmentSchema = new mongoose.Schema(
@@ -15,10 +18,10 @@ const AssignmentSchema = new mongoose.Schema(
 
     questions: {
       type: [AssignmentQuestionSchema],
-      default: []
-    }
+      default: [],
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Store inside existing collection name "assignment"
