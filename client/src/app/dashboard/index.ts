@@ -1,5 +1,5 @@
-import { DashboardHome } from "@/app/dashboard/home";
-import { DashboardSettings } from "@/app/dashboard/settings";
+import { DashboardHome } from "@/app/dashboard/dashboard-page";
+import { DashboardSettings } from "@/app/dashboard/dashboard-settings";
 
 export {
     DashboardHome,

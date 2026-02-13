@@ -1,4 +1,4 @@
-import type { Assignment, Coding, Mcq, User } from "@/types/types";
+import type { Assignment, Coding, Mcq, Question, User } from "@/types/types";
 
 // ========== USER DUMMY DATA ==========
 export const dummyUsers: User[] = [
@@ -329,10 +329,464 @@ export const dummyMcqs: Mcq[] = [
     }
 ];
 
+export const dummyQuestions: Question[] = [
+    {
+        question_id: "q_code_001",
+        number: 1,
+        question_text: "Write a function to find the factorial of a number using recursion.",
+        difficulty: "easy",
+        acceptance: "65%",
+        isPremium: false,
+        category: "recursion"
+    },
+    {
+        question_id: "q_code_002",
+        number: 2,
+        question_text: "Write a function to check if a given string is a palindrome.",
+        difficulty: "easy",
+        acceptance: "70%",
+        isPremium: false,
+        category: "string"
+    },
+    {
+        question_id: "q_code_003",
+        number: 3,
+        question_text: "Implement a function to reverse an array without using built-in methods.",
+        difficulty: "easy",
+        acceptance: "75%",
+        isPremium: false,
+        category: "array"
+    },
+    {
+        question_id: "q_code_004",
+        number: 4,
+        question_text: "Write a function to find the maximum element in an array.",
+        difficulty: "easy",
+        acceptance: "80%",
+        isPremium: false,
+        category: "array"
+    },
+    {
+        question_id: "q_code_005",
+        number: 5,
+        question_text: "Implement binary search algorithm.",
+        difficulty: "medium",
+        acceptance: "60%",
+        isPremium: false,
+        category: "search"
+    },
+    {
+        question_id: "q_code_006",
+        number: 6,
+        question_text: "Write a function to count vowels in a string.",
+        difficulty: "easy",
+        acceptance: "75%",
+        isPremium: false,
+        category: "string"
+    },
+    {
+        question_id: "q_code_007",
+        number: 7,
+        question_text: "Implement a function to remove duplicates from an array.",
+        difficulty: "medium",
+        acceptance: "65%",
+        isPremium: false,
+        category: "array"
+    },
+    {
+        question_id: "q_code_008",
+        number: 8,
+        question_text: "Write a function to find the sum of digits in a number.",
+        difficulty: "easy",
+        acceptance: "70%",
+        isPremium: false,
+        category: "math"
+    },
+    {
+        question_id: "q_code_009",
+        number: 9,
+        question_text: "Implement a function to check if a number is prime.",
+        difficulty: "easy",
+        acceptance: "68%",
+        isPremium: false,
+        category: "math"
+    },
+    {
+        question_id: "q_code_010",
+        number: 10,
+        question_text: "Write a function to convert temperature from Celsius to Fahrenheit.",
+        difficulty: "easy",
+        acceptance: "82%",
+        isPremium: false,
+        category: "math"
+    },
+    {
+        question_id: "q_code_011",
+        number: 11,
+        question_text: "Implement a function to merge two sorted arrays.",
+        difficulty: "medium",
+        acceptance: "62%",
+        isPremium: false,
+        category: "array"
+    },
+    {
+        question_id: "q_code_012",
+        number: 12,
+        question_text: "Write a function to find the second largest element in an array.",
+        difficulty: "medium",
+        acceptance: "58%",
+        isPremium: false,
+        category: "array"
+    },
+    {
+        question_id: "q_code_013",
+        number: 13,
+        question_text: "Implement a function to rotate an array by k positions.",
+        difficulty: "medium",
+        acceptance: "55%",
+        isPremium: false,
+        category: "array"
+    },
+    {
+        question_id: "q_code_014",
+        number: 14,
+        question_text: "Write a function to find all pairs that sum to a target value.",
+        difficulty: "medium",
+        acceptance: "60%",
+        isPremium: false,
+        category: "array"
+    },
+    {
+        question_id: "q_code_015",
+        number: 15,
+        question_text: "Implement a function to check if a string is an anagram.",
+        difficulty: "easy",
+        acceptance: "72%",
+        isPremium: false,
+        category: "string"
+    },
+    {
+        question_id: "q_code_016",
+        number: 16,
+        question_text: "Write a function to find the longest substring without repeating characters.",
+        difficulty: "medium",
+        acceptance: "52%",
+        isPremium: false,
+        category: "string"
+    },
+    {
+        question_id: "q_code_017",
+        number: 17,
+        question_text: "Implement bubble sort algorithm.",
+        difficulty: "easy",
+        acceptance: "68%",
+        isPremium: false,
+        category: "sort"
+    },
+    {
+        question_id: "q_code_018",
+        number: 18,
+        question_text: "Write a function to find the GCD of two numbers.",
+        difficulty: "easy",
+        acceptance: "70%",
+        isPremium: false,
+        category: "math"
+    },
+    {
+        question_id: "q_code_019",
+        number: 19,
+        question_text: "Implement a function to check if brackets are balanced.",
+        difficulty: "medium",
+        acceptance: "61%",
+        isPremium: false,
+        category: "stack"
+    },
+    {
+        question_id: "q_code_020",
+        number: 20,
+        question_text: "Write a function to flatten a nested array.",
+        difficulty: "medium",
+        acceptance: "64%",
+        isPremium: false,
+        category: "array"
+    },
+    {
+        question_id: "q_code_021",
+        number: 21,
+        question_text: "Implement quick sort algorithm.",
+        difficulty: "hard",
+        acceptance: "45%",
+        isPremium: true,
+        category: "sort"
+    },
+    {
+        question_id: "q_code_022",
+        number: 22,
+        question_text: "Write a function to find the intersection of two arrays.",
+        difficulty: "medium",
+        acceptance: "58%",
+        isPremium: false,
+        category: "array"
+    },
+    {
+        question_id: "q_code_023",
+        number: 23,
+        question_text: "Implement a function to transpose a matrix.",
+        difficulty: "medium",
+        acceptance: "66%",
+        isPremium: false,
+        category: "matrix"
+    },
+    {
+        question_id: "q_code_024",
+        number: 24,
+        question_text: "Write a function to find the Fibonacci number at position n.",
+        difficulty: "easy",
+        acceptance: "73%",
+        isPremium: false,
+        category: "recursion"
+    },
+    {
+        question_id: "q_code_025",
+        number: 25,
+        question_text: "Implement a function to check if a number is a perfect square.",
+        difficulty: "easy",
+        acceptance: "76%",
+        isPremium: false,
+        category: "math"
+    },
+    {
+        question_id: "q_code_026",
+        number: 26,
+        question_text: "Write a function to capitalize the first letter of each word.",
+        difficulty: "easy",
+        acceptance: "78%",
+        isPremium: false,
+        category: "string"
+    },
+    {
+        question_id: "q_code_027",
+        number: 27,
+        question_text: "Implement a function to find the mode of an array.",
+        difficulty: "medium",
+        acceptance: "59%",
+        isPremium: false,
+        category: "array"
+    },
+    {
+        question_id: "q_code_028",
+        number: 28,
+        question_text: "Write a function to check if a number is an Armstrong number.",
+        difficulty: "easy",
+        acceptance: "67%",
+        isPremium: false,
+        category: "math"
+    },
+    {
+        question_id: "q_code_029",
+        number: 29,
+        question_text: "Implement a function to generate all permutations of a string.",
+        difficulty: "hard",
+        acceptance: "40%",
+        isPremium: true,
+        category: "backtracking"
+    },
+    {
+        question_id: "q_code_030",
+        number: 30,
+        question_text: "Write a function to find the median of an array.",
+        difficulty: "medium",
+        acceptance: "54%",
+        isPremium: false,
+        category: "array"
+    },
+    {
+        question_id: "q_code_031",
+        number: 31,
+        question_text: "Implement insertion sort algorithm.",
+        difficulty: "easy",
+        acceptance: "71%",
+        isPremium: false,
+        category: "sort"
+    },
+    {
+        question_id: "q_code_032",
+        number: 32,
+        question_text: "Write a function to find the longest common substring.",
+        difficulty: "hard",
+        acceptance: "38%",
+        isPremium: true,
+        category: "dp"
+    },
+    {
+        question_id: "q_code_033",
+        number: 33,
+        question_text: "Implement a function to check if a string contains all unique characters.",
+        difficulty: "easy",
+        acceptance: "74%",
+        isPremium: false,
+        category: "string"
+    },
+    {
+        question_id: "q_code_034",
+        number: 34,
+        question_text: "Write a function to generate Pascal's triangle.",
+        difficulty: "medium",
+        acceptance: "63%",
+        isPremium: false,
+        category: "array"
+    },
+    {
+        question_id: "q_code_035",
+        number: 35,
+        question_text: "Implement a function to find all subsets of a set.",
+        difficulty: "hard",
+        acceptance: "42%",
+        isPremium: true,
+        category: "backtracking"
+    },
+    {
+        question_id: "q_code_036",
+        number: 36,
+        question_text: "Write a function to convert a number to binary.",
+        difficulty: "easy",
+        acceptance: "77%",
+        isPremium: false,
+        category: "math"
+    },
+    {
+        question_id: "q_code_037",
+        number: 37,
+        question_text: "Implement a function to find the power set of a string.",
+        difficulty: "hard",
+        acceptance: "41%",
+        isPremium: true,
+        category: "backtracking"
+    },
+    {
+        question_id: "q_code_038",
+        number: 38,
+        question_text: "Write a function to check if a linked list is circular.",
+        difficulty: "medium",
+        acceptance: "50%",
+        isPremium: true,
+        category: "linkedlist"
+    },
+    {
+        question_id: "q_code_039",
+        number: 39,
+        question_text: "Implement a function to find the kth element from the end of a linked list.",
+        difficulty: "medium",
+        acceptance: "55%",
+        isPremium: true,
+        category: "linkedlist"
+    },
+    {
+        question_id: "q_code_040",
+        number: 40,
+        question_text: "Write a function to detect a cycle in a linked list.",
+        difficulty: "medium",
+        acceptance: "52%",
+        isPremium: true,
+        category: "linkedlist"
+    },
+    {
+        question_id: "q_code_041",
+        number: 41,
+        question_text: "Implement a function to find the LCM of two numbers.",
+        difficulty: "easy",
+        acceptance: "69%",
+        isPremium: false,
+        category: "math"
+    },
+    {
+        question_id: "q_code_042",
+        number: 42,
+        question_text: "Write a function to implement atoi (convert string to integer).",
+        difficulty: "medium",
+        acceptance: "57%",
+        isPremium: true,
+        category: "string"
+    },
+    {
+        question_id: "q_code_043",
+        number: 43,
+        question_text: "Implement a function to find the sum of a matrix diagonal.",
+        difficulty: "easy",
+        acceptance: "72%",
+        isPremium: false,
+        category: "matrix"
+    },
+    {
+        question_id: "q_code_044",
+        number: 44,
+        question_text: "Write a function to check if a matrix is symmetric.",
+        difficulty: "medium",
+        acceptance: "60%",
+        isPremium: false,
+        category: "matrix"
+    },
+    {
+        question_id: "q_code_045",
+        number: 45,
+        question_text: "Implement merge sort algorithm.",
+        difficulty: "hard",
+        acceptance: "48%",
+        isPremium: true,
+        category: "sort"
+    },
+    {
+        question_id: "q_code_046",
+        number: 46,
+        question_text: "Write a function to find the minimum window substring.",
+        difficulty: "hard",
+        acceptance: "35%",
+        isPremium: true,
+        category: "string"
+    },
+    {
+        question_id: "q_code_047",
+        number: 47,
+        question_text: "Implement a function to validate an email address.",
+        difficulty: "easy",
+        acceptance: "71%",
+        isPremium: false,
+        category: "regex"
+    },
+    {
+        question_id: "q_code_048",
+        number: 48,
+        question_text: "Write a function to find the number of islands in a grid.",
+        difficulty: "hard",
+        acceptance: "44%",
+        isPremium: true,
+        category: "graph"
+    },
+    {
+        question_id: "q_code_049",
+        number: 49,
+        question_text: "Implement a function to solve the knapsack problem.",
+        difficulty: "hard",
+        acceptance: "37%",
+        isPremium: true,
+        category: "dp"
+    },
+    {
+        question_id: "q_code_050",
+        number: 50,
+        question_text: "Write a function to find the edit distance between two strings.",
+        difficulty: "hard",
+        acceptance: "39%",
+        isPremium: true,
+        category: "dp"
+    }
+];
+
 // ========== EXPORT ALL DUMMY DATA ==========
 export const dummyData = {
     users: dummyUsers,
     assignments: dummyAssignments,
     coding: dummyCoding,
-    mcqs: dummyMcqs
+    mcqs: dummyMcqs,
+    dummyQuestions,
 };

@@ -45,7 +45,6 @@ export function Header({ variant = "default", theme = "light" }: HeaderProps) {
                         />
                     </div> */}
 
-                    {/* Navigation */}
                     <nav
                         className={`hidden lg:flex items-center gap-8 font-normal ${theme === "light" ? "text-gray-700" : "text-neutral-400"
                             }`}
@@ -55,7 +54,7 @@ export function Header({ variant = "default", theme = "light" }: HeaderProps) {
                                 key={index}
                                 to={link.path}
                                 className={({ isActive }) =>
-                                    `transition-colors duration-300 ${isActive && "text-neutral-200"} hover:text-neutral-200`
+                                    `transition-colors duration-300 ${isActive && "text-neutral-200"} ${theme === "light" ? "hover:text-neutral-900" : "hover:text-neutral-200"}`
                                 }
                             >
                                 {link.name}
@@ -67,13 +66,16 @@ export function Header({ variant = "default", theme = "light" }: HeaderProps) {
 
                     <div className="flex items-center gap-2">
                         {isLoggedIn && user ? (
-                            <button
-                                type="button"
-                                className="cursor-pointer flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-orange-500 border border-orange-600/60 bg-orange-50/30 rounded-full hover:bg-orange-500 hover:text-white transition-all duration-200"
-                            >
-                                <User size={18} />
-                                <span className="select-none">Profile</span>
-                            </button>
+                            <Link to={'/dashboard'}>
+
+                                <button
+                                    type="button"
+                                    className="cursor-pointer flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-neutral-100 border border-orange-600/60 bg-orange-500 rounded-full hover:bg-orange-500 hover:text-white transition-all duration-200"
+                                >
+                                    <User size={18} />
+                                    <span className="select-none">Profile</span>
+                                </button>
+                            </Link>
 
                         ) : (
                             <Link to={'/login'}>
