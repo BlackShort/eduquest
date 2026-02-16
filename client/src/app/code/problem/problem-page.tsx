@@ -68,7 +68,7 @@ export const ProblemHome = () => {
   };
 
   return (
-    <div className="flex justify-center py-8 px-4">
+    <div className="flex justify-center py-10">
       {/* Main Content */}
       <div className="w-full max-w-5xl mx-auto">
         {/* Topic Filter Tabs */}
@@ -81,8 +81,8 @@ export const ProblemHome = () => {
                 size="sm"
                 onClick={() => setSelectedTopic(topic.value)}
                 className={`cursor-pointer whitespace-nowrap rounded-full duration-300 transition-colors ${selectedTopic === topic.value
-                    ? "bg-orange-600 text-white border-orange-500 hover:bg-orange-700"
-                    : "text-neutral-200 hover:text-neutral-400 bg-neutral-700/50 border border-neutral-600 hover:border-neutral-500 hover:bg-neutral-600/50"
+                  ? "bg-orange-600 text-white border-orange-500 hover:bg-orange-700"
+                  : "text-neutral-200 hover:text-neutral-400 bg-neutral-700/50 border border-neutral-600 hover:border-neutral-500 hover:bg-neutral-600/50"
                   }`}
               >
                 {topic.label}
@@ -93,9 +93,9 @@ export const ProblemHome = () => {
 
         {/* Search and Filter Bar */}
         <div className="mb-6 flex flex-row items-center justify-between gap-3">
-          <div className="flex gap-5">
+          <div className="flex-1 flex gap-5"> {/* Changed from w-max to flex-1 */}
             {/* Search Bar */}
-            <div className="hidden border border-neutral-600 md:flex items-center gap-2 text-neutral-200 bg-neutral-700/50 rounded-full px-3 py-2 w-full max-w-sm focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-200 transition-all duration-200">
+            <div className="hidden border border-neutral-600 md:flex items-center gap-2 text-neutral-200 bg-neutral-700/50 rounded-full px-3 py-2 flex-1 max-w-xs focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-200 transition-all duration-200"> {/* Changed w-full to flex-1 */}
               <Search className="w-5 h-5 text-neutral-600" />
               <input
                 type="text"
@@ -106,7 +106,7 @@ export const ProblemHome = () => {
               />
             </div>
 
-            <div className="flex gap-2">
+            <div className="w-max flex gap-2">
               <Select value={difficultyFilter} onValueChange={handleDifficultyChange}>
                 <SelectTrigger className="
                     cursor-pointer
@@ -142,12 +142,11 @@ export const ProblemHome = () => {
             <div className="text-sm text-neutral-300">
               {filteredProblems.length} / {allProblems.length} questions
             </div>
-            <Badge variant={'success'} className="text-sm font-normal border-green-600 bg-green-500 text-neutral-100 rounded-full flex items-center gap-2">
+            <Badge variant={'success'} className="text-sm font-normal border-green-600 bg-green-500/50 text-neutral-100 rounded-full flex items-center gap-2">
               0/{allProblems.length} Solved
             </Badge>
           </div>
         </div>
-
 
         {/* Problem List Table */}
         <div className="rounded-lg border bg-neutral-700/50 border-neutral-600">

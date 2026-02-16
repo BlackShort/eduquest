@@ -44,7 +44,7 @@ const languageTemplates = {
   javascript: `function solution(input) {\n    // Write your code here\n    return 0;\n}\n`,
   python: `def solution(input):\n    # Write your code here\n    return 0\n`,
   cpp: `#include <iostream>\nusing namespace std;\n\nint solution() {\n    // Write your code here\n    return 0;\n}\n`,
-  java: `public class Solution {\n    public int solution() {\n        // Write your code here\n        return 0;\n    }\n}`,
+  java: `public class Solution {\n    public int solution(int n) {\n        // Write your code here\n        return 0;\n    }\n}`,
 };
 
 interface ProblemDetailProps {
@@ -123,11 +123,11 @@ export const ProblemDetail = ({
               {/* Problem Title */}
               <div>
                 <h1 className="text-xl font-medium text-white mb-4">
-                  {problem.question_id}. {problem.question_text}
+                  {problem.question_id.slice(7)}. {problem.question_text}
                 </h1>
                 <div className="flex items-center gap-2 mb-4">
                   <span className="px-2.5 py-1 text-xs font-medium bg-[#ffc01e]/10 text-[#ffc01e] rounded-full">
-                    Medium
+                    Easy
                   </span>
                 </div>
               </div>
@@ -256,7 +256,7 @@ export const ProblemDetail = ({
           <ResizableHandle withHandle />
 
           <ResizablePanel defaultSize="25%" minSize="7%" className="overflow-hidden border border-neutral-500 rounded-lg bg-neutral-800">
-            <Tabs defaultValue="testcase" className="w-full h-full text-neutral-100">
+            <Tabs defaultValue="testcase" className="w-full h-full text-neutral-100 gap-0">
               <TabsList className="p-1 w-full bg-neutral-700/50 rounded-t-lg rounded-b-none">
                 <TabsTrigger
                   value="testcase"
@@ -277,12 +277,12 @@ export const ProblemDetail = ({
               <TabsContent value="testcase" className="flex-1 overflow-y-auto p-3 mt-0">
                 <Tabs defaultValue="case-0" className="w-full h-full text-neutral-100">
                   {/* CASE TABS */}
-                  <TabsList className="p-1 w-full bg-neutral-800 rounded-md flex gap-2">
+                  <TabsList className="p-1 w-full bg-neutral-800 rounded-md flex items-center justify-start gap-2">
                     {problem.test_cases.slice(0, 3).map((_, index) => (
                       <TabsTrigger
                         key={index}
                         value={`case-${index}`}
-                        className="px-3 py-1.5 text-xs rounded-md data-[state=active]:bg-neutral-700 data-[state=active]:text-white text-neutral-400"
+                        className="max-w-18 px-3 py-1.5 text-xs rounded-sm data-[state=active]:bg-neutral-700 data-[state=active]:text-white text-neutral-400 hover:bg-neutral-700/50 hover:text-neutral-200 cursor-pointer"
                       >
                         Case {index + 1}
                       </TabsTrigger>

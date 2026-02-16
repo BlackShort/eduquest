@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router";
-import { ChevronLeft, ChevronRight, Settings, User, ListVideo, CloudUpload, Play, LayoutPanelLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Settings, User, ListVideo, CloudUpload, Play, LayoutPanelLeft, Shuffle } from 'lucide-react';
 import eduquest from '@/assets/logo/favicon.png'
 import { useContextAPI } from '@/hooks/useContext';
-import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
 import { ProblemDetail } from "@/app/code";
@@ -21,20 +20,42 @@ const CodeHeader = ({ onRun, onSubmit, isRunning }: CodeHeaderProps) => {
     <header className="w-full h-12">
       <div className="w-full px-6 h-full">
         <div className="flex items-center justify-between h-full">
-          <div className="flex h-5 items-center gap-2">
-            <Link to="/dashboard" className="flex items-center">
+          <div className="flex w-max h-7 items-center gap-2">
+            <Link to="/dashboard" className="flex items-center px-2">
               <img
                 src={eduquest}
                 alt="EduQuest"
-                className="h-6 w-6"
+                className="w-full h-7 object-cover"
               />
             </Link>
-            <Separator orientation="vertical" className="bg-neutral-600" />
-            <div className="flex items-center gap-2 text-gray-300">
-              <ListVideo className="w-4 h-4" />
-              <span className="text-sm font-medium">Problem List</span>
-              <ChevronLeft className="w-4 h-4 cursor-pointer hover:text-white" />
-              <ChevronRight className="w-4 h-4 cursor-pointer hover:text-white" />
+
+            <div className="h-5 w-px bg-neutral-600" />
+
+            <div className="flex items-center gap-0 text-gray-300 hover:bg-neutral-700/40 rounded transition-colors group">
+              <div className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/10 rounded-l transition-colors cursor-pointer">
+                <ListVideo className="w-5 h-5" />
+                <span className="text-sm font-normal">Problem List</span>
+              </div>
+
+              <div className="h-8 w-px bg-neutral-950" />
+
+              <div className="flex items-center">
+                <button className="p-1.5 hover:bg-white/10 transition-colors cursor-pointer">
+                  <ChevronLeft className="w-5 h-5 text-neutral-400 hover:text-neutral-200" />
+                </button>
+
+                <div className="h-8 w-px bg-neutral-950" />
+
+                <button className="p-1.5 hover:bg-white/10 transition-colors cursor-pointer">
+                  <ChevronRight className="w-5 h-5 text-neutral-400 hover:text-neutral-200" />
+                </button>
+              </div>
+
+              <div className="h-8 w-px bg-neutral-950" />
+
+              <button className="p-1.5 hover:bg-neutral-700/60 rounded-r transition-colors cursor-pointer">
+                <Shuffle className="w-5 h-5 text-neutral-400 hover:text-neutral-200" />
+              </button>
             </div>
           </div>
 
@@ -59,14 +80,20 @@ const CodeHeader = ({ onRun, onSubmit, isRunning }: CodeHeaderProps) => {
             </ButtonGroup>
           </div>
 
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-4">
             <div className="flex gap-4">
               <LayoutPanelLeft className="w-5 h-5 text-gray-400 cursor-pointer hover:text-white" />
               <Settings className="w-5 h-5 text-gray-400 cursor-pointer hover:text-white" />
             </div>
-            {isLoggedIn && user?._id ? (
-              <Link to={`/profile/${user._id}/me`} className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#3a3a3a] hover:bg-[#4a4a4a] cursor-pointer">
-                <User className="w-4 h-4 text-gray-300" />
+            {isLoggedIn && user ? (
+              <Link to={'/profile'}>
+                <button
+                  type="button"
+                  className="cursor-pointer flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-neutral-100 border border-orange-600/60 bg-orange-500 rounded-full hover:bg-orange-500 hover:text-white transition-all duration-200"
+                >
+                  <User size={18} />
+                  <span className="select-none">Profile</span>
+                </button>
               </Link>
             ) : (
               <Link to={'/login'}>

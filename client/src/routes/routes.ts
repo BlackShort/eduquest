@@ -2,11 +2,12 @@ import { createBrowserRouter } from "react-router";
 import { AssignmentLayout, EditorLayout, ContestLayout, DashboardLayout, ProblemListLayout, RootLayout, SiteLayout } from "@/layouts";
 import { Home, About, Privacy, Terms, Cookies, Contact, Login } from "@/app/site";
 import { DashboardHome, DashboardSettings } from "@/app/dashboard";
-import { ContestHome, ContestDetails, ProblemHome, ProblemList } from "@/app/code";
+import { ContestHome, ContestDetails, ProblemHome, ProblemCategory } from "@/app/code";
 import { ErrorPage } from "@/app/error/error";
 import { Assignment, AssignmentDetail } from "@/app/assignment";
 // test
 import { ProctorTestPage } from "@/app/proctortest";
+import { AssessmentHome } from "@/app/assessment";
 
 export const router = createBrowserRouter([
     {
@@ -37,6 +38,7 @@ export const router = createBrowserRouter([
                     { index: true, Component: DashboardHome },
                     { path: "settings", Component: DashboardSettings },
                     { path: "assignments", Component: Assignment },
+                    { path: "assessment", Component: AssessmentHome },
                 ],
             },
             {
@@ -60,6 +62,7 @@ export const router = createBrowserRouter([
             },
             {
                 path: "problems",
+                Component: ProblemListLayout,
                 children: [
                     { index: true, Component: ProblemHome },
                     { path: ":problemId", Component: EditorLayout },
@@ -70,7 +73,7 @@ export const router = createBrowserRouter([
                 Component: ProblemListLayout,
                 children: [
                     { index: true, Component: ProblemHome },
-                    { path: ":category", Component: ProblemList },
+                    { path: ":category", Component: ProblemCategory },
                 ],
             },
             {
