@@ -5,7 +5,7 @@ import eduquestLight from '@/assets/logo/eduquest-invert.png'
 import { useContextAPI } from '@/hooks/useContext';
 
 interface HeaderProps {
-    variant?: "default" | "sticky";
+    variant?: "default" | "sticky" | "fixed";
     theme?: "light" | "dark";
 }
 
@@ -22,6 +22,8 @@ export function Header({ variant = "default", theme = "light" }: HeaderProps) {
 
     return (
         <header className={`${variant === "sticky" ? "sticky top-0 z-50" : ""} w-full border-b ${theme === "light" ? "border-gray-200 bg-white/95" : "border-neutral-500 bg-neutral-800"} backdrop-blur-md shadow-sm`}>
+
+
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-14">
                     <Link to="/" className="flex items-center gap-2 group">
