@@ -16,7 +16,7 @@ export function Header({ variant = "default", theme = "light" }: HeaderProps) {
         { name: "Problems", path: "/problemset" },
         { name: "Contests", path: "/contest" },
         { name: "Leaderboard", path: "/leaderboard" },
-        { name: "Discuss", path: "/discuss" },
+        { name: "Assessment", path: "/assessment" },
     ];
 
 

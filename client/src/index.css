@@ -10,7 +10,7 @@
     transform: translateY(0px) translateX(0px);
   }
   50% {
-    transform: translateY(-40px) translateX(15px);
+    transform: translateY(-30px) translateX(15px);
   }
 }
 
@@ -19,7 +19,7 @@
     transform: translateY(0px) translateX(0px);
   }
   50% {
-    transform: translateY(-50px) translateX(25px);
+    transform: translateY(-40px) translateX(20px);
   }
 }
 
@@ -28,7 +28,7 @@
     transform: translateY(0px) translateX(0px);
   }
   50% {
-    transform: translateY(45px) translateX(-20px);
+    transform: translateY(40px) translateX(-20px);
   }
 }
 

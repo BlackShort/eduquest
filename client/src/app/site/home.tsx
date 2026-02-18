@@ -1,4 +1,4 @@
-import { Code2, Trophy, Shield, BarChart3, Users, BookOpen, CheckCircle } from 'lucide-react'
+﻿import { Code2, Trophy, Shield, BarChart3, Users, BookOpen, CheckCircle } from 'lucide-react'
 import editorImage from "@/assets/screenshot/editor-preview.jpeg";
 import contestImage from "@/assets/screenshot/contest-preview.jpeg";
 import problemImage from "@/assets/screenshot/problemlist-preview.jpeg";
@@ -8,38 +8,130 @@ import { TbBrandCpp, TbSql } from "react-icons/tb";
 
 export const Home = () => {
   const icons = [TbBrandCpp, TbSql, FaRust, FaSwift, FaPython, FaPhp, FaJava, FaJs];
+
+  const features = [
+    {
+      icon: Code2,
+      title: 'Monaco Editor',
+      subtitle: 'Editor � Live Now',
+      description: 'Experience the same powerful editor that powers VS Code. Get intelligent code completion, syntax highlighting, and error detection for 8+ programming languages.',
+      mainTitle: 'Professional-Grade Code Editor',
+      mainDescription: 'Write code with confidence using our industry-standard Monaco Editor integration. Features include',
+      highlight: ' multi-language support, IntelliSense, and real-time syntax validation',
+      tagline: '�giving you the tools professionals use.',
+      gradientFrom: 'from-blue-600',
+      gradientTo: 'to-purple-600',
+      iconGradient: 'from-blue-600 to-blue-700',
+      languages: ['C++', 'Java', 'Python', 'JavaScript', '+4 more'],
+      layout: 'left'
+    },
+    {
+      icon: BarChart3,
+      title: 'Real-time Execution',
+      subtitle: 'Execution Engine � Active',
+      description: 'Execute code in milliseconds with our optimized cloud infrastructure. Support for custom test cases, stdin/stdout handling, and detailed execution metrics.',
+      mainTitle: 'Instant Code Execution',
+      mainDescription: 'Test your code instantly with our cloud-based execution engine. Run programs in',
+      highlight: ' multiple languages, get detailed output, and receive immediate feedback',
+      tagline: ' on your submissions.',
+      gradientFrom: 'from-green-600',
+      gradientTo: 'to-emerald-600',
+      iconGradient: 'from-emerald-600 to-green-700',
+      dotColor: 'bg-emerald-500',
+      features: [
+        'Compile-time error detection',
+        'Runtime output preview',
+        'Test case validation'
+      ],
+      layout: 'right'
+    },
+    {
+      icon: Shield,
+      title: 'Smart Proctoring',
+      subtitle: 'Security � AI-Powered',
+      description: 'Maintain academic integrity with our AI-powered proctoring system. Track suspicious behavior, detect tab switches, and generate comprehensive reports automatically.',
+      mainTitle: 'Academic Integrity Monitoring',
+      mainDescription: 'Ensure fair assessments with our comprehensive proctoring solution. Monitor student activity,',
+      highlight: ' detect plagiarism using Jaccard similarity, and generate detailed behavioral logs',
+      tagline: ' for complete transparency.',
+      gradientFrom: 'from-purple-600',
+      gradientTo: 'to-pink-600',
+      iconGradient: 'from-purple-600 to-pink-600',
+      dotColor: 'bg-purple-500',
+      iconColor: 'text-purple-500',
+      features: [
+        'Real-time behavior tracking',
+        'Plagiarism detection engine',
+        'Automated violation reports'
+      ],
+      layout: 'left'
+    }
+  ];
+
+  const heroImages = [
+    { src: problemImage, alt: 'Problem List Preview', scale: 'scale-[0.95]', width: 'w-[90%]', translate: '-translate-y-14', zIndex: 'z-0' },
+    { src: contestImage, alt: 'Contest Preview', scale: 'scale-[0.97]', width: 'w-[95%]', translate: '-translate-y-8', zIndex: 'z-10' },
+    { src: editorImage, alt: 'Editor Preview', scale: '', width: 'w-full', translate: '', zIndex: 'z-20' }
+  ];
+
+  const dashboardStats = [
+    { value: '156', label: 'Active Students', gradient: 'from-purple-400 to-purple-300', hoverBorder: 'hover:border-purple-500/50' },
+    { value: '12', label: 'Active Tests', gradient: 'from-blue-400 to-blue-300', hoverBorder: 'hover:border-blue-500/50' },
+    { value: '89%', label: 'Average Score', gradient: 'from-green-400 to-green-300', hoverBorder: 'hover:border-green-500/50' },
+    { value: '45', label: 'Questions', gradient: 'from-orange-400 to-orange-300', hoverBorder: 'hover:border-orange-500/50' }
+  ];
+
+  const recentActivities = [
+    { color: 'bg-green-500', text: 'Test "Data Structures" completed by 45 students' },
+    { color: 'bg-yellow-500', text: '3 plagiarism cases detected' },
+    { color: 'bg-blue-500', text: 'New assignment created' }
+  ];
+
+  const trustIndicators = [
+    'Free to start',
+    'No credit card required',
+    '24/7 Support'
+  ];
+
+  const footerLinks = ['Terms', 'Privacy', 'Cookies'];
+
   return (
     <div className="w-full min-h-screen">
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-6 bg-linear-to-b from-neutral-900 via-neutral-800 to-neutral-950 overflow-hidden">
+      <section className="relative pt-32 pb-24 px-6 bg-linear-to-b from-neutral-900 via-neutral-800 to-black overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="w-full flex flex-col items-center">
-            <div className="relative flex flex-col items-center text-center gap-4 mb-20 z-5">
-              <h1 className="text-7xl font-bold text-neutral-200">Built by Engineers</h1>
-              <h1 className="text-7xl font-bold text-neutral-200">for Engineers</h1>
+            <div className="inline-flex p-px rounded-full bg-linear-to-r from-neutral-500 to-neutral-700 mb-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900/60 backdrop-blur-sm rounded-full text-sm font-medium text-neutral-200">
+                Code
+                <span className="w-1.5 h-1.5 bg-neutral-400 rounded-full"></span>
+                Eat
+                <span className="w-1.5 h-1.5 bg-neutral-400 rounded-full"></span>
+                Repeat
+              </div>
             </div>
 
+            <div className="flex flex-col justify-center my-5 ">
+              <div className="relative flex flex-col items-center text-center gap-4 z-5">
+                <h1 className="text-7xl font-bold text-neutral-200">Built by Engineers</h1>
+                <h1 className="text-7xl font-bold text-neutral-200">for Engineers</h1>
+              </div>
+
+              <p className="text-center text-xl text-neutral-400 max-w-3xl mt-6 leading-relaxed">
+                A comprehensive platform for coding assessments, real-time proctoring, and performance analytics designed specifically for engineering education.
+              </p>
+            </div>
+
+
             <div className="my-20 relative h-120 w-full max-w-5xl mx-auto flex items-start justify-center">
-              <div className="scale-[0.95] w-[90%] overflow-hidden absolute top-0 transform -translate-y-14 rounded-2xl border border-neutral-700 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6)] z-0">
-                <img
-                  src={problemImage}
-                  alt="Back Preview"
-                  className="w-full h-full object-cover" />
-              </div>
-
-              <div className="scale-[0.97] w-[95%] overflow-hidden absolute top-0 transform -translate-y-8 rounded-2xl border border-neutral-700 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.7)] z-10">
-                <img
-                  src={contestImage}
-                  alt="Back Preview"
-                  className="w-full h-full object-cover" />
-              </div>
-
-              <div className="w-full relative overflow-hidden rounded-2xl border border-neutral-700 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.7)] z-20">
-                <img
-                  src={editorImage}
-                  alt="Back Preview"
-                  className="w-full h-full object-cover" />
-              </div>
+              {heroImages.map((image, idx) => (
+                <div key={idx} className={`${image.scale} ${image.width} overflow-hidden absolute top-0 transform ${image.translate} rounded-2xl border border-neutral-700 shadow-[0_40px_80px_-20px_rgba(0,0,0,${idx === 0 ? '0.6' : '0.7'})] ${image.zIndex} ${idx === 2 ? 'relative' : ''}`}>
+                  <img
+                    src={image.src}
+                    alt={image.alt}
+                    className="w-full h-full object-cover" />
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -54,13 +146,13 @@ export const Home = () => {
               { bottom: '15%', right: '8%', animation: 'floatReverse', delay: 1.5 },
               { top: '50%', left: '3%', animation: 'float', delay: 0.5 },
               { top: '35%', right: '4%', animation: 'floatSlow', delay: 2.5 },
-              { top: '8%', right: '50%', animation: 'floatReverse', delay: 3 },
+              { top: '2%', right: '35%', animation: 'floatReverse', delay: 3 },
               { bottom: '40%', right: '15%', animation: 'float', delay: 1 },
             ];
 
             const position = positions[index % positions.length];
             const positionStyle: React.CSSProperties = {
-              animation: `${position.animation} 7s ease-in-out infinite`,
+              animation: `${position.animation} 15s ease-in-out infinite`,
               animationDelay: `${position.delay}s`,
             };
 
@@ -84,165 +176,85 @@ export const Home = () => {
         </div>
       </section>
 
-      <section className="relative flex flex-col gap-44 bg-black text-white py-20 px-6 overflow-hidden">
+      <section className="relative flex flex-col gap-32 bg-linear-to-b from-black via-neutral-950 to-black text-white py-24 px-6 overflow-hidden">
 
-        {/* Background subtle linear */}
-        <div className="absolute inset-0 bg-linear-to-b from-neutral-900 via-black to-black opacity-90" />
+        {/* Background gradient overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent" />
 
-        <div className="flex flex-col">
-          <h2 className="text-center text-5xl font-bold">Our Features</h2>
-          <p className="text-lg text-center text-neutral-400 mt-4">Discover the powerful tools that make coding easier and more efficient.</p>
+        <div className="flex flex-col relative z-10">
+          <h2 className="text-center text-6xl font-bold bg-linear-to-r from-white via-neutral-200 to-neutral-400 bg-clip-text text-transparent">Powerful Features</h2>
+          <p className="text-xl text-center text-neutral-400 mt-6 max-w-3xl mx-auto">Discover the comprehensive tools that empower students and faculty in their coding journey.</p>
         </div>
 
-        <div className="relative max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-
-          {/* LEFT SIDE CARD */}
-          <div className="relative">
-            <div className="relative flex items-center gap-6 bg-linear-to-r from-neutral-900/90 to-black/40 backdrop-blur-md border border-neutral-800  rounded-2xl p-8 shadow-2xl">
-
-              {/* Envelope Icon Container */}
-              <div className="w-20 h-20 rounded-xl bg-linear-to-b from-neutral-700 to-neutral-900 flex items-center justify-center shadow-inner">
-
-              </div>
-
-              {/* Text Content */}
-              <div>
-                <p className="text-sm text-neutral-400">
-                  Fery newsletter · March 10, 2025
-                </p>
-
-                <h3 className="text-xl font-semibold mt-2">
-                  Monaco Editor
-                </h3>
-
-                <p className="text-sm text-neutral-400 mt-2 leading-relaxed max-w-sm">
-                  We’ve integrated the powerful Monaco Editor into our platform, providing you with a seamless coding experience.
-                </p>
-              </div>
-            </div>
+        {features.map((feature, idx) => (
+          <div key={idx} className="relative max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center z-10">
+            {/* Conditionally render card on left or right based on layout */}
+            {feature.layout === 'left' ? (
+              <>
+                {/* LEFT SIDE CARD */}
+                <div className="relative group">
+                  <div className={`relative flex items-center gap-6 bg-linear-to-r ${feature.gradientFrom} ${feature.gradientTo} backdrop-blur-md border border-neutral-800 hover:border-neutral-700 rounded-2xl p-8 shadow-2xl transition-all duration-300 hover:scale-[1.02]`}>
+                    <div className={`w-20 h-20 rounded-xl bg-linear-to-b ${feature.iconGradient} flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-300`}>
+                      <feature.icon className="w-10 h-10 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-neutral-400">{feature.subtitle}</p>
+                      <h3 className="text-xl font-semibold mt-2">{feature.title}</h3>
+                      <p className="text-sm text-neutral-400 mt-2 leading-relaxed max-w-sm">{feature.description}</p>
+                    </div>
+                  </div>
+                </div>
+                {/* RIGHT SIDE CONTENT */}
+                <div>
+                  <h2 className="text-5xl font-bold tracking-tight bg-linear-to-r from-white to-neutral-300 bg-clip-text text-transparent">{feature.mainTitle}</h2>
+                  <p className="mt-6 text-lg text-neutral-400 leading-relaxed max-w-lg">{feature.mainDescription}<span className="text-white font-medium"> {feature.highlight}</span></p>
+                  <div className="mt-4 text-sm text-neutral-500 italic">{feature.tagline}</div>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* LEFT SIDE CONTENT */}
+                <div>
+                  <h2 className="text-5xl font-bold tracking-tight bg-linear-to-r from-white to-neutral-300 bg-clip-text text-transparent">{feature.mainTitle}</h2>
+                  <p className="mt-6 text-lg text-neutral-400 leading-relaxed max-w-lg">{feature.mainDescription}<span className="text-white font-medium"> {feature.highlight}</span></p>
+                  <div className="mt-4 text-sm text-neutral-500 italic">{feature.tagline}</div>
+                </div>
+                {/* RIGHT SIDE CARD */}
+                <div className="relative group">
+                  <div className={`relative flex items-center gap-6 bg-linear-to-r ${feature.gradientFrom} ${feature.gradientTo} backdrop-blur-md border border-neutral-800 hover:border-neutral-700 rounded-2xl p-8 shadow-2xl transition-all duration-300 hover:scale-[1.02]`}>
+                    <div className={`w-20 h-20 rounded-xl bg-linear-to-b ${feature.iconGradient} flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-300`}>
+                      <feature.icon className="w-10 h-10 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-neutral-400">{feature.subtitle}</p>
+                      <h3 className="text-xl font-semibold mt-2">{feature.title}</h3>
+                      <p className="text-sm text-neutral-400 mt-2 leading-relaxed max-w-sm">{feature.description}</p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
-
-          {/* RIGHT SIDE CONTENT */}
-          <div>
-            <h2 className="text-5xl font-bold tracking-tight">
-              Weekly insights.
-            </h2>
-
-            <p className="mt-6 text-lg text-neutral-400 leading-relaxed max-w-lg">
-              Start each week ahead. Every Monday, get personalized insights on
-              your watchlist, portfolio updates, and market-moving stories
-              <span className="text-white font-medium">
-                {" "}
-                directly in your inbox.
-              </span>
-            </p>
-          </div>
-        </div>
-
-        <div className="relative max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-          {/* RIGHT SIDE CONTENT */}
-          <div>
-            <h2 className="text-5xl font-bold tracking-tight">
-              Weekly insights.
-            </h2>
-
-            <p className="mt-6 text-lg text-neutral-400 leading-relaxed max-w-lg">
-              Start each week ahead. Every Monday, get personalized insights on
-              your watchlist, portfolio updates, and market-moving stories
-              <span className="text-white font-medium">
-                {" "}
-                directly in your inbox.
-              </span>
-            </p>
-          </div>
-
-          {/* LEFT SIDE CARD */}
-          <div className="relative">
-            <div className="relative flex items-center gap-6 bg-linear-to-r from-neutral-900/90 to-black/40 backdrop-blur-md border border-neutral-800  rounded-2xl p-8 shadow-2xl">
-
-              {/* Envelope Icon Container */}
-              <div className="w-20 h-20 rounded-xl bg-linear-to-b from-neutral-700 to-neutral-900 flex items-center justify-center shadow-inner">
-
-              </div>
-
-              {/* Text Content */}
-              <div>
-                <p className="text-sm text-neutral-400">
-                  Fery newsletter · March 10, 2025
-                </p>
-
-                <h3 className="text-xl font-semibold mt-2">
-                  Monaco Editor
-                </h3>
-
-                <p className="text-sm text-neutral-400 mt-2 leading-relaxed max-w-sm">
-                  We’ve integrated the powerful Monaco Editor into our platform, providing you with a seamless coding experience.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-
-          {/* LEFT SIDE CARD */}
-          <div className="relative">
-            <div className="relative flex items-center gap-6 bg-linear-to-r from-neutral-900/90 to-black/40 backdrop-blur-md border border-neutral-800  rounded-2xl p-8 shadow-2xl">
-
-              {/* Envelope Icon Container */}
-              <div className="w-20 h-20 rounded-xl bg-linear-to-b from-neutral-700 to-neutral-900 flex items-center justify-center shadow-inner">
-
-              </div>
-
-              {/* Text Content */}
-              <div>
-                <p className="text-sm text-neutral-400">
-                  Fery newsletter · March 10, 2025
-                </p>
-
-                <h3 className="text-xl font-semibold mt-2">
-                  Monaco Editor
-                </h3>
-
-                <p className="text-sm text-neutral-400 mt-2 leading-relaxed max-w-sm">
-                  We’ve integrated the powerful Monaco Editor into our platform, providing you with a seamless coding experience.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT SIDE CONTENT */}
-          <div>
-            <h2 className="text-5xl font-bold tracking-tight">
-              Weekly insights.
-            </h2>
-
-            <p className="mt-6 text-lg text-neutral-400 leading-relaxed max-w-lg">
-              Start each week ahead. Every Monday, get personalized insights on
-              your watchlist, portfolio updates, and market-moving stories
-              <span className="text-white font-medium">
-                {" "}
-                directly in your inbox.
-              </span>
-            </p>
-          </div>
-        </div>
+        ))}
       </section>
 
       {/* For Students Section */}
-      <section id="for-students" className="py-20 px-6 bg-neutral-950">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <section id="for-students" className="relative py-24 px-6 bg-linear-to-b from-black via-neutral-950 to-neutral-900 overflow-hidden">
+        {/* Background gradient overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent" />
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             {/* Left - Content */}
             <div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-900/30 text-blue-400 rounded-full text-sm font-medium mb-6 border border-blue-800">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-900/30 backdrop-blur-sm text-blue-400 rounded-full text-sm font-medium mb-6 border border-blue-800/50">
                 <Users className="w-4 h-4" />
                 For Students
               </div>
-              <h2 className="text-4xl font-bold text-white mb-6">
+              <h2 className="text-5xl font-bold mb-6 bg-linear-to-r from-white to-blue-200 bg-clip-text text-transparent">
                 Practice, Learn, and Excel
               </h2>
-              <p className="text-lg text-gray-400 mb-8">
+              <p className="text-xl text-neutral-300 mb-10 leading-relaxed">
                 Access a comprehensive platform designed to enhance your coding skills and ace your assessments
               </p>
 
@@ -253,13 +265,13 @@ export const Home = () => {
                   { icon: CheckCircle, title: 'Instant Feedback', desc: 'Get detailed explanations and performance analytics' },
                   { icon: Trophy, title: 'Leaderboards', desc: 'Compete with peers and track your progress' }
                 ].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-4 p-4 bg-neutral-800 rounded-lg border border-neutral-700 hover:border-blue-500/50 transition-colors">
-                    <div className="w-10 h-10 bg-blue-900/30 rounded-lg flex items-center justify-center shrink-0">
-                      <item.icon className="w-5 h-5 text-blue-400" />
+                  <div key={idx} className="group flex items-start gap-4 p-5 bg-linear-to-br from-neutral-800/80 to-neutral-900/50 rounded-xl border border-neutral-700 hover:border-blue-500/70 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10">
+                    <div className="w-12 h-12 bg-linear-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                      <item.icon className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-white mb-1">{item.title}</h4>
-                      <p className="text-sm text-gray-400">{item.desc}</p>
+                      <h4 className="font-semibold text-white mb-2 text-lg">{item.title}</h4>
+                      <p className="text-sm text-neutral-300 leading-relaxed">{item.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -267,8 +279,9 @@ export const Home = () => {
             </div>
 
             {/* Right - Visual */}
-            <div className="relative">
-              <div className="w-full relative overflow-hidden rounded-2xl border border-neutral-700 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.7)] z-20">
+            <div className="relative group">
+              <div className="absolute -inset-2 bg-linear-to-r from-blue-600 to-purple-600 rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-500" />
+              <div className="w-full relative overflow-hidden rounded-2xl border border-neutral-600 shadow-[0_40px_80px_-20px_rgba(59,130,246,0.3)] group-hover:border-blue-500/50 transition-all duration-300">
                 <img
                   src={studentImage}
                   alt="Student Preview"
@@ -280,50 +293,38 @@ export const Home = () => {
       </section>
 
       {/* For Faculty Section */}
-      <section id="for-faculty" className="py-20 px-6 bg-neutral-900 border-t border-neutral-800">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <section id="for-faculty" className="relative py-24 px-6 bg-linear-to-b from-neutral-900 via-neutral-950 to-black overflow-hidden">
+        {/* Background gradient overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,var(--tw-gradient-stops))] from-purple-900/10 via-transparent to-transparent" />
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             {/* Left - Visual */}
-            <div className="order-2 lg:order-1">
-              <div className="bg-neutral-800 rounded-2xl p-8 shadow-xl border border-neutral-700">
+            <div className="order-2 lg:order-1 relative group">
+              <div className="absolute -inset-2 bg-linear-to-r from-purple-600 to-pink-600 rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-500" />
+              <div className="relative bg-linear-to-br from-neutral-800 to-neutral-900 rounded-2xl p-8 shadow-2xl border border-neutral-700 group-hover:border-purple-500/50 transition-all duration-300">
                 <h3 className="text-xl font-bold text-white mb-6">Faculty Dashboard</h3>
 
                 {/* Mock Dashboard Cards */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-neutral-700 p-4 rounded-lg border border-neutral-600">
-                    <div className="text-2xl font-bold text-purple-400">156</div>
-                    <div className="text-sm text-gray-400">Active Students</div>
-                  </div>
-                  <div className="bg-neutral-700 p-4 rounded-lg border border-neutral-600">
-                    <div className="text-2xl font-bold text-blue-400">12</div>
-                    <div className="text-sm text-gray-400">Active Tests</div>
-                  </div>
-                  <div className="bg-neutral-700 p-4 rounded-lg border border-neutral-600">
-                    <div className="text-2xl font-bold text-green-400">89%</div>
-                    <div className="text-sm text-gray-400">Average Score</div>
-                  </div>
-                  <div className="bg-neutral-700 p-4 rounded-lg border border-neutral-600">
-                    <div className="text-2xl font-bold text-orange-400">45</div>
-                    <div className="text-sm text-gray-400">Questions</div>
-                  </div>
+                  {dashboardStats.map((stat, idx) => (
+                    <div key={idx} className={`bg-linear-to-br from-neutral-700 to-neutral-800 p-5 rounded-xl border border-neutral-600 ${stat.hoverBorder} transition-all duration-300`}>
+                      <div className={`text-3xl font-bold bg-linear-to-r ${stat.gradient} bg-clip-text text-transparent`}>{stat.value}</div>
+                      <div className="text-sm text-neutral-400 mt-1">{stat.label}</div>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Recent Activity */}
-                <div className="bg-neutral-700 rounded-lg p-4 border border-neutral-600">
-                  <h4 className="text-sm font-semibold text-white mb-3">Recent Activity</h4>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm text-gray-300">Test "Data Structures" completed by 45 students</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                      <span className="text-sm text-gray-300">3 plagiarism cases detected</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm text-gray-300">New assignment created</span>
-                    </div>
+                <div className="bg-linear-to-br from-neutral-700 to-neutral-800 rounded-xl p-5 border border-neutral-600">
+                  <h4 className="text-sm font-semibold text-white mb-4">Recent Activity</h4>
+                  <div className="space-y-4">
+                    {recentActivities.map((activity, idx) => (
+                      <div key={idx} className="flex items-center gap-3">
+                        <div className={`w-2 h-2 ${activity.color} rounded-full animate-pulse`}></div>
+                        <span className="text-sm text-neutral-300">{activity.text}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -331,14 +332,14 @@ export const Home = () => {
 
             {/* Right - Content */}
             <div className="order-1 lg:order-2">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-900/30 text-purple-400 rounded-full text-sm font-medium mb-6 border border-purple-800">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-900/30 backdrop-blur-sm text-purple-400 rounded-full text-sm font-medium mb-6 border border-purple-800/50">
                 <Users className="w-4 h-4" />
                 For Faculty
               </div>
-              <h2 className="text-4xl font-bold text-white mb-6">
+              <h2 className="text-5xl font-bold mb-6 bg-linear-to-r from-white to-purple-200 bg-clip-text text-transparent">
                 Manage, Monitor, and Analyze
               </h2>
-              <p className="text-lg text-gray-400 mb-8">
+              <p className="text-xl text-neutral-300 mb-10 leading-relaxed">
                 Powerful tools for creating assessments, monitoring student progress, and ensuring academic integrity
               </p>
 
@@ -349,13 +350,13 @@ export const Home = () => {
                   { icon: CheckCircle, title: 'Plagiarism Detection', desc: 'Identify similar code submissions using Jaccard similarity' },
                   { icon: BarChart3, title: 'Performance Analytics', desc: 'Track class performance and identify improvement areas' }
                 ].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-4 p-4 bg-neutral-800 rounded-lg border border-neutral-700 hover:border-purple-500/50 transition-colors">
-                    <div className="w-10 h-10 bg-purple-900/30 rounded-lg flex items-center justify-center shrink-0">
-                      <item.icon className="w-5 h-5 text-purple-400" />
+                  <div key={idx} className="group flex items-start gap-4 p-5 bg-linear-to-br from-neutral-800/80 to-neutral-900/50 rounded-xl border border-neutral-700 hover:border-purple-500/70 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10">
+                    <div className="w-12 h-12 bg-linear-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                      <item.icon className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-white mb-1">{item.title}</h4>
-                      <p className="text-sm text-gray-400">{item.desc}</p>
+                      <h4 className="font-semibold text-white mb-2 text-lg">{item.title}</h4>
+                      <p className="text-sm text-neutral-300 leading-relaxed">{item.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -366,52 +367,45 @@ export const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6 bg-neutral-900 border-t border-neutral-800">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl font-bold text-white mb-6">
-            Ready to start your
+      <section className="relative py-32 px-6 bg-linear-to-b from-black via-neutral-950 to-black overflow-hidden">
+        {/* Background gradient overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-blue-900/20 via-purple-900/10 to-transparent" />
+
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <h2 className="text-6xl font-bold mb-6">
+            <span className="bg-linear-to-r from-white via-neutral-200 to-neutral-400 bg-clip-text text-transparent">Ready to start your</span>
             <br />
-            <span className="text-blue-500">coding journey?</span>
+            <span className="bg-linear-to-r from-amber-500 via-orange-500 to-red-500 bg-clip-text text-transparent">coding journey?</span>
           </h2>
-          <p className="text-xl text-gray-400 mb-8">
+          <p className="text-xl text-neutral-300 mb-12 leading-relaxed">
             Join thousands of engineering students already improving their skills on EduQuest
           </p>
-          <div className="flex items-center justify-center gap-4">
-            <button className="px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl">
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            <button className="px-6 py-2.5 text-lg bg-linear-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-lg transform-content transition-all duration-300 hover:scale-105">
               Get Started Free
-            </button>
-            <button className="px-8 py-4 bg-neutral-800 text-gray-300 font-semibold rounded-lg hover:bg-neutral-700 transition-all border border-neutral-700">
-              Contact Sales
             </button>
           </div>
 
           {/* Trust Indicators */}
-          <div className="mt-12 flex items-center justify-center gap-8 text-sm text-gray-400">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              <span>Free to start</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              <span>No credit card required</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              <span>24/7 Support</span>
-            </div>
+          <div className="mt-16 flex items-center justify-center gap-12 text-base text-neutral-400 flex-wrap">
+            {trustIndicators.map((indicator, idx) => (
+              <div key={idx} className="flex items-center gap-3">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <span>{indicator}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-5 px-6 bg-neutral-950 text-white border-t border-neutral-800">
-
+      <footer className="py-4 px-6 bg-black text-white border-t border-neutral-800/50">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-gray-400 text-sm">© 2026 EduQuest. All rights reserved.</p>
-          <div className="flex gap-6 text-sm text-gray-400">
-            <a href="#" className="hover:text-white transition-colors">Terms</a>
-            <a href="#" className="hover:text-white transition-colors">Privacy</a>
-            <a href="#" className="hover:text-white transition-colors">Cookies</a>
+          <p className="text-neutral-400 text-sm">Copyright &copy; 2026 EduQuest. All rights reserved.</p>
+          <div className="flex gap-6 text-sm text-neutral-400">
+            {footerLinks.map((link, idx) => (
+              <a key={idx} href="#" className="hover:text-white transition-colors hover:underline">{link}</a>
+            ))}
           </div>
         </div>
       </footer>
