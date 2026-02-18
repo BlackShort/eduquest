@@ -5,6 +5,7 @@ import { EditorLayout } from "@/layouts/editor-layout";
 import { ProblemListLayout } from "@/layouts/problemlist-layout";
 import { AssignmentLayout } from "@/layouts/assignment-layout";
 import { ContestLayout } from "@/layouts/contest-layout";
+import { AssessmentLayout } from "@/layouts/assessment-layout";
 
 export {
     RootLayout,
@@ -13,5 +14,6 @@ export {
     EditorLayout,
     ProblemListLayout,
     AssignmentLayout,
-    ContestLayout
+    ContestLayout,
+    AssessmentLayout
 }
