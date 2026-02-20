@@ -45,6 +45,7 @@ export const router = createBrowserRouter([
                 path: "assessment",
                 Component: AssessmentLayout,
                 children: [
+                    { index: true, Component: AssessmentHome },
                     { path: ":assessmentId", Component: AssignmentDetail },
                 ],
             },
