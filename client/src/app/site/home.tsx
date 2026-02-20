@@ -1,10 +1,11 @@
-﻿import { Code2, Trophy, Shield, BarChart3, Users, BookOpen, CheckCircle } from 'lucide-react'
+﻿import { Code2, Trophy, Shield, BarChart3, Users, BookOpen, CheckCircle, ChevronRightIcon } from 'lucide-react'
 import editorImage from "@/assets/screenshot/editor-preview.jpeg";
 import contestImage from "@/assets/screenshot/contest-preview.jpeg";
 import problemImage from "@/assets/screenshot/problemlist-preview.jpeg";
 import studentImage from "@/assets/screenshot/studentd-ashboard-preeview.jpeg";
 import { FaJava, FaSwift, FaPython, FaPhp, FaRust, FaJs } from "react-icons/fa";
 import { TbBrandCpp, TbSql } from "react-icons/tb";
+import { Link } from 'react-router';
 
 export const Home = () => {
   const icons = [TbBrandCpp, TbSql, FaRust, FaSwift, FaPython, FaPhp, FaJava, FaJs];
@@ -13,30 +14,30 @@ export const Home = () => {
     {
       icon: Code2,
       title: 'Monaco Editor',
-      subtitle: 'Editor � Live Now',
+      subtitle: 'Live Code Editor',
       description: 'Experience the same powerful editor that powers VS Code. Get intelligent code completion, syntax highlighting, and error detection for 8+ programming languages.',
       mainTitle: 'Professional-Grade Code Editor',
       mainDescription: 'Write code with confidence using our industry-standard Monaco Editor integration. Features include',
       highlight: ' multi-language support, IntelliSense, and real-time syntax validation',
       tagline: '�giving you the tools professionals use.',
-      gradientFrom: 'from-blue-600',
-      gradientTo: 'to-purple-600',
-      iconGradient: 'from-blue-600 to-blue-700',
+      gradientFrom: 'from-neutral-900',
+      gradientTo: 'to-neutral-950',
+      iconGradient: 'from-neutral-700/70 to-neutral-800/30',
       languages: ['C++', 'Java', 'Python', 'JavaScript', '+4 more'],
       layout: 'left'
     },
     {
       icon: BarChart3,
       title: 'Real-time Execution',
-      subtitle: 'Execution Engine � Active',
+      subtitle: ' Active Execution Engine',
       description: 'Execute code in milliseconds with our optimized cloud infrastructure. Support for custom test cases, stdin/stdout handling, and detailed execution metrics.',
       mainTitle: 'Instant Code Execution',
       mainDescription: 'Test your code instantly with our cloud-based execution engine. Run programs in',
       highlight: ' multiple languages, get detailed output, and receive immediate feedback',
       tagline: ' on your submissions.',
-      gradientFrom: 'from-green-600',
-      gradientTo: 'to-emerald-600',
-      iconGradient: 'from-emerald-600 to-green-700',
+      gradientFrom: 'from-neutral-900',
+      gradientTo: 'to-neutral-950',
+      iconGradient: 'from-neutral-700/70 to-neutral-800/30',
       dotColor: 'bg-emerald-500',
       features: [
         'Compile-time error detection',
@@ -48,15 +49,15 @@ export const Home = () => {
     {
       icon: Shield,
       title: 'Smart Proctoring',
-      subtitle: 'Security � AI-Powered',
+      subtitle: 'AI-Powered Security',
       description: 'Maintain academic integrity with our AI-powered proctoring system. Track suspicious behavior, detect tab switches, and generate comprehensive reports automatically.',
       mainTitle: 'Academic Integrity Monitoring',
       mainDescription: 'Ensure fair assessments with our comprehensive proctoring solution. Monitor student activity,',
       highlight: ' detect plagiarism using Jaccard similarity, and generate detailed behavioral logs',
       tagline: ' for complete transparency.',
-      gradientFrom: 'from-purple-600',
-      gradientTo: 'to-pink-600',
-      iconGradient: 'from-purple-600 to-pink-600',
+      gradientFrom: 'from-neutral-900',
+      gradientTo: 'to-neutral-950',
+      iconGradient: 'from-neutral-700/70 to-neutral-800/30',
       dotColor: 'bg-purple-500',
       iconColor: 'text-purple-500',
       features: [
@@ -99,9 +100,9 @@ export const Home = () => {
     <div className="w-full min-h-screen">
       {/* Hero Section */}
       <section className="relative pt-32 pb-24 px-6 bg-linear-to-b from-neutral-900 via-neutral-800 to-black overflow-hidden">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto relative z-20">
           <div className="w-full flex flex-col items-center">
-            <div className="inline-flex p-px rounded-full bg-linear-to-r from-neutral-500 to-neutral-700 mb-4">
+            {/* <div className="inline-flex p-px rounded-full bg-linear-to-r from-neutral-500 to-neutral-700 mb-4">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900/60 backdrop-blur-sm rounded-full text-sm font-medium text-neutral-200">
                 Code
                 <span className="w-1.5 h-1.5 bg-neutral-400 rounded-full"></span>
@@ -109,17 +110,27 @@ export const Home = () => {
                 <span className="w-1.5 h-1.5 bg-neutral-400 rounded-full"></span>
                 Repeat
               </div>
-            </div>
+            </div> */}
 
-            <div className="flex flex-col justify-center my-5 ">
-              <div className="relative flex flex-col items-center text-center gap-4 z-5">
+            <div className="flex flex-col items-center justify-center my-5">
+              <div className="relative flex flex-col items-center text-center gap-4">
                 <h1 className="text-7xl font-bold text-neutral-200">Built by Engineers</h1>
                 <h1 className="text-7xl font-bold text-neutral-200">for Engineers</h1>
               </div>
 
-              <p className="text-center text-xl text-neutral-400 max-w-3xl mt-6 leading-relaxed">
-                A comprehensive platform for coding assessments, real-time proctoring, and performance analytics designed specifically for engineering education.
+              <p className="text-center text-lg text-neutral-400 max-w-xl mt-6 leading-relaxed">
+                A platform for coding assessments, real-time proctoring, and performance analytics, designed specifically for engineering education.
               </p>
+
+              <Link to={'/login'} className="mt-8">
+                <button
+                  type="button"
+                  className="will-change-transform group flex items-center gap-2 cursor-pointer px-5 py-2 text-lg font-semibold text-white bg-linear-to-r from-amber-600 via-orange-600 to-orange-500 hover:from-amber-500 hover:via-orange-500 hover:to-orange-400 rounded-full transition-all duration-400 hover:scale-105 border-2 border-orange-400/30 hover:border-orange-300/50"
+                >
+                  <span>Get Started</span>
+                  <ChevronRightIcon className="w-6 h-6 group-hover:translate-x-1 transition-transform duration-300" />
+                </button>
+              </Link>
             </div>
 
 
@@ -136,8 +147,11 @@ export const Home = () => {
           </div>
         </div>
 
+        {/* Honeycomb Background Pattern */}
+        <div className="absolute inset-0 pointer-events-none z-0 bg-honeycomb-pattern" />
+
         {/* Floating Icons */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
           {icons.map((Icon, index) => {
             const positions = [
               { top: '10%', left: '8%', animation: 'float', delay: 0 },
@@ -194,13 +208,13 @@ export const Home = () => {
                 {/* LEFT SIDE CARD */}
                 <div className="relative group">
                   <div className={`relative flex items-center gap-6 bg-linear-to-r ${feature.gradientFrom} ${feature.gradientTo} backdrop-blur-md border border-neutral-800 hover:border-neutral-700 rounded-2xl p-8 shadow-2xl transition-all duration-300 hover:scale-[1.02]`}>
-                    <div className={`w-20 h-20 rounded-xl bg-linear-to-b ${feature.iconGradient} flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-300`}>
+                    <div className={`w-20 h-20 rounded-xl bg-linear-to-b ${feature.iconGradient} flex items-center justify-center shadow-inner group-hover:scale-103 transition-transform duration-250`}>
                       <feature.icon className="w-10 h-10 text-white" />
                     </div>
                     <div>
-                      <p className="text-sm text-neutral-400">{feature.subtitle}</p>
-                      <h3 className="text-xl font-semibold mt-2">{feature.title}</h3>
-                      <p className="text-sm text-neutral-400 mt-2 leading-relaxed max-w-sm">{feature.description}</p>
+                      <p className="will-change-transform text-sm text-neutral-400">{feature.subtitle}</p>
+                      <h3 className="will-change-transform text-xl font-semibold mt-2">{feature.title}</h3>
+                      <p className="will-change-transform text-sm text-neutral-400 mt-2 leading-relaxed max-w-sm">{feature.description}</p>
                     </div>
                   </div>
                 </div>
@@ -222,13 +236,13 @@ export const Home = () => {
                 {/* RIGHT SIDE CARD */}
                 <div className="relative group">
                   <div className={`relative flex items-center gap-6 bg-linear-to-r ${feature.gradientFrom} ${feature.gradientTo} backdrop-blur-md border border-neutral-800 hover:border-neutral-700 rounded-2xl p-8 shadow-2xl transition-all duration-300 hover:scale-[1.02]`}>
-                    <div className={`w-20 h-20 rounded-xl bg-linear-to-b ${feature.iconGradient} flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-300`}>
+                    <div className={`w-20 h-20 rounded-xl bg-linear-to-b ${feature.iconGradient} flex items-center justify-center shadow-inner group-hover:scale-103 transition-transform duration-250`}>
                       <feature.icon className="w-10 h-10 text-white" />
                     </div>
                     <div>
-                      <p className="text-sm text-neutral-400">{feature.subtitle}</p>
-                      <h3 className="text-xl font-semibold mt-2">{feature.title}</h3>
-                      <p className="text-sm text-neutral-400 mt-2 leading-relaxed max-w-sm">{feature.description}</p>
+                      <p className="will-change-transform text-sm text-neutral-400">{feature.subtitle}</p>
+                      <h3 className="will-change-transform text-xl font-semibold mt-2">{feature.title}</h3>
+                      <p className="will-change-transform text-sm text-neutral-400 mt-2 leading-relaxed max-w-sm">{feature.description}</p>
                     </div>
                   </div>
                 </div>
@@ -381,9 +395,15 @@ export const Home = () => {
             Join thousands of engineering students already improving their skills on EduQuest
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <button className="px-6 py-2.5 text-lg bg-linear-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-lg transform-content transition-all duration-300 hover:scale-105">
-              Get Started Free
-            </button>
+            <Link to={'/login'}>
+              <button
+                type="button"
+                className="will-change-transform group flex items-center gap-2 cursor-pointer px-5 py-2 text-lg font-semibold text-white bg-linear-to-r from-amber-600 via-orange-600 to-orange-500 hover:from-amber-500 hover:via-orange-500 hover:to-orange-400 rounded-full transition-all duration-400 hover:scale-105 border-2 border-orange-400/30 hover:border-orange-300/50"
+              >
+                <span>Get Started</span>
+                <ChevronRightIcon className="w-6 h-6 group-hover:translate-x-1 transition-transform duration-300" />
+              </button>
+            </Link>
           </div>
 
           {/* Trust Indicators */}

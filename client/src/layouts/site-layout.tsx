@@ -3,7 +3,7 @@ import { Outlet } from 'react-router';
 
 export const SiteLayout = () => {
     return (
-        <div className='flex flex-col min-h-screen w-full'>
+        <div className='relative flex flex-col min-h-screen w-full'>
             <Header variant='sticky' theme="dark" />
             <Outlet />
         </div>
