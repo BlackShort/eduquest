@@ -1,34 +1,166 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+// "use client";
+
+// import { useEffect, useRef, useState } from "react";
+
+// interface Props {
+//   active: boolean;
+// }
+
+// export default function ProctorOverlay({ active }: Props) {
+//   const videoRef = useRef<HTMLVideoElement | null>(null);
+//   const [warning, setWarning] = useState<string | null>(null);
+
+//   /* ---------- start webcam ---------- */
+
+//   useEffect(() => {
+//     if (!active) return;
+
+//     const videoE1 = videoRef.current
+
+//     async function startCam() {
+//       try {
+//         const stream = await navigator.mediaDevices.getUserMedia({
+//           video: true,
+//           audio: false,
+//         });
+
+//         if (videoE1) {
+//           videoE1.srcObject = stream;
+//         }
+//       } catch (err) {
+//         console.log(err)
+//         setWarning("Camera access denied");
+//       }
+//     }
+
+//     startCam();
+
+//     return () => {
+//       if (videoE1?.srcObject) {
+//         const tracks = (videoE1.srcObject as MediaStream).getTracks();
+//         tracks.forEach(t => t.stop());
+//       }
+//     };
+//   }, [active]);
+
+//   /* ---------- tab warning UI ---------- */
+
+//   useEffect(() => {
+//     if (!active) return;
+
+//     const vis = () => {
+//       if (document.visibilityState === "hidden") {
+//         setWarning("⚠️ Tab switch detected");
+//         setTimeout(() => setWarning(null), 3000);
+//       }
+//     };
+
+//     window.addEventListener("blur", vis);
+//     document.addEventListener("visibilitychange", vis);
+
+//     return () => {
+//       window.removeEventListener("blur", vis);
+//       document.removeEventListener("visibilitychange", vis);
+//     };
+//   }, [active]);
+
+//   if (!active) return null;
+
+//   return (
+//     <>
+//       {/* floating camera panel */}
+//       <div
+//         style={{
+//           position: "fixed",
+//           bottom: 20,
+//           right: 20,
+//           width: 200,
+//           background: "#111",
+//           borderRadius: 12,
+//           padding: 10,
+//           boxShadow: "0 0 12px rgba(0,0,0,0.4)",
+//           zIndex: 9999,
+//         }}
+//       >
+//         <div style={{ color: "#0f0", fontSize: 12, marginBottom: 6 }}>
+//           ● Proctor Active
+//         </div>
+
+//         <video
+//           ref={videoRef}
+//           autoPlay
+//           muted
+//           playsInline
+//           style={{
+//             width: "100%",
+//             borderRadius: 8,
+//             background: "#000",
+//           }}
+//         />
+//       </div>
+
+//       {/* warning banner */}
+//       {warning && (
+//         <div
+//           style={{
+//             position: "fixed",
+//             top: 20,
+//             left: "50%",
+//             transform: "translateX(-50%)",
+//             background: "#ff4444",
+//             color: "white",
+//             padding: "10px 18px",
+//             borderRadius: 8,
+//             fontWeight: 600,
+//             zIndex: 10000,
+//           }}
+//         >
+//           {warning}
+//         </div>
+//       )}
+//     </>
+//   );
+// }
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { initFaceDetector, detectFaces } from "@/proctor/proctor.engine";
+import type { ProctorEventType } from "@/types/proctor";
 
 interface Props {
   active: boolean;
+  sessionId: string | null;
+  reportEvent: (type: ProctorEventType) => void;
 }
 
-export default function ProctorOverlay({ active }: Props) {
+export default function ProctorOverlay({
+  active,
+  sessionId,
+  reportEvent,
+}: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+  const [faceCount, setFaceCount] = useState(0);
+  const detectionInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastViolationRef = useRef<ProctorEventType | null>(null);
 
   /* ---------- start webcam ---------- */
 
   useEffect(() => {
     if (!active) return;
 
-    const videoE1 = videoRef.current
-
     async function startCam() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
-          audio: false,
         });
 
-        if (videoE1) {
-          videoE1.srcObject = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
         }
-      } catch (err) {
-        console.log(err)
+      } catch {
         setWarning("Camera access denied");
       }
     }
@@ -36,45 +168,69 @@ export default function ProctorOverlay({ active }: Props) {
     startCam();
 
     return () => {
-      if (videoE1?.srcObject) {
-        const tracks = (videoE1.srcObject as MediaStream).getTracks();
-        tracks.forEach(t => t.stop());
-      }
+      const video = videoRef.current;
+      if (!video || !video.srcObject) return;
+
+      const tracks = (video.srcObject as MediaStream).getTracks();
+      tracks.forEach((t) => t.stop());
     };
   }, [active]);
 
-  /* ---------- tab warning UI ---------- */
+  /* ---------- AI detection loop ---------- */
 
   useEffect(() => {
-    if (!active) return;
+    if (!active || !sessionId) return;
 
-    const vis = () => {
-      if (document.visibilityState === "hidden") {
-        setWarning("⚠️ Tab switch detected");
-        setTimeout(() => setWarning(null), 3000);
-      }
-    };
+    async function startDetection() {
+      await initFaceDetector();
 
-    window.addEventListener("blur", vis);
-    document.addEventListener("visibilitychange", vis);
+      detectionInterval.current = setInterval(async () => {
+        if (!videoRef.current) return;
+
+        const count = await detectFaces(videoRef.current);
+        setFaceCount(count);
+
+        if (count === 0) {
+          setWarning("⚠️ No face detected");
+
+          if (lastViolationRef.current !== "NO_FACE") {
+            reportEvent("NO_FACE");
+            lastViolationRef.current = "NO_FACE";
+          }
+        } else if (count > 1) {
+          setWarning("⚠️ Multiple faces detected");
+
+          if (lastViolationRef.current !== "MULTIPLE_FACES") {
+            reportEvent("MULTIPLE_FACES");
+            lastViolationRef.current = "MULTIPLE_FACES";
+          }
+        } else {
+          // exactly one face → clear violation state
+          setWarning(null);
+          lastViolationRef.current = null;
+        }
+      }, 3000);
+    }
+
+    startDetection();
 
     return () => {
-      window.removeEventListener("blur", vis);
-      document.removeEventListener("visibilitychange", vis);
+      if (detectionInterval.current) {
+        clearInterval(detectionInterval.current);
+      }
     };
-  }, [active]);
+  }, [active, sessionId, reportEvent]);
 
   if (!active) return null;
 
   return (
     <>
-      {/* floating camera panel */}
       <div
         style={{
           position: "fixed",
           bottom: 20,
           right: 20,
-          width: 200,
+          width: 220,
           background: "#111",
           borderRadius: 12,
           padding: 10,
@@ -82,9 +238,9 @@ export default function ProctorOverlay({ active }: Props) {
           zIndex: 9999,
         }}
       >
-        <div style={{ color: "#0f0", fontSize: 12, marginBottom: 6 }}>
-          ● Proctor Active
-        </div>
+        <div style={{ color: "#0f0", fontSize: 12 }}>● Proctor Active</div>
+
+        <div style={{ fontSize: 12, color: "#aaa" }}>Faces: {faceCount}</div>
 
         <video
           ref={videoRef}
@@ -99,7 +255,6 @@ export default function ProctorOverlay({ active }: Props) {
         />
       </div>
 
-      {/* warning banner */}
       {warning && (
         <div
           style={{
