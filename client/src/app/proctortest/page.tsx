@@ -30,9 +30,13 @@ export const ProctorTestPage = () => {
 
       <p>Session: {proctor.sessionId}</p>
       <p>Status: {proctor.active ? "ACTIVE" : "INACTIVE"}</p>
-      
+
       {/* ✅ Proctor Overlay Mounted */}
-      <ProctorOverlay active={proctor.active} />
+      <ProctorOverlay
+        active={proctor.active}
+        sessionId={proctor.sessionId}
+        reportEvent={proctor.reportEvent}
+      />
     </div>
   );
 };
