@@ -1,6 +1,7 @@
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Header } from "@/components/site/header";
 import { Outlet } from "react-router";
+import { studentNavigation } from "@/data/sidebar";
 
 export const DashboardLayout = () => {
   return (
@@ -9,7 +10,7 @@ export const DashboardLayout = () => {
       
       <div className="flex flex-1">
         <aside className="sticky top-14 h-[calc(100vh-3.5rem)] shrink-0">
-          <Sidebar />
+          <Sidebar navigation={studentNavigation} />
         </aside>
 
         <main className="w-full max-w-4xl mx-auto p-6">

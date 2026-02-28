@@ -1,0 +1,53 @@
+version: "3.8"
+
+services:
+
+  nginx:
+    image: nginx:latest
+    container_name: eduquest-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - auth
+      # - content
+      # - code
+      # - proctor
+    restart: always
+
+  auth:
+    build: ./services/auth
+    container_name: auth
+    env_file:
+      - .env
+    environment:
+      - PORT=5001
+    restart: always
+
+  # content:
+  #   build: ./services/content
+  #   container_name: content
+  #   env_file:
+  #     - .env 
+  #   environment:
+  #     - PORT=5002
+  #   restart: always
+
+  # code:
+  #   build: ./services/code
+  #   container_name: code
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - PORT=5003
+  #   restart: always
+
+  # proctor:
+  #   build: ./services/proctor
+  #   container_name: proctor
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - PORT=5004
+  #   restart: always
