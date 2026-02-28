@@ -1,132 +1,12 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-// "use client";
-
-// import { useEffect, useRef, useState } from "react";
-
-// interface Props {
-//   active: boolean;
-// }
-
-// export default function ProctorOverlay({ active }: Props) {
-//   const videoRef = useRef<HTMLVideoElement | null>(null);
-//   const [warning, setWarning] = useState<string | null>(null);
-
-//   /* ---------- start webcam ---------- */
-
-//   useEffect(() => {
-//     if (!active) return;
-
-//     const videoE1 = videoRef.current
-
-//     async function startCam() {
-//       try {
-//         const stream = await navigator.mediaDevices.getUserMedia({
-//           video: true,
-//           audio: false,
-//         });
-
-//         if (videoE1) {
-//           videoE1.srcObject = stream;
-//         }
-//       } catch (err) {
-//         console.log(err)
-//         setWarning("Camera access denied");
-//       }
-//     }
-
-//     startCam();
-
-//     return () => {
-//       if (videoE1?.srcObject) {
-//         const tracks = (videoE1.srcObject as MediaStream).getTracks();
-//         tracks.forEach(t => t.stop());
-//       }
-//     };
-//   }, [active]);
-
-//   /* ---------- tab warning UI ---------- */
-
-//   useEffect(() => {
-//     if (!active) return;
-
-//     const vis = () => {
-//       if (document.visibilityState === "hidden") {
-//         setWarning("⚠️ Tab switch detected");
-//         setTimeout(() => setWarning(null), 3000);
-//       }
-//     };
-
-//     window.addEventListener("blur", vis);
-//     document.addEventListener("visibilitychange", vis);
-
-//     return () => {
-//       window.removeEventListener("blur", vis);
-//       document.removeEventListener("visibilitychange", vis);
-//     };
-//   }, [active]);
-
-//   if (!active) return null;
-
-//   return (
-//     <>
-//       {/* floating camera panel */}
-//       <div
-//         style={{
-//           position: "fixed",
-//           bottom: 20,
-//           right: 20,
-//           width: 200,
-//           background: "#111",
-//           borderRadius: 12,
-//           padding: 10,
-//           boxShadow: "0 0 12px rgba(0,0,0,0.4)",
-//           zIndex: 9999,
-//         }}
-//       >
-//         <div style={{ color: "#0f0", fontSize: 12, marginBottom: 6 }}>
-//           ● Proctor Active
-//         </div>
-
-//         <video
-//           ref={videoRef}
-//           autoPlay
-//           muted
-//           playsInline
-//           style={{
-//             width: "100%",
-//             borderRadius: 8,
-//             background: "#000",
-//           }}
-//         />
-//       </div>
-
-//       {/* warning banner */}
-//       {warning && (
-//         <div
-//           style={{
-//             position: "fixed",
-//             top: 20,
-//             left: "50%",
-//             transform: "translateX(-50%)",
-//             background: "#ff4444",
-//             color: "white",
-//             padding: "10px 18px",
-//             borderRadius: 8,
-//             fontWeight: 600,
-//             zIndex: 10000,
-//           }}
-//         >
-//           {warning}
-//         </div>
-//       )}
-//     </>
-//   );
-// }
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { initFaceDetector, detectFaces } from "@/proctor/proctor.engine";
+import {
+  initFaceDetector,
+  detectFaces,
+  initObjectDetector,
+  detectPhone,
+} from "@/proctor/proctor.engine";
 import type { ProctorEventType } from "@/types/proctor";
 
 interface Props {
@@ -143,18 +23,24 @@ export default function ProctorOverlay({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [faceCount, setFaceCount] = useState(0);
-  const detectionInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-  const lastViolationRef = useRef<ProctorEventType | null>(null);
 
-  /* ---------- start webcam ---------- */
+  const detectionInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const activeViolations = useRef<Record<string, boolean>>({});
+  const tickCounter = useRef(0);
+
+  /* ==============================
+     START WEBCAM
+  ============================== */
 
   useEffect(() => {
     if (!active) return;
 
+    let stream: MediaStream | null = null;
+
     async function startCam() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480 },
         });
 
         if (videoRef.current) {
@@ -168,46 +54,83 @@ export default function ProctorOverlay({
     startCam();
 
     return () => {
-      const video = videoRef.current;
-      if (!video || !video.srcObject) return;
-
-      const tracks = (video.srcObject as MediaStream).getTracks();
-      tracks.forEach((t) => t.stop());
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
     };
   }, [active]);
 
-  /* ---------- AI detection loop ---------- */
+  /* ==============================
+     AI DETECTION LOOP
+  ============================== */
 
   useEffect(() => {
     if (!active || !sessionId) return;
 
+    let isCancelled = false;
+
     async function startDetection() {
       await initFaceDetector();
+      await initObjectDetector();
 
       detectionInterval.current = setInterval(async () => {
-        if (!videoRef.current) return;
+        if (isCancelled) return;
 
-        const count = await detectFaces(videoRef.current);
+        const video = videoRef.current;
+        if (!video) return;
+
+        tickCounter.current++;
+
+        /* -------- FACE DETECTION (Every cycle) -------- */
+
+        const count = await detectFaces(video);
         setFaceCount(count);
 
         if (count === 0) {
-          setWarning("⚠️ No face detected");
-
-          if (lastViolationRef.current !== "NO_FACE") {
+          if (!activeViolations.current["NO_FACE"]) {
             reportEvent("NO_FACE");
-            lastViolationRef.current = "NO_FACE";
-          }
-        } else if (count > 1) {
-          setWarning("⚠️ Multiple faces detected");
-
-          if (lastViolationRef.current !== "MULTIPLE_FACES") {
-            reportEvent("MULTIPLE_FACES");
-            lastViolationRef.current = "MULTIPLE_FACES";
+            activeViolations.current["NO_FACE"] = true;
           }
         } else {
-          // exactly one face → clear violation state
+          activeViolations.current["NO_FACE"] = false;
+        }
+
+        if (count > 1) {
+          if (!activeViolations.current["MULTIPLE_FACES"]) {
+            reportEvent("MULTIPLE_FACES");
+            activeViolations.current["MULTIPLE_FACES"] = true;
+          }
+        } else {
+          activeViolations.current["MULTIPLE_FACES"] = false;
+        }
+
+        /* -------- PHONE DETECTION (Every 3rd cycle ~9s) -------- */
+
+        let phoneDetected = false;
+
+        if (tickCounter.current % 3 === 0) {
+          phoneDetected = await detectPhone(video);
+
+          if (phoneDetected) {
+            if (!activeViolations.current["PHONE_DETECTED"]) {
+              reportEvent("PHONE_DETECTED");
+              activeViolations.current["PHONE_DETECTED"] = true;
+            }
+          } else {
+            activeViolations.current["PHONE_DETECTED"] = false;
+          }
+        }
+
+        /* -------- WARNING PRIORITY -------- */
+
+        if (activeViolations.current["PHONE_DETECTED"]) {
+          setWarning("📱 Phone detected");
+        } else if (activeViolations.current["NO_FACE"]) {
+          setWarning("⚠️ No face detected");
+        } else if (activeViolations.current["MULTIPLE_FACES"]) {
+          setWarning("⚠️ Multiple faces detected");
+        } else {
           setWarning(null);
-          lastViolationRef.current = null;
         }
       }, 3000);
     }
@@ -215,6 +138,8 @@ export default function ProctorOverlay({
     startDetection();
 
     return () => {
+      isCancelled = true;
+
       if (detectionInterval.current) {
         clearInterval(detectionInterval.current);
       }
@@ -225,6 +150,7 @@ export default function ProctorOverlay({
 
   return (
     <>
+      {/* Floating Camera Panel */}
       <div
         style={{
           position: "fixed",
@@ -238,9 +164,13 @@ export default function ProctorOverlay({
           zIndex: 9999,
         }}
       >
-        <div style={{ color: "#0f0", fontSize: 12 }}>● Proctor Active</div>
+        <div style={{ color: "#0f0", fontSize: 12 }}>
+          ● Proctor Active
+        </div>
 
-        <div style={{ fontSize: 12, color: "#aaa" }}>Faces: {faceCount}</div>
+        <div style={{ fontSize: 12, color: "#aaa" }}>
+          Faces: {faceCount}
+        </div>
 
         <video
           ref={videoRef}
@@ -255,6 +185,7 @@ export default function ProctorOverlay({
         />
       </div>
 
+      {/* Warning Banner */}
       {warning && (
         <div
           style={{
