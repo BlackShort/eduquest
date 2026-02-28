@@ -104,11 +104,11 @@ export default function ProctorOverlay({
           activeViolations.current["MULTIPLE_FACES"] = false;
         }
 
-        /* -------- PHONE DETECTION (Every 3rd cycle ~9s) -------- */
+        /* -------- PHONE DETECTION (Every 6th cycle ~3s) -------- */
 
         let phoneDetected = false;
 
-        if (tickCounter.current % 3 === 0) {
+        if (tickCounter.current % 6 === 0) {
           phoneDetected = await detectPhone(video);
 
           if (phoneDetected) {
@@ -132,7 +132,7 @@ export default function ProctorOverlay({
         } else {
           setWarning(null);
         }
-      }, 3000);
+      }, 500); // ⚡ 500ms = Near real-time detection with API throttling
     }
 
     startDetection();
@@ -164,13 +164,9 @@ export default function ProctorOverlay({
           zIndex: 9999,
         }}
       >
-        <div style={{ color: "#0f0", fontSize: 12 }}>
-          ● Proctor Active
-        </div>
+        <div style={{ color: "#0f0", fontSize: 12 }}>● Proctor Active</div>
 
-        <div style={{ fontSize: 12, color: "#aaa" }}>
-          Faces: {faceCount}
-        </div>
+        <div style={{ fontSize: 12, color: "#aaa" }}>Faces: {faceCount}</div>
 
         <video
           ref={videoRef}
