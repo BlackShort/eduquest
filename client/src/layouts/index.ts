@@ -1,6 +1,7 @@
 import { RootLayout } from "@/layouts/root-layout";
 import { SiteLayout } from "@/layouts/site-layout";
 import { DashboardLayout } from "@/layouts/dashboard-layout";
+import { FDashboardLayout } from "@/layouts/fdashboard-layout";
 import { EditorLayout } from "@/layouts/editor-layout";
 import { ProblemListLayout } from "@/layouts/problemlist-layout";
 import { AssignmentLayout } from "@/layouts/assignment-layout";
@@ -11,6 +12,7 @@ export {
     RootLayout,
     SiteLayout,
     DashboardLayout,
+    FDashboardLayout,
     EditorLayout,
     ProblemListLayout,
     AssignmentLayout,

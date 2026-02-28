@@ -5,11 +5,13 @@ import eduquestLight from '@/assets/logo/eduquest-invert.png'
 import { useContextAPI } from '@/hooks/useContext';
 
 interface HeaderProps {
+    layout?: "site" | "student"|"faculty";
     variant?: "default" | "sticky" | "fixed";
     theme?: "light" | "dark";
+    menu?: boolean;
 }
 
-export function Header({ variant = "default", theme = "light" }: HeaderProps) {
+export function Header({ layout = "site", variant = "default", theme = "light", menu = true }: HeaderProps) {
     const { isLoggedIn, user } = useContextAPI();
 
     const links = [
@@ -25,7 +27,7 @@ export function Header({ variant = "default", theme = "light" }: HeaderProps) {
 
 
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-14">
+                <div className={`flex items-center justify-between ${layout === "faculty" ? "h-12" : "h-14"}`}>
                     <Link to="/" className="flex items-center gap-2 group">
                         <div className="w-full h-8 rounded-lg flex items-center justify-center group-hover:scale-105 transition-all duration-300">
                             <img
@@ -47,7 +49,7 @@ export function Header({ variant = "default", theme = "light" }: HeaderProps) {
                         />
                     </div> */}
 
-                    <nav
+                    {menu && <nav
                         className={`hidden lg:flex items-center gap-8 font-normal ${theme === "light" ? "text-gray-700" : "text-neutral-400"
                             }`}
                     >
@@ -62,7 +64,7 @@ export function Header({ variant = "default", theme = "light" }: HeaderProps) {
                                 {link.name}
                             </NavLink>
                         ))}
-                    </nav>
+                    </nav>}
 
 
 

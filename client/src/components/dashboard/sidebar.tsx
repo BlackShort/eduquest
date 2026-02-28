@@ -1,34 +1,16 @@
 import { NavLink } from 'react-router';
-import { CodeXml, FileCodeCorner, ChartNoAxesColumn, UserRound, Settings, ChevronRight, ListTodo, LayoutDashboard, ChartColumnDecreasing } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import type { Navigation, NavigationItem } from '@/data/sidebar';
 
-export const Sidebar = () => {
+interface SidebarProps {
+    navigation: Navigation;
+}
+
+export const Sidebar = ({ navigation }: SidebarProps) => {
     // const { setUser, setIsLoggedIn } = useContextAPI();
     // const navigate = useNavigate();
 
-    const navigation = {
-        dashboard: [
-            { featured: false, path: `/dashboard`, icon: LayoutDashboard, title: 'Dashboard' },
-            { featured: true, path: `assessment`, icon: ListTodo, title: 'Assessment' },
-            { featured: false, path: `/contest`, icon: ChartNoAxesColumn, title: 'Contests' },
-            { featured: false, path: `/problems`, icon: CodeXml, title: 'Problems' },
-            { featured: false, path: `/leaderboard`, icon: ChartColumnDecreasing, title: 'Leaderboard' },
-        ],
 
-        learning: [
-            { featured: false, path: `assignments`, icon: FileCodeCorner, title: 'Assignments' },
-            // { path: `courses`, icon: FileText, title: 'Courses' },
-            // { path: `resources`, icon: FolderClosed, title: 'Resources' },
-        ],
-
-        account: [
-            { featured: false, path: `me`, icon: UserRound, title: 'Profile' },
-            { featured: false, path: `settings`, icon: Settings, title: 'Settings' },
-        ],
-
-        // app: [
-        //     { path: `appshare`, icon: QrCode, title: 'Share App' },
-        // ],
-    };
 
 
     // const handleLogout = async () => {
@@ -54,10 +36,11 @@ export const Sidebar = () => {
                 {Object.entries(navigation).map(([group, items]) => (
                     <div key={group}>
                         <div className='flex flex-col gap-1'>
-                            {items.map((item, index) => (
+                            {(items as NavigationItem[]).map((item, index) => (
                                 <NavLink
                                     key={index}
                                     to={item.path}
+                                    end={item.path.startsWith('/')}
                                     className={({ isActive }) =>
                                         `group flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-normal transition-all duration-200
                                             ${isActive

@@ -10,7 +10,7 @@ const proctorRoutes = require("./routes/proctor.routes.js");
 const app = express();
 
 const corsOptions = {
-  origin: "*", // only during DEV -> Not in Production
+  origin: "*", // only during DEV  -> Not in Production
   methods: ["GET", "POST", "PATCH"],
   allowedHeaders: ["Content-Type", "student-id", "user-role"],
 };

@@ -1,5 +1,5 @@
 import { createBrowserRouter } from "react-router";
-import { AssignmentLayout, EditorLayout, ContestLayout, DashboardLayout, ProblemListLayout, RootLayout, SiteLayout, AssessmentLayout } from "@/layouts";
+import { AssignmentLayout, EditorLayout, ContestLayout, DashboardLayout, ProblemListLayout, RootLayout, SiteLayout, AssessmentLayout, FDashboardLayout } from "@/layouts";
 import { Home, About, Privacy, Terms, Cookies, Contact, Login } from "@/app/site";
 import { DashboardHome, DashboardSettings } from "@/app/dashboard";
 import { ContestHome, ContestDetails, ProblemHome, ProblemCategory } from "@/app/code";
@@ -8,6 +8,18 @@ import { Assignment, AssignmentDetail } from "@/app/assignment";
 import { ProctorTestPage } from "@/app/proctortest";
 import { AssessmentHome } from "@/app/assessment";
 import { LeaderboardHome } from "@/app/leaderboard";
+import { FDashboardHome } from "@/app/dashboard/faculty/fdashboard-page";
+import { FDashboardAssessment } from "@/app/dashboard/faculty/fdashboard-assessment";
+import { FDashboardAssignments } from "@/app/dashboard/faculty/fdashboard-assignments";
+import FacultyAnalyticsPage from "@/app/dashboard/faculty/fdashboard-analytics";
+import FacultyProblemBankPage from "@/app/dashboard/faculty/fdashboard-problems";
+import CreateTestPage from "@/app/dashboard/faculty/fdashboard-create-test";
+import EditTestPage from "@/app/dashboard/faculty/fdashboard-edit-test";
+import TestResultsPage from "@/app/dashboard/faculty/fdashboard-test-results";
+import FacultySettingsPage from "@/app/dashboard/faculty/fdashboard-settings";
+import AttemptDetailPage from "@/app/dashboard/faculty/fdashboard-attempt-detail";
+import BulkImportPage from "@/app/dashboard/faculty/fdashboard-bulk-import";
+import ReportsPage from "@/app/dashboard/faculty/fdashboard-reports";
 
 export const router = createBrowserRouter([
     {
@@ -39,6 +51,24 @@ export const router = createBrowserRouter([
                     { path: "settings", Component: DashboardSettings },
                     { path: "assignments", Component: Assignment },
                     { path: "assessment", Component: AssessmentHome },
+                ],
+            },
+            {
+                path: "faculty-dashboard",
+                Component: FDashboardLayout,
+                children: [
+                    { index: true, Component: FDashboardHome },
+                    { path: "assessment", Component: FDashboardAssessment },
+                    { path: "assignments", Component: FDashboardAssignments },
+                    { path: "analytics", Component: FacultyAnalyticsPage },
+                    { path: "problems", Component: FacultyProblemBankPage },
+                    { path: "settings", Component: FacultySettingsPage },
+                    { path: "tests/create", Component: CreateTestPage },
+                    { path: "tests/:testId/edit", Component: EditTestPage },
+                    { path: "tests/:testId/results", Component: TestResultsPage },
+                    { path: "attempt/:attemptId", Component: AttemptDetailPage },
+                    { path: "bulk-import", Component: BulkImportPage },
+                    { path: "reports", Component: ReportsPage },
                 ],
             },
             {
