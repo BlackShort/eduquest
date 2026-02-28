@@ -16,4 +16,4 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE']
 }));
 
-app.use('/api/v1/auth', authRouter);
+app.use('/v1', authRouter);
