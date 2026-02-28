@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 5001;
 const startServer = async () => {
     try {
         await connectDB();
-        app.listen(PORT, () => {
+        app.listen(PORT, "0.0.0.0", () => {
             console.log(`Auth service is running on port ${PORT}`);
         });
     } catch (error) {
