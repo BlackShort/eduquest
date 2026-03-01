@@ -27,15 +27,15 @@ const submissionsRoutes = require("./routes/submissionsRoute");
 const problemRoutes = require("./routes/problemRoute");
 
 // Mount Routes
-app.use("/mcq", mcqRoutes);
-app.use("/coding", codingRoutes);
-app.use("/assignment", assignmentRoutes);
+app.use("/v1/mcq", mcqRoutes);
+app.use("/v1/coding", codingRoutes);
+app.use("/v1/assignment", assignmentRoutes);
 
 // Mount Faculty Routes
-app.use("/api/faculty/tests", testRoutes);
-app.use("/api/faculty/questions", questionsRoutes);
-app.use("/api/faculty/submissions", submissionsRoutes);
-app.use("/api/faculty/problems", problemRoutes);
+app.use("/v1/faculty/tests", testRoutes);
+app.use("/v1/faculty/questions", questionsRoutes);
+app.use("/v1/faculty/submissions", submissionsRoutes);
+app.use("/v1/faculty/problems", problemRoutes);
 
 // Health Check Route
 app.get("/", (req, res) => {

@@ -22,6 +22,6 @@ app.get('/', (req, res) => {
 });
 
 // Routes
-app.use('/api/v1/submissions', submissionRoutes);
+app.use('/v1/submissions', submissionRoutes);
 
 module.exports = app;
