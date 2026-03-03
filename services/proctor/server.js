@@ -23,7 +23,7 @@ app.get("/health", (req, res) => {
   res.json({ service: "proctor-service", status: "ok" });
 });
 
-app.use("/api/v1/proctor", proctorRoutes);
+app.use("/v1", proctorRoutes);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 4004;

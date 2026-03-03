@@ -12,7 +12,11 @@ import type { ProctorEventType } from "@/types/proctor";
 interface Props {
   active: boolean;
   sessionId: string | null;
-  reportEvent: (type: ProctorEventType) => void;
+  reportEvent: (
+    type: ProctorEventType,
+    isActive: boolean,
+    confidence?: number,
+  ) => void;
 }
 
 export default function ProctorOverlay({
@@ -25,8 +29,8 @@ export default function ProctorOverlay({
   const [faceCount, setFaceCount] = useState(0);
 
   const detectionInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-  const activeViolations = useRef<Record<string, boolean>>({});
   const tickCounter = useRef(0);
+  const lastPhoneDetection = useRef(false); // Track phone state for UI
 
   /* ==============================
      START WEBCAM
@@ -86,48 +90,32 @@ export default function ProctorOverlay({
         const count = await detectFaces(video);
         setFaceCount(count);
 
-        if (count === 0) {
-          if (!activeViolations.current["NO_FACE"]) {
-            reportEvent("NO_FACE");
-            activeViolations.current["NO_FACE"] = true;
-          }
-        } else {
-          activeViolations.current["NO_FACE"] = false;
+        // 🎯 State-based reporting (not event spam)
+        const isNoFace = count === 0;
+        const isMultipleFaces = count > 1;
+
+        reportEvent("NO_FACE", isNoFace);
+        reportEvent("MULTIPLE_FACES", isMultipleFaces);
+
+        /* -------- PHONE DETECTION (Every 3rd cycle ~1.5s) -------- */
+
+        if (tickCounter.current % 3 === 0) {
+          const phoneDetected = await detectPhone(video);
+          lastPhoneDetection.current = phoneDetected;
+          reportEvent("PHONE_DETECTED", phoneDetected, 0.8);
         }
 
-        if (count > 1) {
-          if (!activeViolations.current["MULTIPLE_FACES"]) {
-            reportEvent("MULTIPLE_FACES");
-            activeViolations.current["MULTIPLE_FACES"] = true;
-          }
-        } else {
-          activeViolations.current["MULTIPLE_FACES"] = false;
-        }
+        /* -------- WARNING PRIORITY (Based on current states) -------- */
 
-        /* -------- PHONE DETECTION (Every 6th cycle ~3s) -------- */
+        const currentNoFace = count === 0;
+        const currentMultipleFaces = count > 1;
+        const phoneDetected = lastPhoneDetection.current;
 
-        let phoneDetected = false;
-
-        if (tickCounter.current % 6 === 0) {
-          phoneDetected = await detectPhone(video);
-
-          if (phoneDetected) {
-            if (!activeViolations.current["PHONE_DETECTED"]) {
-              reportEvent("PHONE_DETECTED");
-              activeViolations.current["PHONE_DETECTED"] = true;
-            }
-          } else {
-            activeViolations.current["PHONE_DETECTED"] = false;
-          }
-        }
-
-        /* -------- WARNING PRIORITY -------- */
-
-        if (activeViolations.current["PHONE_DETECTED"]) {
+        if (phoneDetected) {
           setWarning("📱 Phone detected");
-        } else if (activeViolations.current["NO_FACE"]) {
+        } else if (currentNoFace) {
           setWarning("⚠️ No face detected");
-        } else if (activeViolations.current["MULTIPLE_FACES"]) {
+        } else if (currentMultipleFaces) {
           setWarning("⚠️ Multiple faces detected");
         } else {
           setWarning(null);

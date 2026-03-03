@@ -1,7 +1,7 @@
 import { proctorUrl as server } from "./server-api";
 import type { ProctorEventPayload } from "@/types/proctor";
 
-const BASE = `${server}/api/v1/proctor`;
+const BASE = `${server}/v1`;
 
 function getAuthHeaders(): HeadersInit {
   const token = localStorage.getItem("accessToken");
