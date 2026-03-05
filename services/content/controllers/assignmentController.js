@@ -91,3 +91,25 @@ exports.getAssignmentByTestId = async (req, res) => {
     });
   }
 };
+exports.getAllAssignments = async (req, res) => {
+  try {
+
+    const assignments = await Assignment.find();
+
+    res.status(200).json({
+      success: true,
+      data: assignments
+    });
+
+  } catch (error) {
+
+    console.error("Fetch Assignments Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching assignments",
+      error: error.message
+    });
+
+  }
+};

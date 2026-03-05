@@ -11,7 +11,10 @@ router.post(
   assignmentController.uploadAssignment
 );
 
-// Get Assignments by test_id
+// ✅ Get ALL assignments
+router.get("/", assignmentController.getAllAssignments);
+
+// Get Assignment by test_id
 router.get("/:test_id", assignmentController.getAssignmentByTestId);
 
 module.exports = router;
