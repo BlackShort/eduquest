@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-async function getTestcasesForQuestion(questionId, mode) {
+export async function getTestcasesForQuestion(questionId, mode) {
 
     const sampleTestcases = [
         {
@@ -33,7 +33,3 @@ async function getTestcasesForQuestion(questionId, mode) {
 
     return [...sampleTestcases, ...hiddenTestcases];
 }
-
-export {
-    getTestcasesForQuestion,
-};
