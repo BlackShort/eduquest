@@ -2,9 +2,9 @@
 import mongoose from 'mongoose';
 import Submission from '../models/submission.model.js';
 
-import executorService from '../services/executor.service.js';
-import testcaseService from '../services/testcase.service.js';
-import plagiarismService from '../services/plagiarism.service.js';
+import { runCodeForQuestion } from '../services/executor.service.js';
+import { getTestcasesForQuestion } from '../services/testcase.service.js';
+import { checkSubmissionPlagiarism } from '../services/plagiarism.service.js';
 
 export const executeSubmission = async (req, res) => {
     try {
@@ -15,9 +15,8 @@ export const executeSubmission = async (req, res) => {
                 message: 'studentId, questionId, testId, language, code and mode are required',
             });
         }
-        const testcases = await testcaseService.getTestcasesForQuestion(questionId, mode);
-
-        const executionResult = await executorService.runCodeForQuestion({
+        const testcases = await getTestcasesForQuestion(questionId, mode);
+        const executionResult = await runCodeForQuestion({
             code,
             language,
             testcases,
@@ -41,9 +40,7 @@ export const executeSubmission = async (req, res) => {
                 testcaseResults: executionResult.testcaseResults,
             });
 
-            plagiarismResult = await plagiarismService.checkSubmissionPlagiarism(
-                savedSubmission
-            );
+            plagiarismResult = await checkSubmissionPlagiarism(savedSubmission);
 
             savedSubmission.plagiarism = plagiarismResult;
             await savedSubmission.save();

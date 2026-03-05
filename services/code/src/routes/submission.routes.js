@@ -1,15 +1,21 @@
 import express from 'express';
 const router = express.Router();
 
-import submissionController from '../controllers/submission.controller.js';
+import {
+    executeSubmission,
+    getSubmissionById,
+    getSubmissionsByStudent,
+    getSubmissionsByQuestion,
+    recheckPlagiarismForSubmission
+} from '../controllers/submission.controller.js';
 
-router.post('/execute', submissionController.executeSubmission);
+router.post('/execute', executeSubmission);
 
-router.get('/:submissionId', submissionController.getSubmissionById);
+router.get('/:submissionId', getSubmissionById);
 
-router.get('/student/:studentId', submissionController.getSubmissionsByStudent);
+router.get('/student/:studentId', getSubmissionsByStudent);
 
-router.get('/question/:questionId', submissionController.getSubmissionsByQuestion);
+router.get('/question/:questionId', getSubmissionsByQuestion);
 
 // Optional: re-check plagiarism for a submission
 // router.post(

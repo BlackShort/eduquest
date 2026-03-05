@@ -1,109 +1,140 @@
-
 import axios from 'axios';
-import { PISTON_BASE_URL } from '../config/piston.config.js';
+import { JUDGE0_BASE_URL, JUDGE0_LANGUAGE_IDS } from '../config/judge0.config.js';
 
-const languageMap = {
-    cpp: {
-        language: 'cpp',
-        version: '10.2.0',
-        filename: 'main.cpp',
-    },
-    c: {
-        language: 'c',
-        version: '10.2.0',
-        filename: 'main.c',
-    },
-    python: {
-        language: 'python',
-        version: '3.10.0',
-        filename: 'main.py',
-    },
-    java: {
-        language: 'java',
-        version: '15.0.2',
-        filename: 'Main.java',
-    },
-    javascript: {
-        language: 'javascript',
-        version: '18.15.0',
-        filename: 'main.js',
-    },
-};
+// How long to wait for Judge0 to finish processing (ms)
+const POLLING_INTERVAL_MS = 1000;
+const MAX_POLLS = 15; // 15 seconds max wait per testcase
 
-async function executeWithPiston({ language, code, stdin }) {
-    const langConfig = languageMap[language];
-
-    if (!langConfig) {
-        throw new Error(`Language not supported for execution: ${language}`);
-    }
-
+/**
+ * Submit code to Judge0 and return a token.
+ * Judge0 processes submissions asynchronously — we submit, then poll.
+ */
+async function submitToJudge0({ languageId, code, stdin }) {
     const payload = {
-        language: langConfig.language,
-        version: langConfig.version,
-        files: [
-            {
-                name: langConfig.filename,
-                content: code,
-            },
-        ],
-        stdin,
+        language_id: languageId,
+        source_code: Buffer.from(code).toString('base64'),
+        stdin: stdin ? Buffer.from(stdin).toString('base64') : '',
+        // Optional: set CPU/memory limits here if your Judge0 instance supports it
+        // cpu_time_limit: 2,       // seconds
+        // memory_limit: 128000,    // KB
     };
 
-    try {
-        const start = Date.now();
+    const response = await axios.post(
+        `${JUDGE0_BASE_URL}/submissions?base64_encoded=true&wait=false`,
+        payload,
+        { timeout: 10000 }
+    );
 
-        const response = await axios.post(
-            `${PISTON_BASE_URL}/execute`,
-            payload,
-            {
-                timeout: 15000, // 15 seconds per testcase
-            }
+    return response.data.token; // Judge0 submission token
+}
+
+/**
+ * Poll Judge0 until the submission is done (status id >= 3 means finished).
+ * Status IDs: 1=In Queue, 2=Processing, 3=Accepted, 4=Wrong Answer,
+ *             5=TLE, 6=CE, 7-12=Runtime Errors, 13=Internal Error
+ */
+async function pollJudge0(token) {
+    for (let attempt = 0; attempt < MAX_POLLS; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL_MS));
+
+        const response = await axios.get(
+            `${JUDGE0_BASE_URL}/submissions/${token}?base64_encoded=true`,
+            { timeout: 10000 }
         );
 
-        const end = Date.now();
-        const timeMs = end - start;
+        const data = response.data;
+        const statusId = data.status?.id;
 
-        const run = response.data.run || {};
+        // Still processing
+        if (statusId === 1 || statusId === 2) continue;
 
-        const stdout = (run.stdout || '').toString();
-        const stderr = (run.stderr || '').toString();
-        const exitCode = typeof run.code === 'number' ? run.code : null;
-
-        let status = 'PASSED';
-
-        if (exitCode !== 0) {
-            status = 'RUNTIME_ERROR';
-        }
-
-        if (stderr && stderr.trim().length > 0) {
-            status = 'RUNTIME_ERROR';
-        }
+        // Done — decode base64 outputs
+        const stdout = data.stdout
+            ? Buffer.from(data.stdout, 'base64').toString('utf-8')
+            : '';
+        const stderr = data.stderr
+            ? Buffer.from(data.stderr, 'base64').toString('utf-8')
+            : '';
+        const compileOutput = data.compile_output
+            ? Buffer.from(data.compile_output, 'base64').toString('utf-8')
+            : '';
 
         return {
+            statusId,
+            statusDescription: data.status?.description || '',
             stdout,
             stderr,
-            exitCode,
-            timeMs,
-            status,
+            compileOutput,
+            timeMs: data.time ? Math.round(parseFloat(data.time) * 1000) : 0,
+            memoryKb: data.memory || 0,
+        };
+    }
+
+    // Timed out waiting
+    return {
+        statusId: 5, // treat as TLE
+        statusDescription: 'Time Limit Exceeded (polling timeout)',
+        stdout: '',
+        stderr: 'Execution timed out waiting for Judge0',
+        compileOutput: '',
+        timeMs: MAX_POLLS * POLLING_INTERVAL_MS,
+        memoryKb: 0,
+    };
+}
+
+/**
+ * Map Judge0 status ID to our internal status strings
+ */
+function mapJudge0Status(statusId) {
+    if (statusId === 3) return 'PASSED';        // Accepted (output match checked separately)
+    if (statusId === 4) return 'FAILED';         // Wrong Answer (Judge0 already compared — we re-check too)
+    if (statusId === 5) return 'TIME_LIMIT';     // TLE
+    if (statusId === 6) return 'COMPILE_ERROR';  // Compilation Error
+    if (statusId >= 7 && statusId <= 12) return 'RUNTIME_ERROR';
+    return 'RUNTIME_ERROR'; // catch-all
+}
+
+/**
+ * Execute one testcase via Judge0
+ */
+async function executeWithJudge0({ language, code, stdin }) {
+    const languageId = JUDGE0_LANGUAGE_IDS[language];
+
+    if (!languageId) {
+        throw new Error(`Language not supported: ${language}`);
+    }
+
+    try {
+        const token = await submitToJudge0({ languageId, code, stdin });
+        const result = await pollJudge0(token);
+
+        const status = mapJudge0Status(result.statusId);
+
+        return {
+            stdout: result.stdout,
+            stderr: result.stderr || result.compileOutput,
+            timeMs: result.timeMs,
+            status, // PASSED | FAILED | TIME_LIMIT | COMPILE_ERROR | RUNTIME_ERROR
         };
     } catch (err) {
-        console.error('Error calling Piston:', err.message);
+        console.error('Judge0 execution error:', err.message);
         return {
             stdout: '',
             stderr: err.message,
-            exitCode: null,
             timeMs: 0,
-            status: 'ERROR',
+            status: 'RUNTIME_ERROR',
         };
     }
 }
-
 
 function outputsMatch(actual, expected) {
     if (actual == null || expected == null) return false;
     return actual.trim() === expected.trim();
 }
 
+/**
+ * Run all testcases for a question and return aggregated results
+ */
 async function runCodeForQuestion({ code, language, testcases }) {
     if (!Array.isArray(testcases) || testcases.length === 0) {
         return {
@@ -119,32 +150,20 @@ async function runCodeForQuestion({ code, language, testcases }) {
     let totalTime = 0;
     let passedCount = 0;
 
-
     for (const tc of testcases) {
         const stdin = tc.input || '';
         const expectedOutput = tc.expectedOutput || '';
         const testcaseId = tc._id ? tc._id.toString() : null;
 
-        const result = await executeWithPiston({
-            language,
-            code,
-            stdin,
-        });
+        const result = await executeWithJudge0({ language, code, stdin });
 
-        const isCorrect =
-            result.status === 'PASSED' &&
-            outputsMatch(result.stdout, expectedOutput);
-
+        // Only mark PASSED if output actually matches
         let status = result.status;
-
-        if (status === 'PASSED' && !isCorrect) {
+        if (status === 'PASSED' && !outputsMatch(result.stdout, expectedOutput)) {
             status = 'FAILED';
         }
 
-        if (status === 'PASSED' && isCorrect) {
-            passedCount++;
-        }
-
+        if (status === 'PASSED') passedCount++;
         totalTime += result.timeMs || 0;
 
         testcaseResults.push({
@@ -159,15 +178,10 @@ async function runCodeForQuestion({ code, language, testcases }) {
     }
 
     const totalTestcases = testcaseResults.length;
-
     let verdict = 'WRONG_ANSWER';
-    if (passedCount === totalTestcases && totalTestcases > 0) {
-        verdict = 'ACCEPTED';
-    } else if (passedCount > 0) {
-        verdict = 'PARTIALLY_CORRECT';
-    } else if (totalTestcases === 0) {
-        verdict = 'PENDING';
-    }
+    if (passedCount === totalTestcases && totalTestcases > 0) verdict = 'ACCEPTED';
+    else if (passedCount > 0) verdict = 'PARTIALLY_CORRECT';
+    else if (totalTestcases === 0) verdict = 'PENDING';
 
     return {
         totalTestcases,
@@ -178,6 +192,4 @@ async function runCodeForQuestion({ code, language, testcases }) {
     };
 }
 
-export {
-    runCodeForQuestion,
-};
+export { runCodeForQuestion };
