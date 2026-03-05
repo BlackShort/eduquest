@@ -150,7 +150,7 @@ problemSchema.virtual('acceptanceRate').get(function() {
 });
 
 // Indexes for better query performance
-problemSchema.index({ problemId: 1 });
+// Note: problemId index is automatic due to unique: true
 problemSchema.index({ creatorId: 1, status: 1 });
 problemSchema.index({ difficulty: 1 });
 problemSchema.index({ tags: 1 });

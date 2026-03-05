@@ -39,7 +39,7 @@ const AssignmentSchema = new mongoose.Schema(
 );
 
 // Indexes for better query performance
-AssignmentSchema.index({ test_id: 1 });
+// Note: test_id index is automatic due to unique: true
 AssignmentSchema.index({ createdBy: 1 });
 AssignmentSchema.index({ subject_id: 1 });
 AssignmentSchema.index({ isInProblemBank: 1 });
