@@ -1,9 +1,9 @@
-const { v4: uuidv4 } = require("uuid");
-const Mcq = require("../models/Mcq");
-const parseCSV = require("../utils/fileParser");
+import { v4 as uuidv4 } from "uuid";
+import Mcq from "../models/Mcq.js";
+import parseCSV from "../utils/fileParser.js";
 
 
-exports.uploadMCQ = async (req, res) => {
+export const uploadMCQ = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -65,7 +65,7 @@ exports.uploadMCQ = async (req, res) => {
 
 
 // ----------------------------------------------------
-exports.getMCQsByTestId = async (req, res) => {
+export const getMCQsByTestId = async (req, res) => {
   try {
     const { test_id } = req.params;
 

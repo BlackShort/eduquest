@@ -1,8 +1,8 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
 
-const uploadCSV = require("../middlewares/uploadCSV");
-const mcqController = require("../controllers/mcqController");
+import uploadCSV from "../middlewares/uploadCSV.js";
+import * as mcqController from "../controllers/mcqController.js";
 
 // Upload MCQ CSV
 router.post("/upload", uploadCSV.single("file"), mcqController.uploadMCQ);
@@ -10,4 +10,4 @@ router.post("/upload", uploadCSV.single("file"), mcqController.uploadMCQ);
 // Get MCQ Test by test_id
 router.get("/:test_id", mcqController.getMCQsByTestId);
 
-module.exports = router;
+export default router;

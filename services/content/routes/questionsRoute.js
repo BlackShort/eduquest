@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const questionsController = require('../controllers/questionsController');
-const { verifyToken, verifyFaculty } = require('../middlewares/auth');
+import * as questionsController from '../controllers/questionsController.js';
+import { verifyToken, verifyFaculty } from '../middlewares/auth.js';
 
 // Apply auth middleware to all routes
 router.use(verifyToken);
@@ -21,4 +21,4 @@ router.delete('/:type/:id/questions/:questionId', questionsController.removeQues
 // Bulk import (for CSV compatibility)
 router.post('/:type/bulk-import', questionsController.bulkImportQuestions);
 
-module.exports = router;
+export default router;

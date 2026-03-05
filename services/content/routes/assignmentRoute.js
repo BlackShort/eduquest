@@ -1,8 +1,8 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
 
-const uploadCSV = require("../middlewares/uploadCSV");
-const assignmentController = require("../controllers/assignmentController");
+import uploadCSV from "../middlewares/uploadCSV.js";
+import * as assignmentController from "../controllers/assignmentController.js";
 
 // Upload Assignment CSV
 router.post(
@@ -17,4 +17,4 @@ router.get("/", assignmentController.getAllAssignments);
 // Get Assignment by test_id
 router.get("/:test_id", assignmentController.getAssignmentByTestId);
 
-module.exports = router;
+export default router;

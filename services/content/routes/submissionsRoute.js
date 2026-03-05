@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const submissionsController = require('../controllers/submissionsController');
-const { verifyToken, verifyFaculty } = require('../middlewares/auth');
+import * as submissionsController from '../controllers/submissionsController.js';
+import { verifyToken, verifyFaculty } from '../middlewares/auth.js';
 
 // Apply auth middleware to all routes
 router.use(verifyToken);
@@ -19,4 +19,4 @@ router.get('/test/:testId/export', submissionsController.exportTestResults);
 router.get('/:attemptId', submissionsController.getAttemptById);
 router.put('/:attemptId/grade', submissionsController.gradeAttempt);
 
-module.exports = router;
+export default router;

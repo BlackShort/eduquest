@@ -3,8 +3,8 @@ import { Header } from "@/components/site/header";
 
 export const AssignmentLayout = () => {
   return (
-    <div className="flex flex-col min-h-screen w-full">
-      <Header variant="sticky" theme="light" />
+    <div className="flex flex-col min-h-screen w-full bg-neutral-950">
+      <Header variant="sticky" theme="dark" />
 
       <main className="w-full max-w-4xl mx-auto p-6">
         <Outlet />

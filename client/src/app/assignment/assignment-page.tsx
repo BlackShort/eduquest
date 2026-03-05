@@ -53,7 +53,7 @@ export const Assignment = () => {
   }, []);
 
   if (loading) {
-    return <div className="p-8 text-center">Loading assignments...</div>;
+    return <div className="p-8 text-center text-neutral-300">Loading assignments...</div>;
   }
 
   return (
@@ -63,13 +63,13 @@ export const Assignment = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Assignments</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-neutral-100">Assignments</h1>
+          <p className="text-neutral-400 mt-1">
             Complete your assignments and track your progress
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="flex items-center gap-2 text-sm text-neutral-400">
           <FileText size={20} />
           <span className="font-medium">
             {assignments.length} Total Assignments
@@ -85,7 +85,7 @@ export const Assignment = () => {
           <Link
             key={assignment.test_id}
             to={`/assignments/${assignment.test_id}`}
-            className="group bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-orange-300 transition-all duration-200"
+            className="group bg-neutral-800 rounded-xl border border-neutral-700 p-6 hover:shadow-lg hover:border-orange-500 transition-all duration-200"
           >
 
             <div className="flex items-start justify-between">
@@ -100,11 +100,11 @@ export const Assignment = () => {
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-neutral-100">
                       {assignment.test_id}
                     </h3>
 
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-neutral-400">
                       Subject: {assignment.subject_id}
                     </p>
                   </div>
@@ -114,7 +114,7 @@ export const Assignment = () => {
                 {/* Questions Preview */}
                 <div className="space-y-2 mb-4">
 
-                  <p className="text-sm font-medium text-gray-700">
+                  <p className="text-sm font-medium text-neutral-300">
                     {assignment.num_questions} Question
                     {assignment.num_questions > 1 ? "s" : ""}
                   </p>
@@ -123,7 +123,7 @@ export const Assignment = () => {
 
                     <div
                       key={question.question_id}
-                      className="text-sm text-gray-600 pl-3 border-l-2 border-gray-200"
+                      className="text-sm text-neutral-400 pl-3 border-l-2 border-neutral-600"
                     >
 
                       {idx + 1}. {question.question_text.substring(0, 100)}
@@ -134,7 +134,7 @@ export const Assignment = () => {
                   ))}
 
                   {assignment.questions.length > 2 && (
-                    <p className="text-xs text-gray-500 pl-3">
+                    <p className="text-xs text-neutral-500 pl-3">
                       +{assignment.questions.length - 2} more questions
                     </p>
                   )}
@@ -142,7 +142,7 @@ export const Assignment = () => {
                 </div>
 
                 {/* Metadata */}
-                <div className="flex items-center gap-4 text-xs text-gray-500">
+                <div className="flex items-center gap-4 text-xs text-neutral-500">
 
                   <div className="flex items-center gap-1">
                     <Calendar size={14} />
@@ -163,7 +163,7 @@ export const Assignment = () => {
               </div>
 
               <div className="ml-4">
-                <ChevronRight size={24} />
+                <ChevronRight className="text-neutral-400 group-hover:text-orange-500" size={24} />
               </div>
 
             </div>
@@ -177,15 +177,15 @@ export const Assignment = () => {
       {/* Empty state */}
       {assignments.length === 0 && (
 
-        <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+        <div className="text-center py-12 bg-neutral-800 rounded-xl border border-neutral-700">
 
-          <FileText className="mx-auto text-gray-400 mb-4" size={48} />
+          <FileText className="mx-auto text-neutral-500 mb-4" size={48} />
 
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <h3 className="text-lg font-semibold text-neutral-200 mb-2">
             No Assignments Yet
           </h3>
 
-          <p className="text-gray-600">
+          <p className="text-neutral-400">
             Check back later for new assignments
           </p>
 

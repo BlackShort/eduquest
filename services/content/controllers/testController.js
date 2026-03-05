@@ -1,12 +1,12 @@
-const Test = require('../models/Test');
-const Mcq = require('../models/Mcq');
-const Coding = require('../models/Coding');
-const Assignment = require('../models/Assignment');
+import Test from '../models/Test.js';
+import Mcq from '../models/Mcq.js';
+import Coding from '../models/Coding.js';
+import Assignment from '../models/Assignment.js';
 
 /**
  * Create a new test
  */
-exports.createTest = async (req, res) => {
+export const createTest = async (req, res) => {
     try {
         const testData = {
             ...req.body,
@@ -34,7 +34,7 @@ exports.createTest = async (req, res) => {
 /**
  * Get all tests for logged-in faculty with filters
  */
-exports.getTests = async (req, res) => {
+export const getTests = async (req, res) => {
     try {
         const { 
             status, 
@@ -92,7 +92,7 @@ exports.getTests = async (req, res) => {
 /**
  * Get single test by ID
  */
-exports.getTestById = async (req, res) => {
+export const getTestById = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -152,7 +152,7 @@ exports.getTestById = async (req, res) => {
 /**
  * Update test
  */
-exports.updateTest = async (req, res) => {
+export const updateTest = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -190,7 +190,7 @@ exports.updateTest = async (req, res) => {
 /**
  * Delete test
  */
-exports.deleteTest = async (req, res) => {
+export const deleteTest = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -223,7 +223,7 @@ exports.deleteTest = async (req, res) => {
 /**
  * Publish test (change status to published)
  */
-exports.publishTest = async (req, res) => {
+export const publishTest = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -260,7 +260,7 @@ exports.publishTest = async (req, res) => {
 /**
  * Archive test
  */
-exports.archiveTest = async (req, res) => {
+export const archiveTest = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -297,7 +297,7 @@ exports.archiveTest = async (req, res) => {
 /**
  * Duplicate/Clone test
  */
-exports.duplicateTest = async (req, res) => {
+export const duplicateTest = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -343,7 +343,7 @@ exports.duplicateTest = async (req, res) => {
 /**
  * Get test statistics
  */
-exports.getTestStats = async (req, res) => {
+export const getTestStats = async (req, res) => {
     try {
         const facultyId = req.user.userId;
 

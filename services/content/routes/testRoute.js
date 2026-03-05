@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const testController = require('../controllers/testController');
-const { verifyToken, verifyFaculty } = require('../middlewares/auth');
+import * as testController from '../controllers/testController.js';
+import { verifyToken, verifyFaculty } from '../middlewares/auth.js';
 
 // Apply auth middleware to all routes
 router.use(verifyToken);
@@ -20,4 +20,4 @@ router.patch('/:id/publish', testController.publishTest);
 router.patch('/:id/archive', testController.archiveTest);
 router.post('/:id/duplicate', testController.duplicateTest);
 
-module.exports = router;
+export default router;

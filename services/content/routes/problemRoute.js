@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const problemController = require('../controllers/problemController');
-const { verifyToken, verifyFaculty } = require('../middlewares/auth');
+import * as problemController from '../controllers/problemController.js';
+import { verifyToken, verifyFaculty } from '../middlewares/auth.js';
 
 // Apply authentication middleware
 router.use(verifyToken);
@@ -22,4 +22,4 @@ router.patch('/:id/publish', problemController.publishProblem);
 router.post('/:id/clone', problemController.cloneProblem);
 router.patch('/:id/increment-usage', problemController.incrementUsageCount);
 
-module.exports = router;
+export default router;

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 // Sub-schema for testcases inside each coding question
 const TestcaseSchema = new mongoose.Schema({
@@ -58,4 +58,4 @@ CodingSchema.index({ subject_id: 1 });
 CodingSchema.index({ isInProblemBank: 1 });
 
 // Use existing collection: coding_ques
-module.exports = mongoose.model("coding_ques", CodingSchema);
+export default mongoose.model("coding_ques", CodingSchema);

@@ -1,5 +1,5 @@
-const fs = require("fs");
-const csv = require("csv-parser");
+import fs from "fs";
+import csv from "csv-parser";
 
 function parseCSV(filePath) {
   return new Promise((resolve, reject) => {
@@ -19,4 +19,4 @@ function parseCSV(filePath) {
   });
 }
 
-module.exports = parseCSV;
+export default parseCSV;

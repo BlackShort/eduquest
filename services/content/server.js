@@ -1,17 +1,25 @@
-require("dotenv").config();
-const http = require("http");
-const app = require("./app");
-const connectDB = require("./config/db");
+import dotenv from 'dotenv';
+import { app } from './app.js';
+import { connectDB } from './config/db-config.js';
 
-// Connect to MongoDB Atlas
-connectDB();
+// Load environment variables
+dotenv.config();
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5002;
 
-// Create HTTP server
-const server = http.createServer(app);
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`Content Service is running on port ${PORT}`);
+    });
+    // app.listen(PORT, "0.0.0.0", () => {
+    //     console.log(`Content Service is running on port ${PORT}`);
+    // });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
 
-// Start server
-server.listen(PORT, () => {
-  console.log(`🚀 Content Microservice running on port ${PORT}`);
-});
+startServer();

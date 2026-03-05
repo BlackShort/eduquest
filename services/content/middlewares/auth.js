@@ -1,10 +1,10 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
 /**
  * Middleware to verify JWT token from authorization header
  * Expects token from auth service microservice
  */
-const verifyToken = async (req, res, next) => {
+export const verifyToken = async (req, res, next) => {
     try {
         // Get token from headers
         const token = req.headers.authorization?.split(' ')[1] || req.cookies?.accessToken;
@@ -47,7 +47,7 @@ const verifyToken = async (req, res, next) => {
  * Middleware to verify user has faculty role
  * Must be used after verifyToken middleware
  */
-const verifyFaculty = (req, res, next) => {
+export const verifyFaculty = (req, res, next) => {
     if (!req.user) {
         return res.status(401).json({ 
             success: false, 
@@ -68,7 +68,7 @@ const verifyFaculty = (req, res, next) => {
 /**
  * Generic role verification middleware
  */
-const verifyRole = (...allowedRoles) => {
+export const verifyRole = (...allowedRoles) => {
     return (req, res, next) => {
         if (!req.user) {
             return res.status(401).json({ 
@@ -86,10 +86,4 @@ const verifyRole = (...allowedRoles) => {
 
         next();
     };
-};
-
-module.exports = {
-    verifyToken,
-    verifyFaculty,
-    verifyRole
 };

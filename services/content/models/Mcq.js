@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 // Sub-schema for individual MCQ questions
 const QuestionSchema = new mongoose.Schema({
@@ -43,4 +43,4 @@ mcqSchema.index({ subject_id: 1 });
 mcqSchema.index({ isInProblemBank: 1 });
 
 // Store inside EXISTING collection "mcq_ques"
-module.exports = mongoose.model("mcq_ques", mcqSchema);
+export default mongoose.model("mcq_ques", mcqSchema);

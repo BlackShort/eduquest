@@ -1,10 +1,10 @@
-const StudentAttempt = require('../models/StudentAttempt');
-const Test = require('../models/Test');
+import StudentAttempt from '../models/StudentAttempt.js';
+import Test from '../models/Test.js';
 
 /**
  * Get all attempts for a specific test (Faculty view)
  */
-exports.getTestAttempts = async (req, res) => {
+export const getTestAttempts = async (req, res) => {
     try {
         const { testId } = req.params;
         const { 
@@ -66,7 +66,7 @@ exports.getTestAttempts = async (req, res) => {
 /**
  * Get single attempt details
  */
-exports.getAttemptById = async (req, res) => {
+export const getAttemptById = async (req, res) => {
     try {
         const { attemptId } = req.params;
 
@@ -112,7 +112,7 @@ exports.getAttemptById = async (req, res) => {
 /**
  * Grade a student attempt
  */
-exports.gradeAttempt = async (req, res) => {
+export const gradeAttempt = async (req, res) => {
     try {
         const { attemptId } = req.params;
         const { 
@@ -189,7 +189,7 @@ exports.gradeAttempt = async (req, res) => {
 /**
  * Get test analytics
  */
-exports.getTestAnalytics = async (req, res) => {
+export const getTestAnalytics = async (req, res) => {
     try {
         const { testId } = req.params;
 
@@ -268,7 +268,7 @@ exports.getTestAnalytics = async (req, res) => {
 /**
  * Get faculty overview analytics
  */
-exports.getFacultyAnalytics = async (req, res) => {
+export const getFacultyAnalytics = async (req, res) => {
     try {
         const facultyId = req.user.userId;
 
@@ -337,7 +337,7 @@ exports.getFacultyAnalytics = async (req, res) => {
 /**
  * Export test results (for CSV/PDF generation)
  */
-exports.exportTestResults = async (req, res) => {
+export const exportTestResults = async (req, res) => {
     try {
         const { testId } = req.params;
 

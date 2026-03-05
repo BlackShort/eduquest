@@ -1,30 +1,24 @@
+import express from 'express';
+import cors from 'cors';
+import morgan from 'morgan';
+import mcqRoutes from "./routes/mcqRoute.js";
+import codingRoutes from "./routes/codingRoute.js";
+import assignmentRoutes from "./routes/assignmentRoute.js";
+import testRoutes from "./routes/testRoute.js";
+import questionsRoutes from "./routes/questionsRoute.js";
+import submissionsRoutes from "./routes/submissionsRoute.js";
+import problemRoutes from "./routes/problemRoute.js";
 
-
-const express = require("express");
-const cors = require("cors");
-const morgan = require("morgan");
-
-const app = express();
+export const app = express();
 
 // Middlewares
 app.use(cors({
   origin: 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE']
-})); 
+}));
 app.use(express.json());
 app.use(morgan("dev"));
-
-// Route Imports
-const mcqRoutes = require("./routes/mcqRoute");
-const codingRoutes = require("./routes/codingRoute");
-const assignmentRoutes = require("./routes/assignmentRoute");
-
-// Faculty Routes
-const testRoutes = require("./routes/testRoute");
-const questionsRoutes = require("./routes/questionsRoute");
-const submissionsRoutes = require("./routes/submissionsRoute");
-const problemRoutes = require("./routes/problemRoute");
 
 // Mount Routes
 app.use("/v1/mcq", mcqRoutes);
@@ -44,5 +38,3 @@ app.get("/", (req, res) => {
     message: "Content Microservice is running",
   });
 });
-
-module.exports = app;
