@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const studentAttemptSchema = new mongoose.Schema({
     testId: {
@@ -124,4 +124,4 @@ studentAttemptSchema.index({ submittedAt: 1 });
 
 const StudentAttempt = mongoose.model('StudentAttempt', studentAttemptSchema);
 
-module.exports = StudentAttempt;
+export default StudentAttempt;

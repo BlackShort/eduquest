@@ -1,9 +1,9 @@
-const { v4: uuidv4 } = require("uuid");
-const Coding = require("../models/Coding");
-const parseCSV = require("../utils/fileParser");
+import { v4 as uuidv4 } from "uuid";
+import Coding from "../models/Coding.js";
+import parseCSV from "../utils/fileParser.js";
 
 
-exports.uploadCoding = async (req, res) => {
+export const uploadCoding = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -73,7 +73,7 @@ exports.uploadCoding = async (req, res) => {
 };
 
 
-exports.getCodingByTestId = async (req, res) => {
+export const getCodingByTestId = async (req, res) => {
   try {
     const { test_id } = req.params;
 

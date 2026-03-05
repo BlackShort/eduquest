@@ -14,7 +14,7 @@ export const connectDB = async () => {
             journal: true,             // Enable journaling
             waitQueueTimeoutMS: 10000, // Time to wait for an available connection
         });
-        console.log('Connected to edqdb-auth-server successfully');
+        console.log('Connected to edqdb-auth-database successfully');
     }
     catch (error) {
         console.error('MongoDB connection error:', error);

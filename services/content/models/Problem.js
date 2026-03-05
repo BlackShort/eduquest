@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const testCaseSchema = new mongoose.Schema({
     input: {
@@ -167,4 +167,4 @@ problemSchema.pre('save', function(next) {
 
 const Problem = mongoose.model('Problem', problemSchema);
 
-module.exports = Problem;
+export default Problem;

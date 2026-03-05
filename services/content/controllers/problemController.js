@@ -1,9 +1,9 @@
-const Problem = require('../models/Problem');
+import Problem from '../models/Problem.js';
 
 /**
  * Create a new problem
  */
-exports.createProblem = async (req, res) => {
+export const createProblem = async (req, res) => {
     try {
         const problemData = {
             ...req.body,
@@ -31,7 +31,7 @@ exports.createProblem = async (req, res) => {
 /**
  * Get all problems for faculty with filters
  */
-exports.getProblems = async (req, res) => {
+export const getProblems = async (req, res) => {
     try {
         const { 
             difficulty,
@@ -96,7 +96,7 @@ exports.getProblems = async (req, res) => {
 /**
  * Get single problem by ID
  */
-exports.getProblemById = async (req, res) => {
+export const getProblemById = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -129,7 +129,7 @@ exports.getProblemById = async (req, res) => {
 /**
  * Get problem by problemId (string identifier)
  */
-exports.getProblemByProblemId = async (req, res) => {
+export const getProblemByProblemId = async (req, res) => {
     try {
         const { problemId } = req.params;
 
@@ -162,7 +162,7 @@ exports.getProblemByProblemId = async (req, res) => {
 /**
  * Update problem
  */
-exports.updateProblem = async (req, res) => {
+export const updateProblem = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -200,7 +200,7 @@ exports.updateProblem = async (req, res) => {
 /**
  * Delete problem
  */
-exports.deleteProblem = async (req, res) => {
+export const deleteProblem = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -233,7 +233,7 @@ exports.deleteProblem = async (req, res) => {
 /**
  * Publish problem
  */
-exports.publishProblem = async (req, res) => {
+export const publishProblem = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -270,7 +270,7 @@ exports.publishProblem = async (req, res) => {
 /**
  * Clone/duplicate problem
  */
-exports.cloneProblem = async (req, res) => {
+export const cloneProblem = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -320,7 +320,7 @@ exports.cloneProblem = async (req, res) => {
 /**
  * Get problem statistics
  */
-exports.getProblemStats = async (req, res) => {
+export const getProblemStats = async (req, res) => {
     try {
         const facultyId = req.user.userId;
 
@@ -361,7 +361,7 @@ exports.getProblemStats = async (req, res) => {
 /**
  * Get all tags used in problems
  */
-exports.getAllTags = async (req, res) => {
+export const getAllTags = async (req, res) => {
     try {
         const facultyId = req.user.userId;
 
@@ -392,7 +392,7 @@ exports.getAllTags = async (req, res) => {
 /**
  * Increment usage count when problem is added to a test
  */
-exports.incrementUsageCount = async (req, res) => {
+export const incrementUsageCount = async (req, res) => {
     try {
         const { id } = req.params;
 

@@ -1,6 +1,6 @@
-const Mcq = require('../models/Mcq');
-const Coding = require('../models/Coding');
-const Assignment = require('../models/Assignment');
+import Mcq from '../models/Mcq.js';
+import Coding from '../models/Coding.js';
+import Assignment from '../models/Assignment.js';
 
 /**
  * Get model based on question type
@@ -21,7 +21,7 @@ const getModelByType = (type) => {
 /**
  * Get all questions by type (question bank or test-specific)
  */
-exports.getQuestions = async (req, res) => {
+export const getQuestions = async (req, res) => {
     try {
         const { type } = req.params;
         const { 
@@ -84,7 +84,7 @@ exports.getQuestions = async (req, res) => {
 /**
  * Get single question set by test_id
  */
-exports.getQuestionById = async (req, res) => {
+export const getQuestionById = async (req, res) => {
     try {
         const { type, id } = req.params;
         const Model = getModelByType(type);
@@ -118,7 +118,7 @@ exports.getQuestionById = async (req, res) => {
 /**
  * Create new question set
  */
-exports.createQuestion = async (req, res) => {
+export const createQuestion = async (req, res) => {
     try {
         const { type } = req.params;
         const Model = getModelByType(type);
@@ -154,7 +154,7 @@ exports.createQuestion = async (req, res) => {
 /**
  * Update question set
  */
-exports.updateQuestion = async (req, res) => {
+export const updateQuestion = async (req, res) => {
     try {
         const { type, id } = req.params;
         const Model = getModelByType(type);
@@ -199,7 +199,7 @@ exports.updateQuestion = async (req, res) => {
 /**
  * Delete question set
  */
-exports.deleteQuestion = async (req, res) => {
+export const deleteQuestion = async (req, res) => {
     try {
         const { type, id } = req.params;
         const Model = getModelByType(type);
@@ -233,7 +233,7 @@ exports.deleteQuestion = async (req, res) => {
 /**
  * Add individual question to existing question set
  */
-exports.addQuestionToSet = async (req, res) => {
+export const addQuestionToSet = async (req, res) => {
     try {
         const { type, id } = req.params;
         const Model = getModelByType(type);
@@ -274,7 +274,7 @@ exports.addQuestionToSet = async (req, res) => {
 /**
  * Remove individual question from question set
  */
-exports.removeQuestionFromSet = async (req, res) => {
+export const removeQuestionFromSet = async (req, res) => {
     try {
         const { type, id, questionId } = req.params;
         const Model = getModelByType(type);
@@ -317,7 +317,7 @@ exports.removeQuestionFromSet = async (req, res) => {
 /**
  * Bulk import questions (for CSV import compatibility)
  */
-exports.bulkImportQuestions = async (req, res) => {
+export const bulkImportQuestions = async (req, res) => {
     try {
         const { type } = req.params;
         const Model = getModelByType(type);

@@ -1,5 +1,5 @@
-const multer = require("multer");
-const path = require("path");
+import multer from "multer";
+import path from "path";
 
 // Storage for CSV uploads
 const storage = multer.diskStorage({
@@ -28,4 +28,4 @@ const uploadCSV = multer({
   fileFilter: csvFilter
 });
 
-module.exports = uploadCSV;
+export default uploadCSV;

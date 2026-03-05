@@ -1,8 +1,8 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
 
-const uploadCSV = require("../middlewares/uploadCSV");
-const codingController = require("../controllers/codingController");
+import uploadCSV from "../middlewares/uploadCSV.js";
+import * as codingController from "../controllers/codingController.js";
 
 // Upload Coding CSV
 router.post(
@@ -14,4 +14,4 @@ router.post(
 // Get Coding Questions by test_id
 router.get("/:test_id", codingController.getCodingByTestId);
 
-module.exports = router;
+export default router;

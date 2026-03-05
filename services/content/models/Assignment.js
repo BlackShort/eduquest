@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 // Sub-schema for individual assignment question
 const AssignmentQuestionSchema = new mongoose.Schema(
@@ -45,4 +45,4 @@ AssignmentSchema.index({ subject_id: 1 });
 AssignmentSchema.index({ isInProblemBank: 1 });
 
 // Store inside existing collection name "assignment"
-module.exports = mongoose.model("Assignment", AssignmentSchema, "assignment");
+export default mongoose.model("Assignment", AssignmentSchema, "assignment");

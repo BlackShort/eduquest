@@ -7,4 +7,4 @@ function generateTestId() {
   return testId;
 }
 
-module.exports = generateTestId;
+export default generateTestId;
