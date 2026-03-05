@@ -1,16 +1,53 @@
+type Question = {
+    question_id: string;
+    question_text: string;
+};
+
+type Assignment = {
+    test_id: string;
+    subject_id: string;
+    num_questions: number;
+    questions: Question[];
+};
 
 import { useParams, useNavigate } from "react-router";
-import { dummyAssignments } from "@/data/dummy-data";
 import { ArrowLeft, Send, FileText, AlertCircle, Upload, File, X, Download } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import axios from "axios";
+
 
 export const AssignmentDetail = () => {
     const { assignmentId } = useParams();
     const navigate = useNavigate();
+
+    const [assignment, setAssignment] = useState<Assignment | null>(null);
+    const [loading, setLoading] = useState(true);
+
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const assignment = dummyAssignments.find(a => a.test_id === assignmentId);
+    // 🔹 Fetch assignment from backend
+    useEffect(() => {
+        const fetchAssignment = async () => {
+            try {
+                const res = await axios.get(
+                    `http://localhost:5000/v1/assignment/${assignmentId}`
+                );
+
+                setAssignment(res.data.data);
+            } catch (error) {
+                console.error("Failed to load assignment", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAssignment();
+    }, [assignmentId]);
+
+    if (loading) {
+        return <div className="p-8 text-center">Loading assignment...</div>;
+    }
 
     if (!assignment) {
         return (
@@ -49,7 +86,7 @@ export const AssignmentDetail = () => {
             alert('Please upload your assignment PDF before submitting');
             return;
         }
-        // Handle submission logic here
+
         console.log('Submitted file:', uploadedFile);
         alert('Assignment submitted successfully!');
         navigate('/dashboard/assignments');
@@ -63,7 +100,8 @@ export const AssignmentDetail = () => {
 
     return (
         <div className="space-y-6">
-            {/* Header with Back Button and Submit */}
+
+            {/* Header */}
             <div className="flex items-center justify-between backdrop-blur-sm py-4 px-6 rounded-xl border border-gray-200">
                 <div className="flex items-center gap-4">
                     <button
@@ -77,13 +115,10 @@ export const AssignmentDetail = () => {
                         <p className="text-sm text-gray-600">Subject: {assignment.subject_id}</p>
                     </div>
                 </div>
-                <button
-                    className="cursor-pointer flex items-center gap-2 px-4 py-2.5 bg-linear-to-br from-neutral-700 to-neutral-800 text-neutral-100 text-sm font-medium tracking-wide rounded-md transition-all duration-200"
-                >
+                <button className="cursor-pointer flex items-center gap-2 px-4 py-2.5 bg-linear-to-br from-neutral-700 to-neutral-800 text-neutral-100 text-sm font-medium tracking-wide rounded-md transition-all duration-200">
                     <Download size={16} />
                     Download PDF
                 </button>
-
             </div>
 
             {/* Questions */}
@@ -96,7 +131,7 @@ export const AssignmentDetail = () => {
                 </div>
 
                 <div className="space-y-6">
-                    {assignment.questions.map((question, index) => (
+                    {assignment.questions.map((question: Question, index: number) => (
                         <div
                             key={question.question_id}
                             className="pb-6 border-b border-gray-200 last:border-b-0"
@@ -122,72 +157,52 @@ export const AssignmentDetail = () => {
                 </div>
             </div>
 
-            {/* File Upload Section */}
+            {/* Upload Section */}
             <div className="bg-white rounded-xl border-2 border-dashed border-gray-300 p-8">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Your Assignment</h3>
 
                 {!uploadedFile ? (
                     <div className="flex flex-col items-center justify-center py-8">
-                        <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
-                            <Upload className="text-orange-600" size={32} />
-                        </div>
-                        <h4 className="text-lg font-medium text-gray-900 mb-2">Upload PDF File</h4>
-                        <p className="text-sm text-gray-600 mb-6 text-center max-w-md">
-                            Click the button below to select your completed assignment in PDF format
-                        </p>
+                        <Upload className="text-orange-600 mb-4" size={32} />
                         <input
                             ref={fileInputRef}
                             type="file"
-                            accept=".pdf,application/pdf"
+                            accept=".pdf"
                             onChange={handleFileSelect}
                             className="hidden"
                             id="file-upload"
                         />
                         <label
                             htmlFor="file-upload"
-                            className="cursor-pointer px-6 py-3 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 transition-colors shadow-md hover:shadow-lg"
+                            className="cursor-pointer px-6 py-3 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600"
                         >
                             Choose PDF File
                         </label>
-                        <p className="text-xs text-gray-500 mt-3">Maximum file size: 10MB</p>
                     </div>
                 ) : (
                     <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                                    <File className="text-red-600" size={24} />
-                                </div>
+                                <File className="text-red-600" size={24} />
                                 <div>
                                     <p className="font-medium text-gray-900">{uploadedFile.name}</p>
                                     <p className="text-sm text-gray-600">{formatFileSize(uploadedFile.size)}</p>
                                 </div>
                             </div>
-                            <button
-                                onClick={handleRemoveFile}
-                                className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
-                                title="Remove file"
-                            >
-                                <X size={20} className="text-gray-600" />
+                            <button onClick={handleRemoveFile}>
+                                <X size={20} />
                             </button>
-                        </div>
-                        <div className="mt-4 flex items-center gap-2 text-sm text-green-600 font-medium">
-                            <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                            File uploaded successfully! Click "Submit Assignment" to submit.
                         </div>
                     </div>
                 )}
             </div>
 
-            {/* Bottom Submit Button */}
+            {/* Submit */}
             <div className="flex justify-end pt-4 pb-8">
                 <button
                     onClick={handleSubmit}
                     disabled={!uploadedFile}
-                    className={`flex items-center gap-2 px-8 py-3 font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] ${uploadedFile
-                        ? 'bg-linear-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        }`}
+                    className="flex items-center gap-2 px-8 py-3 bg-orange-500 text-white rounded-lg"
                 >
                     <Send size={18} />
                     Submit Assignment
@@ -195,4 +210,4 @@ export const AssignmentDetail = () => {
             </div>
         </div>
     );
-}
+};
