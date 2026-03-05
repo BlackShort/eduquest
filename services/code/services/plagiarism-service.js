@@ -1,4 +1,4 @@
-import Submission from '../models/submission.model.js';
+import Submission from '../models/submission-model.js';
 
 function normalizeCode(rawCode = '') {
     let code = rawCode;
@@ -66,7 +66,7 @@ function jaccardSimilarity(ngramsA, ngramsB) {
 }
 
 
-async function checkSubmissionPlagiarism(currentSubmission, options = {}) {
+export async function checkSubmissionPlagiarism(currentSubmission, options = {}) {
     const {
         questionId,
         language,
@@ -138,7 +138,3 @@ async function checkSubmissionPlagiarism(currentSubmission, options = {}) {
         similarSubmissions,
     };
 }
-
-export {
-    checkSubmissionPlagiarism,
-};

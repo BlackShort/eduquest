@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { JUDGE0_BASE_URL, JUDGE0_LANGUAGE_IDS } from '../config/judge0.config.js';
+import { JUDGE0_BASE_URL, JUDGE0_LANGUAGE_IDS } from '../configs/judge0-config.js';
 
 // How long to wait for Judge0 to finish processing (ms)
-const POLLING_INTERVAL_MS = 1000;
+const POLLING_INTERVAL_MS = 3000;
 const MAX_POLLS = 15; // 15 seconds max wait per testcase
 
 /**
@@ -135,7 +135,7 @@ function outputsMatch(actual, expected) {
 /**
  * Run all testcases for a question and return aggregated results
  */
-async function runCodeForQuestion({ code, language, testcases }) {
+export async function runCodeForQuestion({ code, language, testcases }) {
     if (!Array.isArray(testcases) || testcases.length === 0) {
         return {
             totalTestcases: 0,
@@ -192,4 +192,3 @@ async function runCodeForQuestion({ code, language, testcases }) {
     };
 }
 
-export { runCodeForQuestion };

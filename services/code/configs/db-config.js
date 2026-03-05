@@ -1,7 +1,6 @@
-
 import mongoose from 'mongoose';
 
-const connectDB = async () => {
+export const connectDB = async () => {
     try {
         const conn = await mongoose.connect(process.env.MONGO_URI, {
             dbName: "code_db",
@@ -22,5 +21,3 @@ const connectDB = async () => {
         process.exit(1); // stop app if DB fails
     }
 };
-
-export default connectDB;

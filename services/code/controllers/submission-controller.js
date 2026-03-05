@@ -1,10 +1,10 @@
 
 import mongoose from 'mongoose';
-import Submission from '../models/submission.model.js';
+import Submission from '../models/submission-model.js';
 
-import { runCodeForQuestion } from '../services/executor.service.js';
-import { getTestcasesForQuestion } from '../services/testcase.service.js';
-import { checkSubmissionPlagiarism } from '../services/plagiarism.service.js';
+import { runCodeForQuestion } from '../services/executor-service.js';
+import { getTestcasesForQuestion } from '../services/testcase-service.js';
+import { checkSubmissionPlagiarism } from '../services/plagiarism-service.js';
 
 export const executeSubmission = async (req, res) => {
     try {
