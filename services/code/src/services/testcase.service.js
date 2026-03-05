@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+
 async function getTestcasesForQuestion(questionId, mode) {
 
     const sampleTestcases = [
@@ -26,13 +27,13 @@ async function getTestcasesForQuestion(questionId, mode) {
     ];
 
     if (mode === 'run') {
-        
+
         return sampleTestcases;
     }
 
     return [...sampleTestcases, ...hiddenTestcases];
 }
 
-module.exports = {
+export {
     getTestcasesForQuestion,
 };

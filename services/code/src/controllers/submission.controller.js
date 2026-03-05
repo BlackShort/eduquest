@@ -1,12 +1,12 @@
 
-const mongoose = require('mongoose');
-const Submission = require('../models/submission.model');
+import mongoose from 'mongoose';
+import Submission from '../models/submission.model.js';
 
-const executorService = require('../services/executor.service');
-const testcaseService = require('../services/testcase.service');
-const plagiarismService = require('../services/plagiarism.service');
+import executorService from '../services/executor.service.js';
+import testcaseService from '../services/testcase.service.js';
+import plagiarismService from '../services/plagiarism.service.js';
 
-exports.executeSubmission = async (req, res) => {
+export const executeSubmission = async (req, res) => {
     try {
         const { studentId, questionId, testId, language, code, mode } = req.body;
 
@@ -47,7 +47,7 @@ exports.executeSubmission = async (req, res) => {
 
             savedSubmission.plagiarism = plagiarismResult;
             await savedSubmission.save();
-        }          
+        }
         return res.status(200).json({
             message: 'Execution completed',
             executionResult,
@@ -62,7 +62,7 @@ exports.executeSubmission = async (req, res) => {
     }
 };
 
-exports.getSubmissionById = async (req, res) => {
+export const getSubmissionById = async (req, res) => {
     try {
         const { submissionId } = req.params;
 
@@ -83,7 +83,7 @@ exports.getSubmissionById = async (req, res) => {
     }
 };
 
-exports.getSubmissionsByStudent = async (req, res) => {
+export const getSubmissionsByStudent = async (req, res) => {
     try {
         const { studentId } = req.params;
 
@@ -100,7 +100,7 @@ exports.getSubmissionsByStudent = async (req, res) => {
     }
 };
 
-exports.getSubmissionsByQuestion = async (req, res) => {
+export const getSubmissionsByQuestion = async (req, res) => {
     try {
         const { questionId } = req.params;
 
@@ -117,7 +117,7 @@ exports.getSubmissionsByQuestion = async (req, res) => {
     }
 };
 
-exports.recheckPlagiarismForSubmission = async (req, res) => {
+export const recheckPlagiarismForSubmission = async (req, res) => {
     try {
         const { submissionId } = req.params;
 

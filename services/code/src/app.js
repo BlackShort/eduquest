@@ -1,10 +1,10 @@
 
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
+import express from 'express';
+import cors from 'cors';
+import morgan from 'morgan';
 
-const connectDB = require('./config/db');
-const submissionRoutes = require('./routes/submission.routes');
+import connectDB from './config/db.js';
+import submissionRoutes from './routes/submission.routes.js';
 
 const app = express();
 
@@ -24,4 +24,4 @@ app.get('/', (req, res) => {
 // Routes
 app.use('/v1/submissions', submissionRoutes);
 
-module.exports = app;
+export default app;

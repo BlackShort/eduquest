@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
-const submissionController = require('../controllers/submission.controller');
+import submissionController from '../controllers/submission.controller.js';
 
 router.post('/execute', submissionController.executeSubmission);
 
@@ -17,4 +17,4 @@ router.get('/question/:questionId', submissionController.getSubmissionsByQuestio
 //     submissionController.recheckPlagiarismForSubmission
 // );
 
-module.exports = router;
+export default router;

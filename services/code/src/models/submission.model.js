@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const TestcaseResultSchema = new mongoose.Schema(
     {
         testcaseId: {
             type: mongoose.Schema.Types.ObjectId,
-            required: false, 
+            required: false,
         },
         status: {
             type: String,
@@ -56,7 +56,7 @@ const PlagiarismInfoSchema = new mongoose.Schema(
 );
 
 const SubmissionSchema = new mongoose.Schema(
-    {   
+    {
         testId: {
             type: mongoose.Schema.Types.ObjectId,
             required: true,
@@ -110,7 +110,7 @@ const SubmissionSchema = new mongoose.Schema(
         },
     },
     {
-        timestamps: true, 
+        timestamps: true,
     }
 );
 
@@ -120,4 +120,4 @@ SubmissionSchema.index({ createdAt: -1 });
 
 const Submission = mongoose.model('Submission', SubmissionSchema);
 
-module.exports = Submission;
+export default Submission;
