@@ -306,5 +306,11 @@ export const uploadAssignmentCSV = async (formData: FormData) => {
     });
     return response.data;
 };
+// ============= ASSIGNMENT APIs =============
+
+export const getAssignments = async () => {
+    const response = await facultyApi.get('/v1/assignment');
+    return response.data;
+};
 
 export default facultyApi;
