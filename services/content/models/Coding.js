@@ -52,7 +52,7 @@ const CodingSchema = new mongoose.Schema(
 );
 
 // Indexes for better query performance
-CodingSchema.index({ test_id: 1 });
+// Note: test_id index is automatic due to unique: true
 CodingSchema.index({ createdBy: 1 });
 CodingSchema.index({ subject_id: 1 });
 CodingSchema.index({ isInProblemBank: 1 });

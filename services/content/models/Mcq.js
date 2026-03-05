@@ -37,7 +37,7 @@ const mcqSchema = new mongoose.Schema(
 );
 
 // Indexes for better query performance
-mcqSchema.index({ test_id: 1 });
+// Note: test_id index is automatic due to unique: true
 mcqSchema.index({ createdBy: 1 });
 mcqSchema.index({ subject_id: 1 });
 mcqSchema.index({ isInProblemBank: 1 });
