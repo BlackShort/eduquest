@@ -1,4 +1,4 @@
-const Submission = require('../models/submission.model');
+import Submission from '../models/submission.model.js';
 
 function normalizeCode(rawCode = '') {
     let code = rawCode;
@@ -26,12 +26,12 @@ function normalizeCode(rawCode = '') {
 function tokenize(code) {
     if (!code) return [];
 
-        const tokenRegex =
-            /[a-zA-Z_][a-zA-Z0-9_]*|[0-9]+|==|!=|<=|>=|&&|\|\||[+\-*\/%<>=!&|^]/g;
+    const tokenRegex =
+        /[a-zA-Z_][a-zA-Z0-9_]*|[0-9]+|==|!=|<=|>=|&&|\|\||[+\-*\/%<>=!&|^]/g;
 
-        const tokens = code.match(tokenRegex) || [];
-        return tokens;
-    }  
+    const tokens = code.match(tokenRegex) || [];
+    return tokens;
+}
 
 function makeNGrams(tokens, k = 5) {
     const ngrams = [];
@@ -78,13 +78,13 @@ async function checkSubmissionPlagiarism(currentSubmission, options = {}) {
         maxComparisons = 100,
         ngramSize = 5,
         suspiciousThreshold = 70
-    } = options;      
+    } = options;
     const otherSubmissions = await Submission.find({
         questionId,
         language,
         _id: { $ne: currentId },
     })
-        .sort({ createdAt: -1 }) 
+        .sort({ createdAt: -1 })
         .limit(maxComparisons)
         .select('_id code');
 
@@ -139,6 +139,6 @@ async function checkSubmissionPlagiarism(currentSubmission, options = {}) {
     };
 }
 
-module.exports = {
+export {
     checkSubmissionPlagiarism,
 };

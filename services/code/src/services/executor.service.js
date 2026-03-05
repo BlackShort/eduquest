@@ -1,11 +1,11 @@
 
-const axios = require('axios');
-const { PISTON_BASE_URL } = require('../config/piston.config');
+import axios from 'axios';
+import { PISTON_BASE_URL } from '../config/piston.config.js';
 
 const languageMap = {
     cpp: {
         language: 'cpp',
-        version: '10.2.0', 
+        version: '10.2.0',
         filename: 'main.cpp',
     },
     c: {
@@ -119,7 +119,7 @@ async function runCodeForQuestion({ code, language, testcases }) {
     let totalTime = 0;
     let passedCount = 0;
 
-    
+
     for (const tc of testcases) {
         const stdin = tc.input || '';
         const expectedOutput = tc.expectedOutput || '';
@@ -138,7 +138,7 @@ async function runCodeForQuestion({ code, language, testcases }) {
         let status = result.status;
 
         if (status === 'PASSED' && !isCorrect) {
-            status = 'FAILED'; 
+            status = 'FAILED';
         }
 
         if (status === 'PASSED' && isCorrect) {
@@ -178,6 +178,6 @@ async function runCodeForQuestion({ code, language, testcases }) {
     };
 }
 
-module.exports = {
+export {
     runCodeForQuestion,
 };
