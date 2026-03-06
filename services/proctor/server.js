@@ -26,11 +26,11 @@ app.get("/health", (req, res) => {
 app.use("/v1", proctorRoutes);
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 4004;
+const PORT = process.env.PORT || 5004;
 const MONGO_URI = process.env.MONGO_URI;
 
 connectDB(MONGO_URI).then(() => {
-  app.listen(PORT, () => {
+  app.listen(PORT, "0.0.0.0", () => {
     console.log(`Proctor Service : ${PORT}`);
   });
 });
