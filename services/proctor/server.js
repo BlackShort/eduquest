@@ -30,7 +30,13 @@ const PORT = process.env.PORT || 5004;
 const MONGO_URI = process.env.MONGO_URI;
 
 connectDB(MONGO_URI).then(() => {
-  app.listen(PORT, "0.0.0.0", () => {
+  app.listen(PORT, () => {
     console.log(`Proctor Service : ${PORT}`);
   });
 });
+
+// connectDB(MONGO_URI).then(() => {
+//   app.listen(PORT, "0.0.0.0", () => {
+//     console.log(`Proctor Service : ${PORT}`);
+//   });
+// });
