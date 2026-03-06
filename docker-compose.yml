@@ -13,7 +13,7 @@ services:
       - auth
       # - content
       # - code
-      # - proctor
+      - proctor
     restart: always
 
   auth:
@@ -43,11 +43,11 @@ services:
   #     - PORT=5003
   #   restart: always
 
-  # proctor:
-  #   build: ./services/proctor
-  #   container_name: proctor
-  #   env_file:
-  #     - /home/ubuntu/secrets/eduquest.env
-  #   environment:
-  #     - PORT=5004
-  #   restart: always
+  proctor:
+    build: ./services/proctor
+    container_name: proctor
+    env_file:
+      - /home/ubuntu/secrets/eduquest.env
+    environment:
+      - PORT=5004
+    restart: always
