@@ -66,7 +66,7 @@ export function useProctor({ examId }: UseProctorOpts) {
                tracker.count <= EVENT_LIMITS.PHONE_DETECTED.maxCount;
         
       case "MULTIPLE_FACES":
-        return tracker.count < EVENT_LIMITS.MULTIPLE_FACES.maxCount;
+        return tracker.count <= EVENT_LIMITS.MULTIPLE_FACES.maxCount;
         
       case "NO_FACE":
         // Special handling - managed by timer system
