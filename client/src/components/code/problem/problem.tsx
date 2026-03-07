@@ -30,6 +30,7 @@ import {
   SquareCheck,
   Terminal,
 } from "lucide-react";
+import type { Testcase } from "@/types/types";
 
 interface TestResult {
   index: number;
@@ -49,19 +50,21 @@ const languageTemplates = {
 
 interface ProblemDetailProps {
   problemId?: string;
-  onSubmit?: (code: string, language: string) => void;
-  onRun?: (code: string, language: string) => void;
+  onSubmit?: (code: string, language: string, testCase: Testcase[]) => void;
+  onRun?: (code: string, language: string, testCase: Testcase[]) => void;
   onCodeChange?: (code: string) => void;
   onLanguageChange?: (language: string) => void;
   isRunning?: boolean;
   testResults?: TestResult[];
+  sendTestCase: (testCases: Testcase[]) => void;
 }
 
 export const ProblemDetail = ({ 
   problemId, 
   onCodeChange,
   onLanguageChange,
-  testResults: externalTestResults = []
+  testResults: externalTestResults = [],
+  sendTestCase,
 }: ProblemDetailProps) => {
   const [language, setLanguage] = useState("javascript");
   const [code, setCode] = useState(languageTemplates[language as keyof typeof languageTemplates]);
@@ -76,6 +79,8 @@ export const ProblemDetail = ({
       </div>
     );
   }
+
+  sendTestCase(problem.test_cases || []);
 
   const handleLanguageChange = (newLang: string) => {
     setLanguage(newLang);

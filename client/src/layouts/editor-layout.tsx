@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router";
 import { ProblemDetail } from "@/app/code";
 import { EditorHeader } from "@/components/code/editor/editor-header";
+import type { Testcase } from "@/types/types";
 
 
 interface TestResult {
@@ -17,17 +18,16 @@ export const EditorLayout = () => {
   const { problemId } = useParams();
   const [currentCode, setCurrentCode] = useState("");
   const [currentLanguage, setCurrentLanguage] = useState("javascript");
+  const [testCases, setTestCases] = useState<Testcase[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
 
-  const submitCode = (code: string, language: string) => {
-    console.log("Submitting code...", { code, language });
-    // Implement submission logic here
-    runCode(code, language);
+  const submitCode = (code: string, language: string, testCase: Testcase[]) => {
+    runCode(code, language, testCase);
   }
 
-  const runCode = (code: string, language: string) => {
-    console.log("Running code...", { code, language });
+  const runCode = (code: string, language: string, testCase: Testcase[]) => {
+    console.log("Running code...", { code, language, testCase });
     setIsRunning(true);
 
     // Simulate running test cases
@@ -64,11 +64,15 @@ export const EditorLayout = () => {
     setCurrentLanguage(language);
   }
 
+  const handleSendTestCases = (testCase: Testcase[]) => {
+    setTestCases(testCase);
+  }
+
   return (
     <div className='flex flex-col h-screen w-full overflow-hidden bg-neutral-950'>
       <EditorHeader
-        onRun={() => runCode(currentCode, currentLanguage)}
-        onSubmit={() => submitCode(currentCode, currentLanguage)}
+        onRun={() => runCode(currentCode, currentLanguage, testCases.slice(0, 3))}
+        onSubmit={() => submitCode(currentCode, currentLanguage, testCases)}
         isRunning={isRunning}
       />
       <main className="m-2.5 mt-0 flex-1 overflow-hidden">
@@ -80,6 +84,7 @@ export const EditorLayout = () => {
           onLanguageChange={handleLanguageChange}
           isRunning={isRunning}
           testResults={testResults}
+          sendTestCase={handleSendTestCases}
         />
       </main>
     </div>
