@@ -56,7 +56,7 @@ interface ProblemDetailProps {
   onLanguageChange?: (language: string) => void;
   isRunning?: boolean;
   testResults?: TestResult[];
-  sendTestCase: (testCases: Testcase[]) => void;
+  sendTestCase?: (testCases: Testcase[]) => void;
 }
 
 export const ProblemDetail = ({ 
@@ -80,7 +80,7 @@ export const ProblemDetail = ({
     );
   }
 
-  sendTestCase(problem.test_cases || []);
+  sendTestCase?.(problem.test_cases || []);
 
   const handleLanguageChange = (newLang: string) => {
     setLanguage(newLang);
