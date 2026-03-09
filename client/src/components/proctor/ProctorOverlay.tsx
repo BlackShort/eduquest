@@ -17,12 +17,22 @@ interface Props {
     isActive: boolean,
     confidence?: number,
   ) => void;
+  enrollIdentityFromVideo?: (video: HTMLVideoElement) => Promise<boolean>;
+  verifyIdentityFromVideo?: (video: HTMLVideoElement) => Promise<{
+    matched: boolean;
+    score: number;
+    threshold: number;
+  } | null>;
+  shouldRunIdentityVerification?: (intervalMs?: number) => boolean;
 }
 
 export default function ProctorOverlay({
   active,
   sessionId,
   reportEvent,
+  enrollIdentityFromVideo,
+  verifyIdentityFromVideo,
+  shouldRunIdentityVerification,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
@@ -31,6 +41,18 @@ export default function ProctorOverlay({
   const detectionInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const tickCounter = useRef(0);
   const lastPhoneDetection = useRef(false); // Track phone state for UI
+  const identityEnrolledRef = useRef(false);
+  const lastEnrollAttemptAtRef = useRef<number | null>(null);
+  const identityMismatchRef = useRef(false);
+
+  // Reset identity flow only when session actually stops/changes, not on effect re-runs.
+  useEffect(() => {
+    if (!active || !sessionId) {
+      identityEnrolledRef.current = false;
+      lastEnrollAttemptAtRef.current = null;
+      identityMismatchRef.current = false;
+    }
+  }, [active, sessionId]);
 
   /* ==============================
      START WEBCAM
@@ -85,6 +107,40 @@ export default function ProctorOverlay({
 
         tickCounter.current++;
 
+        // -------- IDENTITY ENROLLMENT + PERIODIC VERIFY --------
+        const now = Date.now();
+        const readyForIdentity = video.readyState >= 2;
+
+        if (
+          readyForIdentity &&
+          !identityEnrolledRef.current &&
+          enrollIdentityFromVideo
+        ) {
+          const lastTry = lastEnrollAttemptAtRef.current;
+          const canRetry = !lastTry || now - lastTry >= 10000;
+
+          if (canRetry) {
+            lastEnrollAttemptAtRef.current = now;
+            const enrolled = await enrollIdentityFromVideo(video);
+            if (enrolled) {
+              identityEnrolledRef.current = true;
+            }
+          }
+        }
+
+        if (
+          readyForIdentity &&
+          identityEnrolledRef.current &&
+          verifyIdentityFromVideo &&
+          // shouldRunIdentityVerification?.(5 * 60 * 1000)
+          shouldRunIdentityVerification?.(5 * 1000)
+        ) {
+          const verifyResult = await verifyIdentityFromVideo(video);
+          if (verifyResult) {
+            identityMismatchRef.current = !verifyResult.matched;
+          }
+        }
+
         /* -------- FACE DETECTION (Every cycle) -------- */
 
         const count = await detectFaces(video);
@@ -115,6 +171,8 @@ export default function ProctorOverlay({
           setWarning("📱 Phone detected");
         } else if (currentNoFace) {
           setWarning("⚠️ No face detected");
+        } else if (identityMismatchRef.current) {
+          setWarning("⚠️ Identity mismatch detected");
         } else if (currentMultipleFaces) {
           setWarning("⚠️ Multiple faces detected");
         } else {
@@ -132,7 +190,14 @@ export default function ProctorOverlay({
         clearInterval(detectionInterval.current);
       }
     };
-  }, [active, sessionId, reportEvent]);
+  }, [
+    active,
+    sessionId,
+    reportEvent,
+    enrollIdentityFromVideo,
+    verifyIdentityFromVideo,
+    shouldRunIdentityVerification,
+  ]);
 
   if (!active) return null;
 
