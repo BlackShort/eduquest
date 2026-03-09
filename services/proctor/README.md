@@ -36,7 +36,6 @@ The service tracks the following violation types:
 - `MULTIPLE_FACES` - Multiple faces detected (weight: 4)
 - `PHONE_DETECTED` - Phone/mobile device detected (weight: 6)
 - `LAPTOP_DETECTED` - Additional laptop detected (weight: 5)
-- `LIP_MOVEMENT_TALKING` - Lip movement/talking detected (weight: 3)
 - `TAB_SWITCH` - Tab switching behavior (weight: 2)
 
 Sessions are automatically flagged when the suspicion score reaches 20 points.

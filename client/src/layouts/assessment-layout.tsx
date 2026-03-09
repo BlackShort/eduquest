@@ -320,6 +320,9 @@ export const AssessmentLayout = () => {
         active={proctor.active && isFullscreen}
         sessionId={proctor.sessionId}
         reportEvent={proctor.reportEvent}
+        enrollIdentityFromVideo={proctor.enrollIdentityFromVideo}
+        verifyIdentityFromVideo={proctor.verifyIdentityFromVideo}
+        shouldRunIdentityVerification={proctor.shouldRunIdentityVerification}
       />
     </div>
   );

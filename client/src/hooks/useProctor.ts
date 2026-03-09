@@ -1,9 +1,25 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { sendProctorEvent, completeProctorSession } from "@/apis/proctor-api";
+import {
+  completeProctorSession,
+  enrollIdentity,
+  sendProctorEvent,
+  verifyIdentity,
+} from "@/apis/proctor-api";
+import {
+  captureVideoFrameAsBase64,
+  evaluateEnrollmentQuality,
+  extractFaceEmbedding,
+} from "@/proctor/proctor.engine";
 import type { ProctorEventType } from "@/types/proctor";
 
 interface UseProctorOpts {
   examId: string;
+}
+
+interface IdentityVerifyResult {
+  matched: boolean;
+  score: number;
+  threshold: number;
 }
 
 // 🎯 Event-Based Limiting System
@@ -28,18 +44,21 @@ const EVENT_LIMITS = {
     maxCount: 2, 
     description: "Phone detections (2 calls max)" 
   },
-  MULTIPLE_FACES: { maxCount: 1, description: "Multiple face incidents" },
-  LIP_MOVEMENT_TALKING: { maxCount: 5, description: "Talking incidents" }
+  MULTIPLE_FACES: { maxCount: 1, description: "Multiple face incidents" }
 } as const;
 
 export function useProctor({ examId }: UseProctorOpts) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [active, setActive] = useState(false);
+  const [identityEnrolled, setIdentityEnrolled] = useState(false);
   
   // 🎯 Event-Based Limiting System
   const currentViolations = useRef<Partial<Record<ProctorEventType, boolean>>>({});
   const eventTrackers = useRef<Partial<Record<ProctorEventType, EventLimitTracker>>>({});
   const noFaceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastIdentityVerifyAtRef = useRef<number | null>(null);
+  const identityMismatchCountRef = useRef(0);
+  const identityVerificationHaltedRef = useRef(false);
   
   // 🛡️ Initialize event tracker for a violation type
   const getOrCreateTracker = useCallback((type: ProctorEventType): EventLimitTracker => {
@@ -72,9 +91,6 @@ export function useProctor({ examId }: UseProctorOpts) {
         // Special handling - managed by timer system
         return false;
         
-      case "LIP_MOVEMENT_TALKING":
-        return tracker.count < EVENT_LIMITS.LIP_MOVEMENT_TALKING.maxCount;
-        
       default:
         return false;
     }
@@ -88,6 +104,10 @@ export function useProctor({ examId }: UseProctorOpts) {
     // 🧹 Reset all event trackers for new session
     eventTrackers.current = {};
     currentViolations.current = {};
+    lastIdentityVerifyAtRef.current = null;
+    identityMismatchCountRef.current = 0;
+    identityVerificationHaltedRef.current = false;
+    setIdentityEnrolled(false);
   }
 
   const endSession = useCallback(async () => {
@@ -104,7 +124,99 @@ export function useProctor({ examId }: UseProctorOpts) {
     // 🧹 Cleanup
     currentViolations.current = {};
     eventTrackers.current = {};
+    lastIdentityVerifyAtRef.current = null;
+    identityMismatchCountRef.current = 0;
+    identityVerificationHaltedRef.current = false;
+    setIdentityEnrolled(false);
   }, [sessionId]);
+
+  const enrollIdentityFromVideo = useCallback(
+    async (video: HTMLVideoElement): Promise<boolean> => {
+      if (!active || !sessionId) return false;
+
+      const baselineEmbedding = await extractFaceEmbedding(video);
+      if (!baselineEmbedding) return false;
+
+      const qualityChecks = await evaluateEnrollmentQuality(video);
+      if (!qualityChecks.passed) return false;
+
+      const baselineImageBase64 = captureVideoFrameAsBase64(video);
+
+      await enrollIdentity({
+        examId,
+        sessionId,
+        baselineEmbedding,
+        baselineImageBase64,
+        qualityChecks,
+      });
+
+      setIdentityEnrolled(true);
+      lastIdentityVerifyAtRef.current = Date.now();
+      return true;
+    },
+    [active, examId, sessionId]
+  );
+
+  const verifyIdentityFromVideo = useCallback(
+    async (video: HTMLVideoElement): Promise<IdentityVerifyResult | null> => {
+      if (
+        !active ||
+        !sessionId ||
+        !identityEnrolled ||
+        identityVerificationHaltedRef.current
+      ) {
+        return null;
+      }
+
+      const liveEmbedding = await extractFaceEmbedding(video);
+      if (!liveEmbedding) return null;
+
+      const liveImageBase64 = captureVideoFrameAsBase64(video, 0.8);
+
+      const result = await verifyIdentity({
+        examId,
+        sessionId,
+        liveEmbedding,
+        confidence: 1,
+        liveImageBase64,
+      });
+
+      lastIdentityVerifyAtRef.current = Date.now();
+
+      if (!result.matched) {
+        identityMismatchCountRef.current += 1;
+        if (identityMismatchCountRef.current >= 2) {
+          identityVerificationHaltedRef.current = true;
+          console.log(
+            "IDENTITY_MISMATCH limit reached (2). Halting further identity verify API calls for this session."
+          );
+        }
+      }
+
+      return {
+        matched: result.matched,
+        score: result.score,
+        threshold: result.threshold,
+      };
+    },
+    [active, examId, sessionId, identityEnrolled]
+  );
+
+  const shouldRunIdentityVerification = useCallback(
+    (intervalMs = 5 * 60 * 1000): boolean => {
+      if (
+        !identityEnrolled ||
+        !active ||
+        identityVerificationHaltedRef.current
+      ) {
+        return false;
+      }
+      const last = lastIdentityVerifyAtRef.current;
+      if (!last) return true;
+      return Date.now() - last >= intervalMs;
+    },
+    [active, identityEnrolled]
+  );
 
   // 🎯 Event-Based Limiting System - Smart violation processing
   const reportEvent = useCallback(
@@ -209,12 +321,6 @@ export function useProctor({ examId }: UseProctorOpts) {
                   console.log("MULTIPLE_FACES: Reached maximum (1) - flagged");
                 }
                 break;
-              case "LIP_MOVEMENT_TALKING":
-                if (tracker.count >= EVENT_LIMITS.LIP_MOVEMENT_TALKING.maxCount) {
-                  tracker.flagged = true;
-                  console.log("LIP_MOVEMENT_TALKING: Reached maximum (5) - flagged");
-                }
-                break;
             }
           } else {
             console.log(`${type}: Event logged but no API call (limit logic)`);
@@ -265,5 +371,15 @@ export function useProctor({ examId }: UseProctorOpts) {
     };
   }, [active, reportEvent]);
 
-  return { sessionId, active, startSession, endSession, reportEvent };
+  return {
+    sessionId,
+    active,
+    identityEnrolled,
+    startSession,
+    endSession,
+    reportEvent,
+    enrollIdentityFromVideo,
+    verifyIdentityFromVideo,
+    shouldRunIdentityVerification,
+  };
 }

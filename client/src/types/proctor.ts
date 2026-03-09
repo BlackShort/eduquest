@@ -3,7 +3,7 @@ export type ProctorEventType =
   | "MULTIPLE_FACES"
   | "NO_FACE"
   | "PHONE_DETECTED"
-  | "LIP_MOVEMENT_TALKING";
+  | "IDENTITY_MISMATCH";
 
 export interface ProctorEventPayload {
   examId: string;
@@ -29,4 +29,40 @@ export interface LimitBasedEventMetadata {
   // Legacy batching (kept for backward compatibility)
   immediate?: boolean;
   batchedEvent?: boolean;
+}
+
+export interface IdentityQualityChecks {
+  passed: boolean;
+  singleFace: boolean;
+  brightnessOk: boolean;
+  blurOk: boolean;
+  brightnessScore: number;
+  blurScore: number;
+}
+
+export interface EnrollIdentityPayload {
+  examId: string;
+  sessionId: string;
+  baselineEmbedding: number[];
+  baselineImageBase64?: string;
+  baselineImageS3Key?: string;
+  thresholdUsed?: number;
+  qualityChecks: IdentityQualityChecks;
+}
+
+export interface VerifyIdentityPayload {
+  examId: string;
+  sessionId: string;
+  liveEmbedding: number[];
+  confidence?: number;
+  liveImageBase64?: string;
+  liveImageS3Key?: string;
+}
+
+export interface VerifyIdentityResponse {
+  matched: boolean;
+  score: number;
+  threshold: number;
+  eventCreated: boolean;
+  mismatchEventId: string | null;
 }
