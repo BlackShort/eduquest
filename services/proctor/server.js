@@ -2,10 +2,13 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
+const dns = require("dns");
 
 const connectDB = require("./config/db-config.js");
 const errorHandler = require("./middleware/errorHandler.js");
 const proctorRoutes = require("./routes/proctor.routes.js");
+
+// dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 const app = express();
 
