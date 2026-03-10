@@ -5,6 +5,7 @@ import { Terms } from "@/app/site/terms";
 import { Cookies } from "@/app/site/cookies";
 import { Contact } from "@/app/site/contact";
 import { Login } from "@/app/site/login";
+import { Register } from "@/app/site/register";
 
 export {
     Home,
@@ -13,5 +14,6 @@ export {
     Terms,
     Cookies,
     Contact,
-    Login
+    Login,
+    Register
 }

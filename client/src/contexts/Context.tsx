@@ -19,16 +19,27 @@ interface ContextType {
 const ContextAPI = createContext<ContextType | undefined>(undefined);
 
 const ContextApp = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User>({});
+  const [user, setUser] = useState<User>(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
   const [isOnline, setIsOnline] = useState(true);
   const [userID, setUserID] = useState<null | string | number>(null);
 
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    return localStorage.getItem("isLoggedIn") === "true";
+    return localStorage.getItem("isAuthenticated") === "true";
   });
 
   useEffect(() => {
-    localStorage.setItem("isLoggedIn", String(isLoggedIn));
+    localStorage.setItem("user", JSON.stringify(user));
+  }, [user]);
+
+  useEffect(() => {
+    localStorage.setItem("isAuthenticated", String(isLoggedIn));
   }, [isLoggedIn]);
 
   return (

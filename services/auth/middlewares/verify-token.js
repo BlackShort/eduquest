@@ -9,7 +9,7 @@ import userModel from '../models/user-model.js';
 export const verifyToken = async (req, res, next) => {
     try {
         // Get token from headers or cookies
-        const token = req.headers.authorization?.split(' ')[1] || req.cookies.accessToken;
+        const token = req.cookies.accessToken || req.headers.authorization?.split(' ')[1];
 
         if (!token) {
             return res.status(401).json({ 
@@ -62,6 +62,7 @@ export const verifyToken = async (req, res, next) => {
 
         next();
     } catch (error) {
+        console.log(error)
         if (error.name === 'TokenExpiredError') {
             return res.status(401).json({ 
                 success: false, 

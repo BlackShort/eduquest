@@ -3,18 +3,19 @@ import { useEffect, useState } from "react";
 import toast from 'react-hot-toast';
 import { Eye, EyeOff } from "lucide-react";
 import { useContextAPI } from "@/hooks/useContext.js";
-import { login } from "@/apis/auth-api";
+import { register } from "@/apis/auth-api";
 import logo from "@/assets/logo/favicon.png";
 import { Loader } from "@/components/site/loader";
 
-export const Login = () => {
+export const Register = () => {
     const navigate = useNavigate();
-    const { setIsLoggedIn, setUser } = useContextAPI();
+    const { setIsLoggedIn } = useContextAPI();
     const [loading, setLoading] = useState(false);
     const [authChecking, setAuthChecking] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
 
     const [loginData, setLoginData] = useState({
+        username: "",
         email: "",
         password: "",
     });
@@ -33,16 +34,12 @@ export const Login = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            const data = await login(loginData.email, loginData.password);
-            setLoginData({ email: "", password: "" });
-            toast.success(data.message);
-            setUser(data.user);
-            setIsLoggedIn(true);
-            localStorage.setItem("isAuthenticated", "true");
-            navigate('/dashboard');
+            const data = await register(loginData.username, loginData.email, loginData.password);
+            setLoginData({ username: "", email: "", password: "" });
+            toast.success(data.message + ' — Please log in.');
+            navigate('/auth/login');
         } catch (error: unknown) {
             const errormsg = error instanceof Error ? error.message : "An unknown error occurred";
-            setIsLoggedIn(false);
             toast.error(errormsg);
         } finally {
             setLoading(false);
@@ -77,6 +74,22 @@ export const Login = () => {
                     </div>
                     <form onSubmit={handleLogin} className="flex flex-col gap-4" method="post">
 
+                        {/* Username */}
+                        <div className="flex flex-col gap-1.5">
+                            <label htmlFor="username" className="text-sm font-medium text-neutral-300">Username</label>
+                            <input
+                                id="username"
+                                type="text"
+                                name="username"
+                                value={loginData.username}
+                                onChange={handleChange}
+                                placeholder="Enter your username"
+                                required
+                                disabled={loading}
+                                className="w-full h-11 px-3.5 rounded-lg bg-neutral-950 border border-neutral-700 text-white text-sm placeholder:text-neutral-500 outline-none focus:border-neutral-400 transition-colors disabled:opacity-50"
+                            />
+                        </div>
+
                         {/* Email */}
                         <div className="flex flex-col gap-1.5">
                             <label htmlFor="email" className="text-sm font-medium text-neutral-300">Email</label>
@@ -95,15 +108,7 @@ export const Login = () => {
 
                         {/* Password */}
                         <div className="flex flex-col gap-1.5">
-                            <div className="flex items-center justify-between">
-                                <label htmlFor="password" className="text-sm font-medium text-neutral-300">Password</label>
-                                <button
-                                    type="button"
-                                    className="text-xs text-neutral-400 hover:text-white transition-colors"
-                                >
-                                    Forgot password?
-                                </button>
-                            </div>
+                            <label htmlFor="password" className="text-sm font-medium text-neutral-300">Password</label>
                             <div className="relative">
                                 <input
                                     id="password"
@@ -136,10 +141,10 @@ export const Login = () => {
                             {loading ? (
                                 <>
                                     <span className="w-4 h-4 border-2 border-neutral-800 border-t-transparent rounded-full animate-spin" />
-                                    <span>Signing in...</span>
+                                    <span>Creating account...</span>
                                 </>
                             ) : (
-                                <span>Log In</span>
+                                <span>Register</span>
                             )}
                         </button>
                     </form>
@@ -181,9 +186,9 @@ export const Login = () => {
 
                 {/* Footer */}
                 <p className="mt-5 text-sm text-neutral-500">
-                    Don't have an account?{" "}
-                    <Link to="/auth/register" className="text-neutral-200 hover:text-white font-medium transition-colors underline underline-offset-2">
-                        Register
+                    Already have an account?{" "}
+                    <Link to="/auth/login" className="text-neutral-200 hover:text-white font-medium transition-colors underline underline-offset-2">
+                        Log in
                     </Link>
                 </p>
             </div>

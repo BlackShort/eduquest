@@ -1,4 +1,4 @@
-// function authFromGateway(req, res, next) {
+ // function authFromGateway(req, res, next) {
 //   const studentId = req.headers["student-id"];
 //   const userRole = req.headers["user-role"];
 

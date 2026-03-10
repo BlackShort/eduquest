@@ -273,9 +273,14 @@ export const logout = async (req, res) => {
             );
         }
 
-        // Clear cookies
-        res.clearCookie('accessToken');
-        res.clearCookie('refreshToken');
+        // Clear cookies — options must match how they were set
+        const cookieOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        };
+        res.clearCookie('accessToken', cookieOptions);
+        res.clearCookie('refreshToken', cookieOptions);
 
         return res.status(200).json({ 
             success: true, 
@@ -376,8 +381,13 @@ export const logoutAllSessions = async (req, res) => {
             { isActive: false }
         );
 
-        res.clearCookie('accessToken');
-        res.clearCookie('refreshToken');
+        const cookieOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        };
+        res.clearCookie('accessToken', cookieOptions);
+        res.clearCookie('refreshToken', cookieOptions);
 
         return res.status(200).json({ 
             success: true, 
@@ -399,7 +409,11 @@ export const logoutAllSessions = async (req, res) => {
 */
 export const verifyUserToken = async (req, res) => {
     try {
-        // req.user is already set by verifyToken middleware
+        // Set user identity as response headers so nginx auth_request_set can forward them
+        res.set('X-User-Id',   String(req.user.userId));
+        res.set('X-User-Role', req.user.role);
+        res.set('X-Username',  req.user.username);
+
         return res.status(200).json({ 
             success: true, 
             message: 'Token is valid',
