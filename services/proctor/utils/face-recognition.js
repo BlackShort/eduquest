@@ -1,3 +1,4 @@
+// Basic shape/type guard for embedding vectors.
 function isValidEmbedding(embedding) {
   return (
     Array.isArray(embedding) &&
@@ -6,6 +7,7 @@ function isValidEmbedding(embedding) {
   );
 }
 
+// Cosine similarity for same-length numeric vectors.
 function cosineSimilarity(a, b) {
   if (!isValidEmbedding(a) || !isValidEmbedding(b)) {
     throw new Error("Invalid embedding vectors");
@@ -25,6 +27,7 @@ function cosineSimilarity(a, b) {
     normB += b[i] * b[i];
   }
 
+  // Return 0 instead of NaN when one vector has no magnitude.
   if (normA === 0 || normB === 0) return 0;
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }

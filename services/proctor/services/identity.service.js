@@ -7,6 +7,7 @@ const {
   isValidEmbedding,
 } = require("../utils/face-recognition.js");
 
+// Upsert session-scoped baseline embedding and baseline evidence image.
 async function enrollIdentity({
   studentId,
   examId,
@@ -52,6 +53,7 @@ async function enrollIdentity({
   return doc;
 }
 
+// Compare live embedding to baseline and emit IDENTITY_MISMATCH when below threshold.
 async function verifyIdentity({
   studentId,
   examId,
@@ -81,6 +83,7 @@ async function verifyIdentity({
 
   let mismatchEventId = null;
   if (!matched) {
+    // Server-side guard to avoid excessive mismatch events in one session.
     const session = await ProctorSession.findOne({ sessionId }).select(
       "violationCounts.IDENTITY_MISMATCH",
     );

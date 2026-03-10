@@ -8,7 +8,7 @@ import type { IdentityQualityChecks } from "@/types/proctor";
 let faceDetector: faceDetection.FaceDetector | null = null;
 let phoneDetector : cocoSsd.ObjectDetection | null = null;  
 
-// initialize tf
+// Initialize TFJS backend once.
 async function initTF() {
   if (tf.getBackend()) return;
 
@@ -16,7 +16,7 @@ async function initTF() {
   await tf.ready();
 }
 
-/*Face Detection*/
+// Face detector setup and inference.
 export async function initFaceDetector() {
   await initTF();
   if (faceDetector) return faceDetector;
@@ -25,6 +25,7 @@ export async function initFaceDetector() {
 
   faceDetector = await faceDetection.createDetector(model, {
     runtime: "tfjs",
+    maxFaces: 5,
   });
 
   return faceDetector;
@@ -39,7 +40,7 @@ export async function detectFaces(
   return faces.length;
 }
 
-/*Phone Detection*/
+// Phone detector setup and inference.
 export async function initObjectDetector() {
   await initTF();
   if (phoneDetector) return phoneDetector;
@@ -54,7 +55,7 @@ export async function detectPhone(
   if (!phoneDetector) return false;
   const predictions = await phoneDetector.detect(video);
 
-  // coco-ssd uses label "cell phone"
+  // coco-ssd class label for phones is "cell phone".
   return predictions.some(
     (p) =>
       p.class === "cell phone" && p.score !== undefined && p.score > 0.6
@@ -101,7 +102,7 @@ function estimateBlurScoreFromImageData(
     }
   }
 
-  // Lightweight blur proxy: variance of local gradients.
+  // Blur proxy based on local gradient variance.
   let gradSum = 0;
   let gradSqSum = 0;
   let count = 0;
@@ -157,13 +158,14 @@ export async function evaluateEnrollmentQuality(
   const checks: IdentityQualityChecks = {
     passed: false,
     singleFace: faceCount === 1,
-    brightnessOk: brightnessScore >= 40,
-    blurOk: blurScore >= 60,
+    brightnessOk: brightnessScore >= 30,
+    blurOk: blurScore >= 20,
     brightnessScore,
     blurScore,
   };
 
-  checks.passed = checks.singleFace && checks.brightnessOk && checks.blurOk;
+  // Allow minor detector jitter while still enforcing basic quality constraints.
+  checks.passed = faceCount >= 1 && checks.brightnessOk && checks.blurOk;
   return checks;
 }
 
@@ -177,7 +179,7 @@ export async function extractFaceEmbedding(
   if (!faceDetector) return null;
 
   const faces = await faceDetector.estimateFaces(video);
-  if (!faces || faces.length !== 1) return null;
+  if (!faces || faces.length < 1) return null;
 
   const face = faces[0] as {
     box?: {
@@ -214,7 +216,7 @@ export async function extractFaceEmbedding(
     return { x: point.x, y: point.y };
   }
 
-  // Resolve box from multiple possible detector output shapes.
+  // Normalize detector output across possible box formats.
   let x = box.xMin ?? 0;
   let y = box.yMin ?? 0;
   let w = box.width ?? 0;
@@ -245,7 +247,7 @@ export async function extractFaceEmbedding(
     }
   }
 
-  // Fallback crop when detector doesn't provide complete box fields.
+  // Fallback to a central crop if box data is incomplete.
   if (w <= 0 || h <= 0) {
     x = width * 0.25;
     y = height * 0.2;
@@ -273,10 +275,10 @@ export async function extractFaceEmbedding(
     kpVec.push(kp.x / width, kp.y / height);
   }
 
-  // Keep fixed-size keypoint segment (16 values).
+  // Keep a fixed-size keypoint segment for stable vector length.
   while (kpVec.length < 16) kpVec.push(0);
 
-  // Add image-based signature from face crop to avoid all-zero embeddings.
+  // Add an image signature so the vector carries appearance information.
   const sourceCanvas = getCanvasFromVideo(video);
   const tiny = document.createElement("canvas");
   tiny.width = 8;

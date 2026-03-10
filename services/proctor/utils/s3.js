@@ -3,6 +3,7 @@ const { randomUUID } = require("crypto");
 
 let s3Client = null;
 
+// Reuse one S3 client instance per process.
 function getS3Client() {
   if (s3Client) return s3Client;
 
@@ -22,6 +23,7 @@ function getS3Client() {
   return s3Client;
 }
 
+// Accept data URL or raw base64 input and normalize to buffer + mime type.
 function parseImagePayload(imageBase64) {
   if (!imageBase64 || typeof imageBase64 !== "string") {
     throw new Error("imageBase64 is required");
@@ -38,19 +40,21 @@ function parseImagePayload(imageBase64) {
     };
   }
 
-  // Fallback for raw base64 payloads
+  // Fallback for raw base64 payloads.
   return {
     mimeType: "image/jpeg",
     buffer: Buffer.from(imageBase64, "base64"),
   };
 }
 
+// Build extension used in generated object key.
 function extensionFromMimeType(mimeType) {
   if (mimeType === "image/png") return "png";
   if (mimeType === "image/webp") return "webp";
   return "jpg";
 }
 
+// Upload image evidence and return storage metadata.
 async function uploadImageToS3({ imageBase64, keyPrefix }) {
   const bucket = process.env.AWS_S3_PROCTOR_BUCKET;
   if (!bucket) {
