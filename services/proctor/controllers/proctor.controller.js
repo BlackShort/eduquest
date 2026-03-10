@@ -1,5 +1,6 @@
 const proctorService = require("../services/proctor.service.js");
 
+// Record one proctor event from the active student session.
 async function postEvent(req, res, next) {
   try {
     const studentId = req.studentId;
@@ -36,6 +37,7 @@ async function postEvent(req, res, next) {
   }
 }
 
+// Mark a session completed when the exam attempt ends.
 async function completeSession(req, res, next) {
   try {
     const { sessionId } = req.params;
@@ -47,6 +49,7 @@ async function completeSession(req, res, next) {
   }
 }
 
+// Return a session with its ordered event timeline.
 async function getSession(req, res, next) {
   try {
     const { sessionId } = req.params;
@@ -58,12 +61,13 @@ async function getSession(req, res, next) {
   }
 }
 
+// List all sessions for a student in a specific exam.
 async function getStudentExamSessions(req, res, next) {
   try {
     const { studentId, examId } = req.params;
     const sessions = await proctorService.getStudentExamSessions(
       studentId,
-      examId
+      examId,
     );
     res.json({ sessions });
   } catch (err) {
@@ -71,6 +75,7 @@ async function getStudentExamSessions(req, res, next) {
   }
 }
 
+// Faculty/admin summary view for all sessions in an exam.
 async function getExamSessionsSummary(req, res, next) {
   try {
     const { examId } = req.params;
@@ -81,6 +86,7 @@ async function getExamSessionsSummary(req, res, next) {
   }
 }
 
+// Manual status override endpoint for review workflows.
 async function patchSessionStatus(req, res, next) {
   try {
     const { sessionId } = req.params;

@@ -40,12 +40,12 @@ export default function ProctorOverlay({
 
   const detectionInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const tickCounter = useRef(0);
-  const lastPhoneDetection = useRef(false); // Track phone state for UI
+  const lastPhoneDetection = useRef(false);
   const identityEnrolledRef = useRef(false);
   const lastEnrollAttemptAtRef = useRef<number | null>(null);
   const identityMismatchRef = useRef(false);
 
-  // Reset identity flow only when session actually stops/changes, not on effect re-runs.
+  // Keep identity state stable across effect re-runs; reset only on session stop/change.
   useEffect(() => {
     if (!active || !sessionId) {
       identityEnrolledRef.current = false;
@@ -54,9 +54,7 @@ export default function ProctorOverlay({
     }
   }, [active, sessionId]);
 
-  /* ==============================
-     START WEBCAM
-  ============================== */
+  // Webcam lifecycle.
 
   useEffect(() => {
     if (!active) return;
@@ -86,9 +84,7 @@ export default function ProctorOverlay({
     };
   }, [active]);
 
-  /* ==============================
-     AI DETECTION LOOP
-  ============================== */
+  // Main detection loop: identity + face/phone events + UI warning state.
 
   useEffect(() => {
     if (!active || !sessionId) return;
@@ -107,7 +103,7 @@ export default function ProctorOverlay({
 
         tickCounter.current++;
 
-        // -------- IDENTITY ENROLLMENT + PERIODIC VERIFY --------
+        // Identity flow.
         const now = Date.now();
         const readyForIdentity = video.readyState >= 2;
 
@@ -121,9 +117,13 @@ export default function ProctorOverlay({
 
           if (canRetry) {
             lastEnrollAttemptAtRef.current = now;
-            const enrolled = await enrollIdentityFromVideo(video);
-            if (enrolled) {
-              identityEnrolledRef.current = true;
+            try {
+              const enrolled = await enrollIdentityFromVideo(video);
+              if (enrolled) {
+                identityEnrolledRef.current = true;
+              }
+            } catch (err) {
+              console.error("Identity enrollment failed", err);
             }
           }
         }
@@ -135,25 +135,29 @@ export default function ProctorOverlay({
           // shouldRunIdentityVerification?.(5 * 60 * 1000)
           shouldRunIdentityVerification?.(5 * 1000)
         ) {
-          const verifyResult = await verifyIdentityFromVideo(video);
-          if (verifyResult) {
-            identityMismatchRef.current = !verifyResult.matched;
+          try {
+            const verifyResult = await verifyIdentityFromVideo(video);
+            if (verifyResult) {
+              identityMismatchRef.current = !verifyResult.matched;
+            }
+          } catch (err) {
+            console.error("Identity verification failed", err);
           }
         }
 
-        /* -------- FACE DETECTION (Every cycle) -------- */
+        // Face detection runs every cycle.
 
         const count = await detectFaces(video);
         setFaceCount(count);
 
-        // 🎯 State-based reporting (not event spam)
+        // reportEvent handles state transitions and per-event limits.
         const isNoFace = count === 0;
         const isMultipleFaces = count > 1;
 
         reportEvent("NO_FACE", isNoFace);
         reportEvent("MULTIPLE_FACES", isMultipleFaces);
 
-        /* -------- PHONE DETECTION (Every 3rd cycle ~1.5s) -------- */
+        // Phone detection is less frequent to reduce load.
 
         if (tickCounter.current % 3 === 0) {
           const phoneDetected = await detectPhone(video);
@@ -161,7 +165,7 @@ export default function ProctorOverlay({
           reportEvent("PHONE_DETECTED", phoneDetected, 0.8);
         }
 
-        /* -------- WARNING PRIORITY (Based on current states) -------- */
+        // Warning priority for banner display.
 
         const currentNoFace = count === 0;
         const currentMultipleFaces = count > 1;
@@ -178,7 +182,7 @@ export default function ProctorOverlay({
         } else {
           setWarning(null);
         }
-      }, 500); // ⚡ 500ms = Near real-time detection with API throttling
+      }, 500);
     }
 
     startDetection();
@@ -203,23 +207,36 @@ export default function ProctorOverlay({
 
   return (
     <>
-      {/* Floating Camera Panel */}
+      {/* Floating proctor panel */}
       <div
         style={{
           position: "fixed",
           bottom: 20,
-          right: 20,
-          width: 220,
-          background: "#111",
-          borderRadius: 12,
+          left: 20,
+          width: 240,
+          background: "linear-gradient(180deg, #1d1d20 0%, #131316 100%)",
+          border: "1px solid rgba(255, 122, 0, 0.35)",
+          borderRadius: 14,
           padding: 10,
-          boxShadow: "0 0 12px rgba(0,0,0,0.4)",
+          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.45)",
+          backdropFilter: "blur(4px)",
           zIndex: 9999,
         }}
       >
-        <div style={{ color: "#0f0", fontSize: 12 }}>● Proctor Active</div>
+        <div
+          style={{
+            color: "#ff8a24",
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: 0.3,
+          }}
+        >
+          ● Proctor Active
+        </div>
 
-        <div style={{ fontSize: 12, color: "#aaa" }}>Faces: {faceCount}</div>
+        <div style={{ fontSize: 12, color: "#a8a8af", marginTop: 4 }}>
+          Faces detected: {faceCount}
+        </div>
 
         <video
           ref={videoRef}
@@ -228,13 +245,15 @@ export default function ProctorOverlay({
           playsInline
           style={{
             width: "100%",
+            marginTop: 8,
             borderRadius: 8,
+            border: "1px solid rgba(255,255,255,0.08)",
             background: "#000",
           }}
         />
       </div>
 
-      {/* Warning Banner */}
+      {/* Warning banner */}
       {warning && (
         <div
           style={{
@@ -242,11 +261,14 @@ export default function ProctorOverlay({
             top: 20,
             left: "50%",
             transform: "translateX(-50%)",
-            background: "#ff4444",
+            background: "linear-gradient(90deg, #ff5a3d 0%, #ff7a00 100%)",
             color: "white",
-            padding: "10px 18px",
-            borderRadius: 8,
-            fontWeight: 600,
+            padding: "10px 16px",
+            borderRadius: 10,
+            border: "1px solid rgba(255,255,255,0.2)",
+            fontWeight: 700,
+            letterSpacing: 0.2,
+            boxShadow: "0 8px 18px rgba(0,0,0,0.28)",
             zIndex: 10000,
           }}
         >

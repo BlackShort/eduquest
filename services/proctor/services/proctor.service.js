@@ -2,6 +2,7 @@ const ProctorEvent = require("../models/ProctorEvent.js");
 const ProctorSession = require("../models/ProctorSession.js");
 const { scoreForEvent, FLAG_THRESHOLD } = require("../utils/scoring.js");
 
+// Create session on first event so clients only need to send sessionId.
 async function ensureSession({ studentId, examId, sessionId }) {
   let session = await ProctorSession.findOne({ sessionId });
 
@@ -15,6 +16,7 @@ async function ensureSession({ studentId, examId, sessionId }) {
   return session;
 }
 
+// Persist event, increment suspicion score/counters, and auto-flag when threshold is reached.
 async function recordEvent({
   studentId,
   examId,
@@ -58,22 +60,25 @@ async function recordEvent({
   return { eventDoc, deltaScore };
 }
 
+// Session lifecycle update when an attempt is finished.
 async function completeSession(sessionId) {
   return ProctorSession.findOneAndUpdate(
     { sessionId },
     { $set: { status: "COMPLETED", endedAt: new Date() } },
-    { new: true }
+    { new: true },
   );
 }
 
+// Manual status change for faculty/admin review actions.
 async function updateSessionStatus(sessionId, status) {
   return ProctorSession.findOneAndUpdate(
     { sessionId },
     { $set: { status } },
-    { new: true }
+    { new: true },
   );
 }
 
+// Session details endpoint with chronological event history.
 async function getSessionWithEvents(sessionId) {
   const session = await ProctorSession.findOne({ sessionId });
   if (!session) return null;
@@ -82,13 +87,15 @@ async function getSessionWithEvents(sessionId) {
   return { session, events };
 }
 
+// Student-scoped history for one exam.
 async function getStudentExamSessions(studentId, examId) {
   return ProctorSession.find({ studentId, examId }).sort({ createdAt: -1 });
 }
 
+// Lightweight exam-wide summary for dashboards.
 async function getExamSessionsSummary(examId) {
   const sessions = await ProctorSession.find({ examId }).select(
-    "studentId sessionId suspicionScore status violationCounts createdAt"
+    "studentId sessionId suspicionScore status violationCounts createdAt",
   );
   return sessions;
 }

@@ -1,5 +1,6 @@
 const identityService = require("../services/identity.service.js");
 
+// Persist baseline identity data for the current student/session.
 async function enrollIdentity(req, res, next) {
   try {
     const studentId = req.studentId;
@@ -29,7 +30,7 @@ async function enrollIdentity(req, res, next) {
       });
     }
 
-    // Enrollment quality gate from frontend quality checks
+    // Require client-side quality gate before baseline enrollment.
     if (!qualityChecks || qualityChecks.passed !== true) {
       return res.status(400).json({
         error:
@@ -58,6 +59,7 @@ async function enrollIdentity(req, res, next) {
   }
 }
 
+// Compare live embedding against enrolled baseline and emit mismatch event when needed.
 async function verifyIdentity(req, res, next) {
   try {
     const studentId = req.studentId;
