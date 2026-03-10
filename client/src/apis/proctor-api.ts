@@ -8,32 +8,26 @@ import type {
 
 const BASE = `${server}/v1`;
 
-function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem("accessToken");
-
-  return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-}
+// Auth is handled by the nginx gateway via HttpOnly cookie — no manual token needed.
+const postOptions: RequestInit = {
+  method: "POST",
+  credentials: "include",
+  headers: { "Content-Type": "application/json" },
+};
 
 export async function sendProctorEvent(payload: ProctorEventPayload) {
   const res = await fetch(`${BASE}/events`, {
-    method: "POST",
-    headers: getAuthHeaders(),
+    ...postOptions,
     body: JSON.stringify(payload),
   });
-
   if (!res.ok) throw await res.json();
   return res.json();
 }
 
 export async function completeProctorSession(sessionId: string) {
   const res = await fetch(`${BASE}/sessions/${sessionId}/complete`, {
-    method: "POST",
-    headers: getAuthHeaders(),
+    ...postOptions,
   });
-
   if (!res.ok) throw await res.json();
   return res.json();
 }
@@ -42,8 +36,7 @@ export async function enrollIdentity(payload: EnrollIdentityPayload) {
   const res = await fetch(
     `${BASE}/sessions/${payload.sessionId}/identity/enroll`,
     {
-      method: "POST",
-      headers: getAuthHeaders(),
+      ...postOptions,
       body: JSON.stringify({
         examId: payload.examId,
         baselineEmbedding: payload.baselineEmbedding,
@@ -54,7 +47,6 @@ export async function enrollIdentity(payload: EnrollIdentityPayload) {
       }),
     }
   );
-
   if (!res.ok) throw await res.json();
   return res.json();
 }
@@ -65,8 +57,7 @@ export async function verifyIdentity(
   const res = await fetch(
     `${BASE}/sessions/${payload.sessionId}/identity/verify`,
     {
-      method: "POST",
-      headers: getAuthHeaders(),
+      ...postOptions,
       body: JSON.stringify({
         examId: payload.examId,
         liveEmbedding: payload.liveEmbedding,
@@ -76,7 +67,6 @@ export async function verifyIdentity(
       }),
     }
   );
-
   if (!res.ok) throw await res.json();
   return res.json();
 }

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:4000';
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://auth:5001';
 
 /*
  Verify JWT token via HTTP call to auth service
@@ -25,7 +25,7 @@ export const verifyTokenHTTP = async (req, res, next) => {
 
         // Call auth service to verify token
         const response = await axios.post(
-            `${AUTH_SERVICE_URL}/api/v1/auth/verify-token`,
+            `${AUTH_SERVICE_URL}/v1/verify-token`,
             {},
             {
                 headers: { 'Authorization': `Bearer ${token}` },
@@ -110,7 +110,7 @@ export const verifyTokenOptional = async (req, res, next) => {
 
         if (token) {
             const response = await axios.post(
-                `${AUTH_SERVICE_URL}/api/v1/auth/verify-token`,
+                `${AUTH_SERVICE_URL}/v1/verify-token`,
                 {},
                 {
                     headers: { 'Authorization': `Bearer ${token}` },

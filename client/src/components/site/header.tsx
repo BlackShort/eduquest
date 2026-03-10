@@ -82,7 +82,7 @@ export function Header({ layout = "site", variant = "default", theme = "light", 
                             </Link>
 
                         ) : (
-                            <Link to={'/login'}>
+                            <Link to={'/auth/login'}>
                                 <button
                                     type="button"
                                     className="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-full hover:bg-orange-600 transition-all hover:shadow-orange-300"

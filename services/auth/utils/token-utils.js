@@ -1,8 +1,9 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const JWT_EXPIRY = process.env.JWT_EXPIRY || '24h';
-const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || '7d';
+// Read secrets lazily (at call time) so dotenv.config() in server.js has already run
+const getSecret = () => process.env.JWT_SECRET;
+const getExpiry = () => process.env.JWT_EXPIRY || '24h';
+const getRefreshExpiry = () => process.env.REFRESH_TOKEN_EXPIRY || '7d';
 
 // Generate JWT access token
 export const generateAccessToken = (userId, username, email, role) => {
@@ -14,8 +15,8 @@ export const generateAccessToken = (userId, username, email, role) => {
             role,
             type: 'access'
         },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRY }
+        getSecret(),
+        { expiresIn: getExpiry() }
     );
 };
 
@@ -27,8 +28,8 @@ export const generateRefreshToken = (userId) => {
             userId,
             type: 'refresh'
         },
-        JWT_SECRET,
-        { expiresIn: REFRESH_TOKEN_EXPIRY }
+        getSecret(),
+        { expiresIn: getRefreshExpiry() }
     );
 };
 
@@ -36,7 +37,7 @@ export const generateRefreshToken = (userId) => {
 
 export const verifyAccessToken = (token) => {
     try {
-        return jwt.verify(token, JWT_SECRET);
+        return jwt.verify(token, getSecret());
     } catch (error) {
         throw new Error('Invalid or expired token');
     }
@@ -49,7 +50,7 @@ export const decodeToken = (token) => {
 
 // Get token expiration time in milliseconds
 
-export const getTokenExpiry = (expiryString = JWT_EXPIRY) => {
+export const getTokenExpiry = (expiryString = getExpiry()) => {
     const units = {
         'h': 3600000,      // hours
         'd': 86400000,     // days

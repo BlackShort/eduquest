@@ -1,37 +1,48 @@
-import { NavLink } from 'react-router';
-import { ChevronRight } from "lucide-react";
+import { NavLink, useNavigate } from 'react-router';
+import { ChevronRight, LogOut, User } from "lucide-react";
 import type { Navigation, NavigationItem } from '@/data/sidebar';
+import { useContextAPI } from '@/hooks/useContext';
+import { logout } from '@/apis/auth-api';
 
 interface SidebarProps {
     navigation: Navigation;
 }
 
 export const Sidebar = ({ navigation }: SidebarProps) => {
-    // const { setUser, setIsLoggedIn } = useContextAPI();
-    // const navigate = useNavigate();
+    const { user, setUser, setIsLoggedIn } = useContextAPI();
+    const navigate = useNavigate();
 
-
-
-
-    // const handleLogout = async () => {
-    //     try {
-    //         const response = await axios.get(`${serverUrl}/auth/logout`, {
-    //             withCredentials: true
-    //         });
-    //         if (response.status === 200) {
-    //             setIsLoggedIn(false);
-    //             toast.success('Logout Successful!');
-    //             setUser({});
-    //             navigate('/');
-    //         }
-    //     } catch (error) {
-    //         console.log(error);
-    //         toast.error('Error logging out!');
-    //     }
-    // }
+    const handleLogout = async () => {
+        try {
+            await logout();
+        } catch {
+            // proceed with local cleanup even if request fails
+        } finally {
+            setIsLoggedIn(false);
+            setUser({});
+            localStorage.removeItem("isAuthenticated");
+            localStorage.removeItem("user");
+            navigate('/auth/login');
+        }
+    };
 
     return (
         <div className='flex flex-col w-64 h-full bg-neutral-800 border-r border-neutral-700/50 overflow-hidden'>
+            {/* User info */}
+            <div className='shrink-0 flex items-center gap-3 px-4 py-3 border-b border-neutral-700/50'>
+                <div className='flex items-center justify-center w-8 h-8 rounded-full bg-orange-500/20 text-orange-400'>
+                    <User size={16} />
+                </div>
+                <div className='min-w-0'>
+                    <p className='text-sm font-medium text-neutral-200 truncate'>
+                        {(user as { username?: string; name?: string }).username ?? (user as { username?: string; name?: string }).name ?? 'User'}
+                    </p>
+                    <p className='text-xs text-neutral-500 truncate'>
+                        {(user as { email?: string }).email ?? ''}
+                    </p>
+                </div>
+            </div>
+
             <div className='flex-1 overflow-y-auto p-4 space-y-1 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 scrollbar-track-transparent'>
                 {Object.entries(navigation).map(([group, items]) => (
                     <div key={group}>
@@ -74,15 +85,15 @@ export const Sidebar = ({ navigation }: SidebarProps) => {
             </div>
 
             {/* Logout Button - Sticky at bottom */}
-            {/* <div className='shrink-0 p-4 border-t border-gray-200 bg-gray-50'>
+            <div className='shrink-0 p-4 border-t border-neutral-700/50'>
                 <button
                     onClick={handleLogout}
-                    className='flex items-center justify-center gap-2 px-4 py-2.5 w-full rounded-lg text-sm font-medium text-white bg-linear-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]'
+                    className='cursor-pointer flex items-center justify-center gap-2 px-4 py-2.5 w-full rounded-lg text-sm font-medium text-red-300 bg-red-500/10 hover:bg-red-500/20 hover:text-red-400 transition-all duration-200'
                 >
                     <LogOut size={18} />
                     Log out
                 </button>
-            </div> */}
+            </div>
         </div>
     );
 }
