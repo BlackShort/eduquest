@@ -1,13 +1,11 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
-async function connectDB(uri) {
+export async function connectDB() {
   try {
-    await mongoose.connect(uri);
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log("Proctor service connected to MongoDB");
   } catch (err) {
     console.error("MongoDB connection error (Proctor Service):", err.message);
     process.exit(1);
   }
 }
-
-module.exports = connectDB;

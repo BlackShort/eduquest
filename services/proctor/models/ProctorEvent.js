@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const proctorEventSchema = new mongoose.Schema(
   {
@@ -13,4 +13,4 @@ const proctorEventSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Proctor_Event", proctorEventSchema);
+export default mongoose.model("Proctor_Event", proctorEventSchema);

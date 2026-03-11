@@ -63,8 +63,6 @@ export const uploadAssignment = async (req, res) => {
   }
 };
 
-
-
 export const getAssignmentByTestId = async (req, res) => {
   try {
     const { test_id } = req.params;
@@ -91,6 +89,7 @@ export const getAssignmentByTestId = async (req, res) => {
     });
   }
 };
+
 export const getAllAssignments = async (req, res) => {
   try {
 

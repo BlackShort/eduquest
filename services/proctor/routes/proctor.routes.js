@@ -1,8 +1,8 @@
-const express = require("express");
-const requireRole = require("../middleware/requireRole.js");
-const authFromGateway = require("../middleware/authFromGateway.js");
-const controller = require("../controllers/proctor.controller.js");
-const identityController = require("../controllers/identity.controller.js");
+import express from "express";
+import requireRole from "../middleware/requireRole.js";
+import authFromGateway from "../middleware/authFromGateway.js";
+import * as controller from "../controllers/proctor.controller.js";
+import * as identityController from "../controllers/identity.controller.js";
 
 const router = express.Router();
 
@@ -41,4 +41,4 @@ router.patch(
   controller.patchSessionStatus,
 );
 
-module.exports = router;
+export { router as proctorRoutes };

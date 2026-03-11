@@ -1,45 +1,25 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const morgan = require("morgan");
-const dns = require("dns");
+import dotenv from 'dotenv';
+import { app } from './app.js';
+import { connectDB } from './config/db-config.js';
 
-const connectDB = require("./config/db-config.js");
-const errorHandler = require("./middleware/errorHandler.js");
-const proctorRoutes = require("./routes/proctor.routes.js");
-
-// dns.setServers(['8.8.8.8', '8.8.4.4']);
-
-const app = express();
-
-const corsOptions = {
-  origin: "*", // only during DEV  -> Not in Production
-  methods: ["GET", "POST", "PATCH"],
-  allowedHeaders: ["Content-Type", "student-id", "user-role"],
-};
-
-app.use(cors(corsOptions));
-app.use(express.json());
-app.use(morgan("dev"));
-
-app.get("/health", (req, res) => {
-  res.json({ service: "proctor-service", status: "ok" });
-});
-
-app.use("/v1", proctorRoutes);
-app.use(errorHandler);
+// Load environment variables
+dotenv.config();
 
 const PORT = process.env.PORT || 5004;
-const MONGO_URI = process.env.MONGO_URI;
 
-connectDB(MONGO_URI).then(() => {
-  app.listen(PORT, () => {
-    console.log(`Proctor Service : ${PORT}`);
-  });
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`Proctor Service is running on port ${PORT}`);
+    });
+    // app.listen(PORT, "0.0.0.0", () => {
+    //     console.log(`Proctor Service is running on port ${PORT}`);
+    // });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
 
-// connectDB(MONGO_URI).then(() => {
-//   app.listen(PORT, "0.0.0.0", () => {
-//     console.log(`Proctor Service : ${PORT}`);
-//   });
-// });
+startServer();

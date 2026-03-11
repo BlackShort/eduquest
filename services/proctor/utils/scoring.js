@@ -16,4 +16,4 @@ function scoreForEvent(eventType, confidence = 1) {
   return base * confidence;
 }
 
-module.exports = { WEIGHTS, FLAG_THRESHOLD, scoreForEvent };
+export { WEIGHTS, FLAG_THRESHOLD, scoreForEvent };

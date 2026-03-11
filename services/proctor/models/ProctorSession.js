@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const proctorSessionSchema = new mongoose.Schema(
   {
@@ -24,4 +24,4 @@ const proctorSessionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Proctor_Session", proctorSessionSchema);
+export default mongoose.model("Proctor_Session", proctorSessionSchema);

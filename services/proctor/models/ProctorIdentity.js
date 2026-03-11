@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const proctorIdentitySchema = new mongoose.Schema(
   {
@@ -24,4 +24,4 @@ proctorIdentitySchema.index(
   { unique: true },
 );
 
-module.exports = mongoose.model("Proctor_Identity", proctorIdentitySchema);
+export default mongoose.model("Proctor_Identity", proctorIdentitySchema);

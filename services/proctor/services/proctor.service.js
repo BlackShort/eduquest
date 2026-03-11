@@ -1,6 +1,6 @@
-const ProctorEvent = require("../models/ProctorEvent.js");
-const ProctorSession = require("../models/ProctorSession.js");
-const { scoreForEvent, FLAG_THRESHOLD } = require("../utils/scoring.js");
+import ProctorEvent from "../models/ProctorEvent.js";
+import ProctorSession from "../models/ProctorSession.js";
+import { scoreForEvent, FLAG_THRESHOLD } from "../utils/scoring.js";
 
 // Create session on first event so clients only need to send sessionId.
 async function ensureSession({ studentId, examId, sessionId }) {
@@ -100,7 +100,7 @@ async function getExamSessionsSummary(examId) {
   return sessions;
 }
 
-module.exports = {
+export {
   recordEvent,
   completeSession,
   updateSessionStatus,
