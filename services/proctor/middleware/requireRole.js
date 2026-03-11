@@ -16,4 +16,4 @@ function requireRole(allowed) {
   };
 }
 
-module.exports = requireRole;
+export default requireRole;

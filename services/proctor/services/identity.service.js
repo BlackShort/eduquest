@@ -1,11 +1,11 @@
-const ProctorIdentity = require("../models/ProctorIdentity.js");
-const ProctorSession = require("../models/ProctorSession.js");
-const proctorService = require("./proctor.service.js");
-const { uploadImageToS3 } = require("../utils/s3.js");
-const {
+import ProctorIdentity from "../models/ProctorIdentity.js";
+import ProctorSession from "../models/ProctorSession.js";
+import * as proctorService from "./proctor.service.js";
+import { uploadImageToS3 } from "../utils/s3.js";
+import {
   cosineSimilarity,
   isValidEmbedding,
-} = require("../utils/face-recognition.js");
+} from "../utils/face-recognition.js";
 
 // Upsert session-scoped baseline embedding and baseline evidence image.
 async function enrollIdentity({
@@ -130,7 +130,4 @@ async function verifyIdentity({
   return { matched, score, threshold, mismatchEventId };
 }
 
-module.exports = {
-  enrollIdentity,
-  verifyIdentity,
-};
+export { enrollIdentity, verifyIdentity };

@@ -1,4 +1,4 @@
-const proctorService = require("../services/proctor.service.js");
+import * as proctorService from "../services/proctor.service.js";
 
 // Record one proctor event from the active student session.
 async function postEvent(req, res, next) {
@@ -105,7 +105,7 @@ async function patchSessionStatus(req, res, next) {
   }
 }
 
-module.exports = {
+export {
   postEvent,
   completeSession,
   getSession,
@@ -113,3 +113,4 @@ module.exports = {
   getExamSessionsSummary,
   patchSessionStatus,
 };
+

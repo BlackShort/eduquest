@@ -1,5 +1,5 @@
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
-const { randomUUID } = require("crypto");
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { randomUUID } from "crypto";
 
 let s3Client = null;
 
@@ -78,6 +78,4 @@ async function uploadImageToS3({ imageBase64, keyPrefix }) {
   return { key, bucket, mimeType };
 }
 
-module.exports = {
-  uploadImageToS3,
-};
+export { uploadImageToS3 };

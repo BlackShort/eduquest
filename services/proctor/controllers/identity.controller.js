@@ -1,4 +1,4 @@
-const identityService = require("../services/identity.service.js");
+import * as identityService from "../services/identity.service.js";
 
 // Persist baseline identity data for the current student/session.
 async function enrollIdentity(req, res, next) {
@@ -112,7 +112,4 @@ async function verifyIdentity(req, res, next) {
   }
 }
 
-module.exports = {
-  enrollIdentity,
-  verifyIdentity,
-};
+export { enrollIdentity, verifyIdentity };

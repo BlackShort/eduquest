@@ -37,4 +37,4 @@ function authFromGateway(req, res, next) {
   });
 }
 
-module.exports = authFromGateway;
+export default authFromGateway;
