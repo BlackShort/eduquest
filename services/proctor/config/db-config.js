@@ -1,11 +1,23 @@
 import mongoose from "mongoose";
 
-export async function connectDB() {
+export const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log("Proctor service connected to MongoDB");
-  } catch (err) {
-    console.error("MongoDB connection error (Proctor Service):", err.message);
-    process.exit(1);
+    await mongoose.connect(process.env.MONGO_URI, {
+      dbName: "proctor_db",
+      maxPoolSize: 10,           // Maximum number of connections in the pool
+      minPoolSize: 2,            // Minimum number of connections in the pool
+      socketTimeoutMS: 45000,    // Socket timeout for operations
+      serverSelectionTimeoutMS: 5000,  // Timeout for server selection
+      maxIdleTimeMS: 60000,      // Max time a connection can be idle
+      retryWrites: true,         // Enable automatic retry for writes
+      w: "majority",             // Write concern - wait for majority
+      journal: true,             // Enable journaling
+      waitQueueTimeoutMS: 10000, // Time to wait for an available connection
+    });
+    console.log('Proctor to edqdb-auth-database successfully');
   }
-}
+  catch (error) {
+    console.error('MongoDB connection error:', error);
+    throw error;
+  }
+};

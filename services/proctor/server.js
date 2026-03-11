@@ -10,6 +10,7 @@ const PORT = process.env.PORT || 5004;
 const startServer = async () => {
   try {
     await connectDB();
+    
     app.listen(PORT, () => {
       console.log(`Proctor Service is running on port ${PORT}`);
     });
