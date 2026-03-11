@@ -2,10 +2,10 @@ import * as tf from "@tensorflow/tfjs";
 import "@tensorflow/tfjs-backend-webgl";
 import "@tensorflow/tfjs-backend-cpu";
 import * as cocoSsd from "@tensorflow-models/coco-ssd";
-import * as faceDetection from "@tensorflow-models/face-detection";
+import * as blazeface from "@tensorflow-models/blazeface";
 import type { IdentityQualityChecks } from "@/types/proctor";
 
-let faceDetector: faceDetection.FaceDetector | null = null;
+let faceDetector: blazeface.BlazeFaceModel | null = null;
 let phoneDetector : cocoSsd.ObjectDetection | null = null;  
 
 // Initialize TFJS backend once.
@@ -21,11 +21,11 @@ export async function initFaceDetector() {
   await initTF();
   if (faceDetector) return faceDetector;
 
-  const model = faceDetection.SupportedModels.MediaPipeFaceDetector;
-
-  faceDetector = await faceDetection.createDetector(model, {
-    runtime: "tfjs",
-    maxFaces: 5,
+  // Load BlazeFace model with keypoints support
+  faceDetector = await blazeface.load({
+    maxFaces: 3,
+    iouThreshold:0.3,
+    scoreThreshold:0.75
   });
 
   return faceDetector;
@@ -36,7 +36,7 @@ export async function detectFaces(
 ): Promise<number> {
   if (!faceDetector) return 0;
 
-  const faces = await faceDetector.estimateFaces(video);
+  const faces = await faceDetector.estimateFaces(video, false, false);  // false = don't flip horizontally
   return faces.length;
 }
 
@@ -178,76 +178,31 @@ export async function extractFaceEmbedding(
 
   if (!faceDetector) return null;
 
-  const faces = await faceDetector.estimateFaces(video);
+  const faces = await faceDetector.estimateFaces(video, false);  // BlazeFace API
   if (!faces || faces.length < 1) return null;
 
+  // BlazeFace returns faces in this format:
+  // { topLeft: [x, y], bottomRight: [x, y], landmarks: [[x1, y1], [x2, y2], ...] }
   const face = faces[0] as {
-    box?: {
-      xMin?: number;
-      yMin?: number;
-      width?: number;
-      height?: number;
-      xMax?: number;
-      yMax?: number;
-      xCenter?: number;
-      yCenter?: number;
-      topLeft?: [number, number] | { x: number; y: number };
-      bottomRight?: [number, number] | { x: number; y: number };
-    };
-    keypoints?: Array<{ x: number; y: number }>;
+    topLeft: [number, number];
+    bottomRight: [number, number]; 
+    landmarks: number[][];  // 6 keypoints: [rightEye, leftEye, nose, mouth, rightEar, leftEar]
   };
 
   const width = video.videoWidth || 640;
   const height = video.videoHeight || 480;
 
-  const box = face.box || {};
-
   function clamp(value: number, min: number, max: number): number {
     return Math.max(min, Math.min(max, value));
   }
 
-  function readPoint(
-    point?: [number, number] | { x: number; y: number }
-  ): { x: number; y: number } | null {
-    if (!point) return null;
-    if (Array.isArray(point)) {
-      return { x: point[0], y: point[1] };
-    }
-    return { x: point.x, y: point.y };
-  }
+  // BlazeFace provides simple topLeft and bottomRight coordinates
+  let x = face.topLeft[0];
+  let y = face.topLeft[1];
+  let w = face.bottomRight[0] - face.topLeft[0];
+  let h = face.bottomRight[1] - face.topLeft[1];
 
-  // Normalize detector output across possible box formats.
-  let x = box.xMin ?? 0;
-  let y = box.yMin ?? 0;
-  let w = box.width ?? 0;
-  let h = box.height ?? 0;
-
-  if ((w === 0 || h === 0) && box.xMax !== undefined && box.yMax !== undefined) {
-    w = Math.max(0, box.xMax - x);
-    h = Math.max(0, box.yMax - y);
-  }
-
-  if ((w === 0 || h === 0) && box.xCenter !== undefined && box.yCenter !== undefined) {
-    const bw = box.width ?? 0;
-    const bh = box.height ?? 0;
-    w = bw;
-    h = bh;
-    x = box.xCenter - bw / 2;
-    y = box.yCenter - bh / 2;
-  }
-
-  if (w === 0 || h === 0) {
-    const tl = readPoint(box.topLeft);
-    const br = readPoint(box.bottomRight);
-    if (tl && br) {
-      x = tl.x;
-      y = tl.y;
-      w = Math.max(0, br.x - tl.x);
-      h = Math.max(0, br.y - tl.y);
-    }
-  }
-
-  // Fallback to a central crop if box data is incomplete.
+  // Fallback to a central crop if box data is invalid
   if (w <= 0 || h <= 0) {
     x = width * 0.25;
     y = height * 0.2;
@@ -267,16 +222,23 @@ export async function extractFaceEmbedding(
     h / height,
   ];
 
-  const keypoints = face.keypoints ?? [];
-  const selected = keypoints.slice(0, 8);
+  // BlazeFace landmarks: 6 keypoints [rightEye, leftEye, nose, mouth, rightEar, leftEar]
+  const landmarks = face.landmarks || [];
   const kpVec: number[] = [];
 
-  for (const kp of selected) {
-    kpVec.push(kp.x / width, kp.y / height);
+  // Take up to 8 keypoints (16 values), use all 6 available from BlazeFace
+  for (let i = 0; i < Math.min(8, landmarks.length); i++) {
+    const landmark = landmarks[i];
+    if (landmark && landmark.length >= 2) {
+      kpVec.push(landmark[0] / width, landmark[1] / height);
+    }
   }
 
-  // Keep a fixed-size keypoint segment for stable vector length.
+  // Keep a fixed-size keypoint segment for stable vector length
   while (kpVec.length < 16) kpVec.push(0);
+
+  console.log('🎯 Keypoints extracted:', kpVec.filter(x => x !== 0).length / 2, 'landmarks found');
+  console.log('🎯 KpVec values:', kpVec);
 
   // Add an image signature so the vector carries appearance information.
   const sourceCanvas = getCanvasFromVideo(video);
