@@ -32,7 +32,7 @@ export const AssignmentDetail = () => {
         const fetchAssignment = async () => {
             try {
                 const res = await axios.get(
-                    `http://localhost:5000/v1/assignment/${assignmentId}`
+                    `http://localhost:5002/v1/assignment/${assignmentId}`
                 );
 
                 setAssignment(res.data.data);
