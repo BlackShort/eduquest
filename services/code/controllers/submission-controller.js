@@ -8,18 +8,29 @@ import { checkSubmissionPlagiarism } from '../services/plagiarism-service.js';
 
 export const executeSubmission = async (req, res) => {
     try {
-        const { studentId, questionId, testId, language, code, mode } = req.body;
+        const {  studentId, questionId, testId, language, code, mode, testCase } = req.body;
+        // const studentId = req.headers["x-student-id"];
 
-        if (!studentId || !questionId || !testId || !language || !code || !mode) {
+        // const role = req.headers["x-user-role"];
+        if (!studentId || !questionId || !language || !code || !mode) {
             return res.status(400).json({
                 message: 'studentId, questionId, testId, language, code and mode are required',
             });
         }
-        const testcases = await getTestcasesForQuestion(questionId, mode);
+
+        console.log('Received submission execution request:', {
+            studentId,
+            questionId,
+            testId,
+            language,
+            mode,
+            code, 
+            testCase,});
+        // const testcases = await getTestcasesForQuestion(questionId, mode);
         const executionResult = await runCodeForQuestion({
             code,
             language,
-            testcases,
+            testcases: testCase,
         });
 
         let savedSubmission = null;
@@ -45,6 +56,14 @@ export const executeSubmission = async (req, res) => {
             savedSubmission.plagiarism = plagiarismResult;
             await savedSubmission.save();
         }
+
+        console.log("Request processed successfully:", {
+            message: 'Execution completed',
+            executionResult,
+            submissionId: savedSubmission ? savedSubmission._id : null,
+            plagiarism: plagiarismResult,
+        })
+
         return res.status(200).json({
             message: 'Execution completed',
             executionResult,

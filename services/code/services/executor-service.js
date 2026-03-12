@@ -20,7 +20,7 @@ async function submitToJudge0({ languageId, code, stdin }) {
     };
 
     const response = await axios.post(
-        `${JUDGE0_BASE_URL}/submissions?base64_encoded=true&wait=false`,
+        `http://13.54.92.185:2358/submissions?base64_encoded=true&wait=false`,
         payload,
         { timeout: 10000 }
     );
@@ -38,7 +38,7 @@ async function pollJudge0(token) {
         await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL_MS));
 
         const response = await axios.get(
-            `${JUDGE0_BASE_URL}/submissions/${token}?base64_encoded=true`,
+            `http://13.54.92.185:2358/submissions/${token}?base64_encoded=true`,
             { timeout: 10000 }
         );
 
@@ -117,7 +117,7 @@ async function executeWithJudge0({ language, code, stdin }) {
             status, // PASSED | FAILED | TIME_LIMIT | COMPILE_ERROR | RUNTIME_ERROR
         };
     } catch (err) {
-        console.error('Judge0 execution error:', err.message);
+        console.error('Judge0 execution error:', err);
         return {
             stdout: '',
             stderr: err.message,
@@ -140,55 +140,92 @@ export async function runCodeForQuestion({ code, language, testcases }) {
         return {
             totalTestcases: 0,
             passedTestcases: 0,
-            verdict: 'PENDING',
+            verdict: "PENDING",
             overallTimeMs: 0,
             testcaseResults: [],
         };
     }
 
-    const testcaseResults = [];
-    let totalTime = 0;
-    let passedCount = 0;
+    try {
+        const testcasePromises = testcases.map(async (tc) => {
+            const stdin = tc.input || "";
+            const expectedOutput = tc.output || "";
+            const testcaseId = tc._id ? tc._id.toString() : null;
 
-    for (const tc of testcases) {
-        const stdin = tc.input || '';
-        const expectedOutput = tc.expectedOutput || '';
-        const testcaseId = tc._id ? tc._id.toString() : null;
+            try {
+                const result = await executeWithJudge0({
+                    language,
+                    code,
+                    stdin,
+                });
 
-        const result = await executeWithJudge0({ language, code, stdin });
+                let status = result.status;
 
-        // Only mark PASSED if output actually matches
-        let status = result.status;
-        if (status === 'PASSED' && !outputsMatch(result.stdout, expectedOutput)) {
-            status = 'FAILED';
+                // Validate output match
+                if (status === "PASSED" && !outputsMatch(result.stdout, expectedOutput)) {
+                    status = "FAILED";
+                }
+
+                return {
+                    testcaseId,
+                    status,
+                    input: stdin,
+                    expectedOutput,
+                    actualOutput: result.stdout || "",
+                    errorMessage: result.stderr || "",
+                    timeTakenMs: result.timeMs || 0,
+                };
+            } catch (err) {
+                console.error("Testcase execution error:", err);
+
+                return {
+                    testcaseId,
+                    status: "RUNTIME_ERROR",
+                    input: stdin,
+                    expectedOutput,
+                    actualOutput: "",
+                    errorMessage: err.message,
+                    timeTakenMs: 0,
+                };
+            }
+        });
+
+        // 🔥 Execute all testcases in parallel
+        const testcaseResults = await Promise.all(testcasePromises);
+
+        let passedCount = 0;
+        let totalTime = 0;
+
+        for (const result of testcaseResults) {
+            if (result.status === "PASSED") passedCount++;
+            totalTime += result.timeTakenMs || 0;
         }
 
-        if (status === 'PASSED') passedCount++;
-        totalTime += result.timeMs || 0;
+        const totalTestcases = testcaseResults.length;
 
-        testcaseResults.push({
-            testcaseId,
-            status,
-            input: stdin,
-            expectedOutput,
-            actualOutput: result.stdout,
-            errorMessage: result.stderr,
-            timeTakenMs: result.timeMs,
-        });
+        let verdict = "WRONG_ANSWER";
+        if (passedCount === totalTestcases && totalTestcases > 0) {
+            verdict = "ACCEPTED";
+        } else if (passedCount > 0) {
+            verdict = "PARTIALLY_CORRECT";
+        }
+
+        return {
+            totalTestcases,
+            passedTestcases: passedCount,
+            verdict,
+            overallTimeMs: totalTime,
+            testcaseResults,
+        };
+    } catch (err) {
+        console.error("runCodeForQuestion error:", err);
+
+        return {
+            totalTestcases: 0,
+            passedTestcases: 0,
+            verdict: "RUNTIME_ERROR",
+            overallTimeMs: 0,
+            testcaseResults: [],
+        };
     }
-
-    const totalTestcases = testcaseResults.length;
-    let verdict = 'WRONG_ANSWER';
-    if (passedCount === totalTestcases && totalTestcases > 0) verdict = 'ACCEPTED';
-    else if (passedCount > 0) verdict = 'PARTIALLY_CORRECT';
-    else if (totalTestcases === 0) verdict = 'PENDING';
-
-    return {
-        totalTestcases,
-        passedTestcases: passedCount,
-        verdict,
-        overallTimeMs: totalTime,
-        testcaseResults,
-    };
 }
-

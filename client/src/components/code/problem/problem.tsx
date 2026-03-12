@@ -44,14 +44,14 @@ interface TestResult {
 const languageTemplates = {
   javascript: `function solution(input) {\n    // Write your code here\n    return 0;\n}\n`,
   python: `def solution(input):\n    # Write your code here\n    return 0\n`,
-  cpp: `#include <iostream>\nusing namespace std;\n\nint solution() {\n    // Write your code here\n    return 0;\n}\n`,
+  cpp: `#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your code here\n    return 0;\n}\n`,
   java: `public class Solution {\n    public int solution(int n) {\n        // Write your code here\n        return 0;\n    }\n}`,
 };
 
 interface ProblemDetailProps {
   problemId?: string;
-  onSubmit?: (code: string, language: string, testCase: Testcase[]) => void;
-  onRun?: (code: string, language: string, testCase: Testcase[]) => void;
+  onSubmit?: (code: string, language: string, testCase: Testcase[], mode:string) => void;
+  onRun?: (code: string, language: string, testCase: Testcase[], mode:string) => void;
   onCodeChange?: (code: string) => void;
   onLanguageChange?: (language: string) => void;
   isRunning?: boolean;

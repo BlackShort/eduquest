@@ -172,6 +172,7 @@ export const AssessmentDetail = ({
   onAnswerChange,
   savedAnswer 
 }: AssessmentDetailProps) => {
+  
   if (questionType === 'coding') {
     // Use ProblemDetail for coding questions
     return (
