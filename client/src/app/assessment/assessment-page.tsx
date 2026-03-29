@@ -13,6 +13,8 @@ import {
     Users,
     Award,
     AlertCircle,
+    Pause,
+    Play,
 } from "lucide-react";
 import { dummyAssignments, dummyCoding, dummyMcqs } from "@/data/dummy-data";
 
@@ -183,33 +185,49 @@ interface AssessmentCardProps {
 }
 
 const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
-    const getTypeIcon = () => {
+    const getTypeStyles = () => {
         switch (assessment.type) {
             case "coding":
-                return <Code2 className="w-5 h-5" />;
+                return {
+                    icon: <Code2 className="w-6 h-6" />,
+                    color: "text-blue-400",
+                    glow: "bg-blue-500/10",
+                    hoverGlow: "group-hover:bg-blue-500/20",
+                    badge: "bg-blue-500/10 border-blue-500/20 text-blue-400",
+                    bar: "from-blue-600 to-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.5)]"
+                };
             case "mcq":
-                return <CheckCircle2 className="w-5 h-5" />;
+                return {
+                    icon: <CheckCircle2 className="w-6 h-6" />,
+                    color: "text-emerald-400",
+                    glow: "bg-emerald-500/10",
+                    hoverGlow: "group-hover:bg-emerald-500/20",
+                    badge: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+                    bar: "from-emerald-600 to-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]"
+                };
             case "assignment":
-                return <FileText className="w-5 h-5" />;
+                return {
+                    icon: <FileText className="w-6 h-6" />,
+                    color: "text-purple-400",
+                    glow: "bg-purple-500/10",
+                    hoverGlow: "group-hover:bg-purple-500/20",
+                    badge: "bg-purple-500/10 border-purple-500/20 text-purple-400",
+                    bar: "from-purple-600 to-purple-400 shadow-[0_0_10px_rgba(192,132,252,0.5)]"
+                };
             default:
-                return <FileText className="w-5 h-5" />;
+                return {
+                    icon: <FileText className="w-6 h-6" />,
+                    color: "text-gray-400",
+                    glow: "bg-gray-500/10",
+                    hoverGlow: "group-hover:bg-gray-500/20",
+                    badge: "bg-gray-500/10 border-gray-500/20 text-gray-400",
+                    bar: "from-gray-600 to-gray-400"
+                };
         }
     };
 
-    const getTypeColor = () => {
-        switch (assessment.type) {
-            case "coding":
-                return "blue";
-            case "mcq":
-                return "green";
-            case "assignment":
-                return "purple";
-            default:
-                return "gray";
-        }
-    };
+    const styles = getTypeStyles();
 
-    const color = getTypeColor();
     const formatDate = (dateStr: string) => {
         return new Date(dateStr).toLocaleString("en-US", {
             month: "short",
@@ -232,141 +250,138 @@ const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
     };
 
     return (
-        <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700 hover:border-orange-500/50 transition-all group">
-            <div className="flex items-start justify-between mb-4">
-                <div className="flex items-start gap-4 flex-1">
-                    <div
-                        className={`w-12 h-12 bg-${color}-900/30 rounded-lg flex items-center justify-center shrink-0 text-${color}-400`}
-                    >
-                        {getTypeIcon()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-orange-400 transition-colors">
-                            {assessment.title}
-                        </h3>
-                        <p className="text-sm text-gray-400">
-                            {assessment.subject} • {assessment.num_questions} Questions
-                        </p>
-                    </div>
-                </div>
+        <div className={`group relative bg-white/2 rounded-2xl p-6 border border-white/5 overflow-hidden hover:bg-white/2 transition-all duration-500`}>
+            <div className={`absolute top-0 right-0 w-32 h-32 ${styles.glow} rounded-full blur-[50px] pointer-events-none ${styles.hoverGlow} transition-all duration-500`}></div>
 
-                {/* Type Badge */}
-                <span
-                    className={`text-xs font-medium px-3 py-1 rounded-full bg-${color}-900/30 text-${color}-400 capitalize`}
-                >
-                    {assessment.type}
-                </span>
-            </div>
-
-            {/* Assessment Details */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <Timer className="w-4 h-4" />
-                    <span>{assessment.duration} mins</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <Award className="w-4 h-4" />
-                    <span>{assessment.totalMarks} marks</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <Calendar className="w-4 h-4" />
-                    <span>{formatDate(assessment.startTime)}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <Clock className="w-4 h-4" />
-                    <span>{formatDate(assessment.endTime)}</span>
-                </div>
-            </div>
-
-            {/* Status-specific content */}
-            {assessment.status === "live" && (
-                <div className="mb-4">
-                    {assessment.attempted && assessment.progress ? (
-                        <div>
-                            <div className="flex justify-between text-sm mb-2">
-                                <span className="text-gray-400">Progress</span>
-                                <span className="text-white font-medium">{assessment.progress}%</span>
-                            </div>
-                            <div className="h-2 bg-neutral-700 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-orange-500 rounded-full transition-all"
-                                    style={{ width: `${assessment.progress}%` }}
-                                ></div>
-                            </div>
+            <div className="relative z-10">
+                <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-start gap-4">
+                        <div className={`w-12 h-12 bg-white/3 border border-white/10 rounded-lg flex items-center justify-center shrink-0 shadow-lg ${styles.color} group-hover:scale-110 transition-transform duration-500`}>
+                            {styles.icon}
                         </div>
-                    ) : (
-                        <div className="flex items-center gap-2 text-sm text-orange-400 bg-orange-900/20 px-3 py-2 rounded-lg">
-                            <AlertCircle className="w-4 h-4" />
-                            <span>{getTimeRemaining()}</span>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {assessment.status === "completed" && assessment.score !== undefined && (
-                <div className="mb-4 p-4 bg-neutral-700 rounded-lg border border-neutral-600">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-400 mb-1">Your Score</p>
-                            <p className="text-2xl font-bold text-white">
-                                {assessment.score}/{assessment.totalMarks}
-                            </p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-sm text-gray-400 mb-1">Percentage</p>
-                            <p
-                                className={`text-2xl font-bold ${assessment.percentage! >= 80
-                                        ? "text-green-400"
-                                        : assessment.percentage! >= 60
-                                            ? "text-yellow-400"
-                                            : "text-red-400"
-                                    }`}
-                            >
-                                {assessment.percentage}%
+                        <div className="mt-1">
+                            <h3 className={`text-xl font-semibold text-white mb-1 transition-colors tracking-tight`}>
+                                {assessment.title}
+                            </h3>
+                            <p className="text-sm text-neutral-400 font-medium">
+                                {assessment.subject} <span className="mx-2 opacity-50">•</span> {assessment.num_questions} Questions
                             </p>
                         </div>
                     </div>
+                    {/* Badge */}
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${styles.badge} capitalize whitespace-nowrap`}>
+                        {assessment.type}
+                    </span>
                 </div>
-            )}
 
-            {/* Action Button */}
-            <Link
-                to={`/assessment/${assessment._id}`}
-                className={`block w-full px-4 py-3 rounded-lg font-medium text-center transition-colors ${assessment.status === "live"
-                        ? assessment.attempted
-                            ? "bg-orange-500 text-white hover:bg-orange-600"
-                            : "bg-orange-500 text-white hover:bg-orange-600"
-                        : assessment.status === "upcoming"
-                            ? "bg-neutral-700 text-gray-400 border border-neutral-600 cursor-not-allowed"
-                            : "bg-neutral-700 text-white hover:bg-neutral-600 border border-neutral-600"
-                    }`}
-            >
-                {assessment.status === "live" ? (
-                    <div className="flex items-center justify-center gap-2">
-                        {assessment.attempted ? (
-                            <>
-                                <PlayCircle className="w-5 h-5" />
-                                Resume Assessment
-                            </>
+                <div className="grid grid-cols-2 gap-4 mb-6 p-4 rounded-xl bg-white/2 border border-white/5">
+                    <div className="flex items-center gap-3 text-sm text-neutral-300">
+                        <Timer className="w-4 h-4 text-neutral-500" />
+                        <span className="font-medium">{assessment.duration} mins</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-neutral-300">
+                        <Award className="w-4 h-4 text-neutral-500" />
+                        <span className="font-medium">{assessment.totalMarks} marks</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-neutral-300">
+                        <Calendar className="w-4 h-4 text-neutral-500" />
+                        <span className="font-medium truncate">{formatDate(assessment.startTime)}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-neutral-300">
+                        <Clock className="w-4 h-4 text-neutral-500" />
+                        <span className="font-medium truncate">{formatDate(assessment.endTime)}</span>
+                    </div>
+                </div>
+
+                {/* Status-specific content */}
+                {assessment.status === "live" && (
+                    <div className="mb-6">
+                        {assessment.attempted && assessment.progress ? (
+                            <div>
+                                <div className="flex justify-between text-sm mb-2">
+                                    <span className="text-neutral-400 font-medium">Progress</span>
+                                    <span className="text-white font-medium">{assessment.progress}%</span>
+                                </div>
+                                <div className="h-1.5 w-full bg-neutral-800/80 rounded-full overflow-hidden shadow-inner">
+                                    <div
+                                        className={`h-full bg-linear-to-r ${styles.bar} rounded-full transition-all duration-1000 relative`}
+                                        style={{ width: `${assessment.progress}%` }}
+                                    >
+                                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,1)]"></div>
+                                    </div>
+                                </div>
+                            </div>
                         ) : (
-                            <>
-                                <PlayCircle className="w-5 h-5" />
-                                Start Assessment
-                            </>
+                            <div className="flex items-center gap-2 text-sm text-blue-400 bg-blue-500/10 border border-blue-500/20 px-4 py-2.5 rounded-lg font-medium">
+                                <AlertCircle className="w-4 h-4" />
+                                <span>{getTimeRemaining()}</span>
+                            </div>
                         )}
                     </div>
-                ) : assessment.status === "upcoming" ? (
-                    <div className="flex items-center justify-center gap-2">
-                        <Clock className="w-5 h-5" />
-                        Starts {formatDate(assessment.startTime)}
-                    </div>
-                ) : (
-                    <div className="flex items-center justify-center gap-2">
-                        <Eye className="w-5 h-5" />
-                        View Results
+                )}
+
+                {assessment.status === "completed" && assessment.score !== undefined && (
+                    <div className="mb-6 p-4 bg-white/2 rounded-lg border border-white/5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-neutral-400 mb-1 font-medium">Your Score</p>
+                                <div className="flex items-baseline gap-1">
+                                    <p className="text-2xl font-bold text-white tracking-tighter">
+                                        {assessment.score}
+                                    </p>
+                                    <span className="text-neutral-500 text-sm">/{assessment.totalMarks}</span>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-sm text-neutral-400 mb-1 font-medium">Percentage</p>
+                                <p
+                                    className={`text-2xl font-bold tracking-tighter ${assessment.percentage! >= 80
+                                        ? "text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]"
+                                        : assessment.percentage! >= 60
+                                            ? "text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.3)]"
+                                            : "text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.3)]"
+                                        }`}
+                                >
+                                    {assessment.percentage}%
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 )}
-            </Link>
+
+                {/* Action Button */}
+                <Link
+                    to={`/assessment/${assessment._id}`}
+                    className={`flex items-center justify-center gap-2 w-full px-3 py-3 rounded-lg font-medium text-center transition-all duration-300 
+                        bg-white/5 text-neutral-100 hover:bg-white/10 border border-white/10 active:scale-[0.98]`}
+                >
+                    {assessment.status === "live" ? (
+                        <>
+                            {assessment.attempted ? (
+                                <>
+                                    <Pause className="w-4 h-4 text-neutral-300" />
+                                    Resume Assessment
+                                </>
+                            ) : (
+                                <>
+                                    <Play className="w-4 h-4 text-neutral-300" />
+                                    Start Assessment
+                                </>
+                            )}
+                        </>
+                    ) : assessment.status === "upcoming" ? (
+                        <>
+                            <Clock className="w-5 h-5" />
+                            Starts {formatDate(assessment.startTime)}
+                        </>
+                    ) : (
+                        <>
+                            <Eye className="w-5 h-5" />
+                            View Results
+                        </>
+                    )}
+                </Link>
+            </div>
         </div>
     );
 };
@@ -377,81 +392,82 @@ export const AssessmentHome = () => {
     const completedAssessments = mockAssessments.filter((a) => a.status === "completed");
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8 p-2 lg:p-4 max-w-7xl mx-auto">
             {/* Header */}
-            <div className="bg-linear-to-br from-purple-500 to-pink-500 rounded-xl p-8 text-white">
-                <div className="flex items-start justify-between">
+            <div className="relative overflow-hidden bg-[#0F0F12] rounded-2xl p-6 border border-white/5">
+                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+                <div className="relative z-10 flex flex-col md:flex-row items-start justify-between gap-6">
                     <div>
-                        <h1 className="text-3xl font-bold mb-2">Assessments</h1>
-                        <p className="text-purple-100 text-lg">
+                        <h1 className="text-3xl font-semibold mb-1 text-neutral-100">
+                            Assessments
+                        </h1>
+                        <p className="text-neutral-400 text-lg font-light max-w-lg">
                             Track your tests, assignments, and coding challenges
                         </p>
                     </div>
-                    <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                        <Users className="w-5 h-5" />
-                        <span className="font-bold">{completedAssessments.length} Completed</span>
+                    <div className="flex items-center gap-3 bg-white/3 border border-white/10 backdrop-blur-xl px-5 py-2.5 rounded-full shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)]">
+                        <Users className="w-5 h-5 text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.8)]" />
+                        <span className="font-semibold text-purple-50 tracking-wide">{completedAssessments.length} Completed</span>
                     </div>
                 </div>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-orange-900/30 rounded-lg flex items-center justify-center">
-                            <PlayCircle className="w-6 h-6 text-orange-400" />
-                        </div>
-                        <div>
-                            <p className="text-gray-400 text-sm">Active</p>
-                            <p className="text-2xl font-bold text-white">{currentAssessments.length}</p>
-                        </div>
+            {/* Command Stats Bar */}
+            <div className="bg-white/2 rounded-2xl border border-white/5 relative overflow-hidden flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-white/5">
+                <div className="absolute top-0 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-[80px] pointer-events-none mix-blend-overlay"></div>
+
+                <div className="flex-1 p-6 group hover:bg-white/1 transition-colors relative">
+                    <div className="flex justify-between items-start mb-3">
+                        <p className="text-neutral-400 font-medium tracking-wide text-sm uppercase">Active</p>
+                        <PlayCircle className="w-5 h-5 text-blue-400/50 group-hover:text-blue-400 transition-colors" />
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                        <h3 className="text-4xl font-light text-white tracking-tighter">{currentAssessments.length}</h3>
                     </div>
                 </div>
 
-                <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-blue-900/30 rounded-lg flex items-center justify-center">
-                            <Clock className="w-6 h-6 text-blue-400" />
-                        </div>
-                        <div>
-                            <p className="text-gray-400 text-sm">Upcoming</p>
-                            <p className="text-2xl font-bold text-white">{upcomingAssessments.length}</p>
-                        </div>
+                <div className="flex-1 p-6 group hover:bg-white/1 transition-colors relative">
+                    <div className="flex justify-between items-start mb-3">
+                        <p className="text-neutral-400 font-medium tracking-wide text-sm uppercase">Upcoming</p>
+                        <Calendar className="w-5 h-5 text-purple-400/50 group-hover:text-purple-400 transition-colors" />
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                        <h3 className="text-4xl font-light text-white tracking-tighter">{upcomingAssessments.length}</h3>
                     </div>
                 </div>
 
-                <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-green-900/30 rounded-lg flex items-center justify-center">
-                            <CheckCircle2 className="w-6 h-6 text-green-400" />
-                        </div>
-                        <div>
-                            <p className="text-gray-400 text-sm">Completed</p>
-                            <p className="text-2xl font-bold text-white">{completedAssessments.length}</p>
-                        </div>
+                <div className="flex-1 p-6 group hover:bg-white/1 transition-colors relative">
+                    <div className="flex justify-between items-start mb-3">
+                        <p className="text-neutral-400 font-medium tracking-wide text-sm uppercase">Completed</p>
+                        <CheckCircle2 className="w-5 h-5 text-emerald-400/50 group-hover:text-emerald-400 transition-colors" />
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                        <h3 className="text-4xl font-light text-white tracking-tighter">{completedAssessments.length}</h3>
                     </div>
                 </div>
             </div>
 
             {/* Tabs */}
-            <Tabs defaultValue="current" className="w-full">
-                <TabsList className="w-full bg-neutral-800 border border-neutral-700 p-1">
-                    <TabsTrigger value="current" className="flex-1 data-[state=active]:text-neutral-100 text-neutral-400 hover:text-neutral-300 data-[state=active]:bg-orange-500">
+            <Tabs defaultValue="current" className="w-full space-y-8">
+                <TabsList className="bg-neutral-100/1 border border-white/5 p-1 rounded-full inline-flex gap-2 max-w-max h-full">
+                    <TabsTrigger value="current" className="cursor-pointer h-full rounded-full data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-neutral-400 hover:text-neutral-300 transition-all font-normal tracking-wide">
                         <PlayCircle className="w-4 h-4 mr-2" />
                         Current ({currentAssessments.length})
                     </TabsTrigger>
-                    <TabsTrigger value="upcoming" className="flex-1 data-[state=active]:text-neutral-100 text-neutral-400 hover:text-neutral-300 data-[state=active]:bg-orange-500">
+                    <TabsTrigger value="upcoming" className="cursor-pointer h-full rounded-full data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-neutral-400 hover:text-neutral-300 transition-all font-normal tracking-wide">
                         <Calendar className="w-4 h-4 mr-2" />
                         Upcoming ({upcomingAssessments.length})
                     </TabsTrigger>
-                    <TabsTrigger value="history" className="flex-1 data-[state=active]:text-neutral-100 text-neutral-400 hover:text-neutral-300 data-[state=active]:bg-orange-500">
+                    <TabsTrigger value="history" className="cursor-pointer h-full rounded-full data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-neutral-400 hover:text-neutral-300 transition-all font-normal tracking-wide">
                         <CheckCircle2 className="w-4 h-4 mr-2" />
                         History ({completedAssessments.length})
                     </TabsTrigger>
                 </TabsList>
 
                 {/* Current Tab */}
-                <TabsContent value="current" className="mt-6">
+                <TabsContent value="current" className="mt-4 animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
                     {currentAssessments.length > 0 ? (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {currentAssessments.map((assessment) => (
@@ -459,16 +475,18 @@ export const AssessmentHome = () => {
                             ))}
                         </div>
                     ) : (
-                        <div className="bg-neutral-800 rounded-lg p-12 border border-neutral-700 text-center">
-                            <PlayCircle className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                            <h3 className="text-xl font-semibold text-white mb-2">No Active Assessments</h3>
-                            <p className="text-gray-400">You don't have any live assessments at the moment.</p>
+                        <div className="bg-[#09090b] rounded-3xl p-16 border border-white/5 text-center shadow-2xl relative overflow-hidden">
+                            <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-xl shadow-black/50 relative z-10 backdrop-blur-xl">
+                                <PlayCircle className="w-10 h-10 text-neutral-400" />
+                            </div>
+                            <h3 className="text-2xl font-semibold text-white mb-3 tracking-tight relative z-10">No Active Assessments</h3>
+                            <p className="text-neutral-400 max-w-md mx-auto relative z-10">You don't have any live assessments at the moment. Take a break or explore upcoming challenges.</p>
                         </div>
                     )}
                 </TabsContent>
 
                 {/* Upcoming Tab */}
-                <TabsContent value="upcoming" className="mt-6">
+                <TabsContent value="upcoming" className="mt-4 animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
                     {upcomingAssessments.length > 0 ? (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {upcomingAssessments.map((assessment) => (
@@ -476,16 +494,19 @@ export const AssessmentHome = () => {
                             ))}
                         </div>
                     ) : (
-                        <div className="bg-neutral-800 rounded-lg p-12 border border-neutral-700 text-center">
-                            <Calendar className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                            <h3 className="text-xl font-semibold text-white mb-2">No Upcoming Assessments</h3>
-                            <p className="text-gray-400">You're all caught up! Check back later for new assessments.</p>
+                        <div className="bg-[#09090b] rounded-3xl p-16 border border-white/5 text-center shadow-2xl relative overflow-hidden">
+                            <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dhe1ygeid/image/upload/v1714495861/grid_m4tnsi.svg')] opacity-[0.03] bg-repeat bg-size-[32px_32px]"></div>
+                            <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-xl shadow-black/50 relative z-10 backdrop-blur-xl">
+                                <Calendar className="w-10 h-10 text-neutral-400" />
+                            </div>
+                            <h3 className="text-2xl font-semibold text-white mb-3 tracking-tight relative z-10">No Upcoming Assessments</h3>
+                            <p className="text-neutral-400 max-w-md mx-auto relative z-10">You're all caught up! Check back later for new tests and assignments.</p>
                         </div>
                     )}
                 </TabsContent>
 
                 {/* History Tab */}
-                <TabsContent value="history" className="mt-6">
+                <TabsContent value="history" className="mt-4 animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
                     {completedAssessments.length > 0 ? (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {completedAssessments.map((assessment) => (
@@ -493,10 +514,13 @@ export const AssessmentHome = () => {
                             ))}
                         </div>
                     ) : (
-                        <div className="bg-neutral-800 rounded-lg p-12 border border-neutral-700 text-center">
-                            <CheckCircle2 className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                            <h3 className="text-xl font-semibold text-white mb-2">No Completed Assessments</h3>
-                            <p className="text-gray-400">Your completed assessments will appear here.</p>
+                        <div className="bg-[#09090b] rounded-3xl p-16 border border-white/5 text-center shadow-2xl relative overflow-hidden">
+                            <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dhe1ygeid/image/upload/v1714495861/grid_m4tnsi.svg')] opacity-[0.03] bg-repeat bg-size-[32px_32px]"></div>
+                            <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-xl shadow-black/50 relative z-10 backdrop-blur-xl">
+                                <CheckCircle2 className="w-10 h-10 text-neutral-400" />
+                            </div>
+                            <h3 className="text-2xl font-semibold text-white mb-3 tracking-tight relative z-10">No Completed Assessments</h3>
+                            <p className="text-neutral-400 max-w-md mx-auto relative z-10">Your completed assessments and test history will appear here.</p>
                         </div>
                     )}
                 </TabsContent>

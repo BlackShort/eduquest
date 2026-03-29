@@ -3,7 +3,7 @@ import { AssignmentLayout, EditorLayout, ContestLayout, DashboardLayout, Problem
 import { Home, About, Privacy, Terms, Cookies, Contact, Login, Register } from "@/app/site";
 import { ProtectedRoute } from "@/components/site/protected-route";
 import { DashboardHome, DashboardSettings } from "@/app/dashboard";
-import { ContestHome, ContestDetails, ProblemHome, ProblemCategory } from "@/app/code";
+import { ContestHome, ContestDetails, ProblemHome, ProblemCategory, ContestDashboard } from "@/app/code";
 import { ErrorPage } from "@/app/error/error";
 import { Assignment, AssignmentDetail } from "@/app/assignment";
 import { ProctorTestPage } from "@/app/proctortest";
@@ -63,6 +63,8 @@ export const router = createBrowserRouter([
                             { path: "settings", Component: DashboardSettings },
                             { path: "assignments", Component: Assignment },
                             { path: "assessment", Component: AssessmentHome },
+                            { path: "contest", Component: ContestDashboard },
+
                         ],
                     },
                     {

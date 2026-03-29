@@ -2,6 +2,17 @@ import { useState, useEffect } from 'react';
 import { Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProblemDetail } from '@/components/code/problem/problem';
+import { codeSubmission } from "@/apis/code-api";
+import type { Testcase } from "@/types/types";
+
+interface TestResult {
+  index: number;
+  input: string;
+  expectedOutput: string;
+  actualOutput: string;
+  passed: boolean;
+  runtime: string;
+}
 
 interface AssessmentDetailProps {
   questionType: 'coding' | 'mcq';
@@ -172,21 +183,66 @@ export const AssessmentDetail = ({
   onAnswerChange,
   savedAnswer 
 }: AssessmentDetailProps) => {
+
+  // --- Isolated State for Coding Questions ---
+  const [currentCode, setCurrentCode] = useState(savedAnswer || "");
+  const [currentLanguage, setCurrentLanguage] = useState("javascript");
+  const [testCases, setTestCases] = useState<Testcase[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
+
+  // Sync state when switching questions
+  useEffect(() => {
+    setCurrentCode(savedAnswer || "");
+    setTestResults([]); // Wipe local test results on problem boundaries
+  }, [questionId, savedAnswer]);
+
+  const runCode = async () => {
+    try {
+      setIsRunning(true);
+      // Run public test cases just like regular practice mode
+      const result = await codeSubmission(currentCode, currentLanguage, testCases.slice(0, 3), "run", questionId);
+      
+      const mapped = (result.data.executionResult?.testcaseResults ?? []).map(
+        (tc: { input: string; expectedOutput: string; actualOutput: string; status: string; timeTakenMs: number }, i: number) => ({
+          index: i + 1,
+          input: tc.input,
+          expectedOutput: tc.expectedOutput,
+          actualOutput: tc.actualOutput,
+          passed: tc.status === "PASSED",
+          runtime: `${tc.timeTakenMs}ms`,
+        })
+      );
+      setTestResults(mapped);
+    } catch (err) {
+      console.error("Error running code:", err);
+    } finally {
+      setIsRunning(false);
+    }
+  };
   
   if (questionType === 'coding') {
-    // Use ProblemDetail for coding questions
+    // Use ProblemDetail for coding questions with isolated assessment runner
     return (
-      <div className='h-full w-full overflow-hidden'>
-        <ProblemDetail 
-          problemId={questionId}
-          onCodeChange={(code) => {
-            console.log('Code changed:', code);
-            if (onAnswerChange) {
-              onAnswerChange(questionId, code);
-            }
-          }}
-          onLanguageChange={(lang) => console.log('Language changed:', lang)}
-        />
+      <div className='flex flex-col h-full w-full overflow-hidden'>
+        <div className="flex-1 overflow-hidden">
+          <ProblemDetail 
+            problemId={questionId}
+            onCodeChange={(code) => {
+              setCurrentCode(code);
+              // Autosave to the master answers dictionary via parent callback
+              if (onAnswerChange) {
+                onAnswerChange(questionId, code);
+              }
+            }}
+            onLanguageChange={(lang) => setCurrentLanguage(lang)}
+            onRun={() => runCode()}
+            isRunning={isRunning}
+            testResults={testResults}
+            sendTestCase={(tc) => setTestCases(tc)}
+            actionBarLayout="editor-bottom"
+          />
+        </div>
       </div>
     );
   }

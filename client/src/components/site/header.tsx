@@ -18,7 +18,6 @@ export function Header({ layout = "site", variant = "default", theme = "light", 
         { name: "Problems", path: "/problemset" },
         { name: "Contests", path: "/contest" },
         { name: "Leaderboard", path: "/leaderboard" },
-        { name: "Assessment", path: "/assessment" },
     ];
 
 

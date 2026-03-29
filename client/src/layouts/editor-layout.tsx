@@ -4,6 +4,7 @@ import { ProblemDetail } from "@/app/code";
 import { EditorHeader } from "@/components/code/editor/editor-header";
 import type { Testcase } from "@/types/types";
 import { codeSubmission } from "@/apis/code-api";
+import { type LayoutOption } from "@/components/code/settings-modal";
 
 interface TestResult {
   index: number;
@@ -21,6 +22,7 @@ export const EditorLayout = () => {
   const [testCases, setTestCases] = useState<Testcase[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const [layout, setLayout] = useState<LayoutOption>("global-header");
 
   const submitCode = (code: string, language: string, testCases: Testcase[], mode:string) => {
     runCode(code, language, testCases, mode);
@@ -37,7 +39,17 @@ export const EditorLayout = () => {
       // mode , questionId, testId will be used in future for fetching testcases from backend
       const result = await codeSubmission(code, language, testCases, mode, problemId);
       console.log("Code execution result:", result.data);
-      setTestResults(result.data.testResults);
+      const mapped = (result.data.executionResult?.testcaseResults ?? []).map(
+        (tc: { input: string; expectedOutput: string; actualOutput: string; status: string; timeTakenMs: number }, i: number) => ({
+          index: i + 1,
+          input: tc.input,
+          expectedOutput: tc.expectedOutput,
+          actualOutput: tc.actualOutput,
+          passed: tc.status === "PASSED",
+          runtime: `${tc.timeTakenMs}ms`,
+        })
+      );
+      setTestResults(mapped);
       
     } catch (err) {
       console.error("Error running code:", err);
@@ -67,6 +79,8 @@ export const EditorLayout = () => {
         onRun={() => runCode(currentCode, currentLanguage, testCases.slice(0, 3),"run")}
         onSubmit={() => submitCode(currentCode, currentLanguage, testCases, "submit")}
         isRunning={isRunning}
+        layout={layout}
+        onLayoutChange={setLayout}
       />
       <main className="m-2.5 mt-0 flex-1 overflow-hidden">
         <ProblemDetail
@@ -78,6 +92,7 @@ export const EditorLayout = () => {
           isRunning={isRunning}
           testResults={testResults}
           sendTestCase={handleSendTestCases}
+          actionBarLayout={layout}
         />
       </main>
     </div>

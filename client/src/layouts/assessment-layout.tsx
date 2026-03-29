@@ -1,7 +1,7 @@
 import { AssessmentDetail } from "@/app/assessment/assessment-detail";
 import { AssessmentHeader } from "@/components/assessment/assessment-header";
 import { useProctor } from "@/hooks/useProctor";
-import ProctorOverlay from "@/components/proctor/ProctorOverlay";
+// import ProctorOverlay from "@/components/proctor/ProctorOverlay";
 import { PanelRightOpen, Code2, ListChecks, CheckCircle2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -183,119 +183,146 @@ export const AssessmentLayout = () => {
 
       <main className="m-2 relative flex flex-row flex-1 gap-2 overflow-hidden">
         <aside
-          className={`relative rounded-md border border-neutral-800 bg-neutral-900 h-full overflow-y-auto transition-all duration-300 ease-in-out ${sidebarOpen ? "w-72" : "w-16"}`}
+          className={`relative rounded-md border border-neutral-800 bg-neutral-900 h-full transition-all duration-300 ease-in-out shrink-0 ${sidebarOpen ? "w-72" : "w-13"} overflow-hidden flex flex-col`}
         >
-          {sidebarOpen ? (
-            <div className="p-4 space-y-4">
-              <div className="mb-6">
-                <h2 className="text-lg font-bold text-white mb-2">Questions</h2>
-                <p className="text-xs text-neutral-500">
-                  {Object.keys(answers).length} / {questions.length} Answered
-                </p>
-              </div>
+          {/* Scrollable Container */}
+          <div className="flex-1 overflow-y-auto w-72">
+            <div className={`transition-opacity duration-200 ${sidebarOpen ? "opacity-100" : "opacity-0"}`}>
+              {sidebarOpen && (
+                <div className="p-4 space-y-4">
+                  <div className="mb-6">
+                    <h2 className="text-lg font-bold text-white mb-2">Questions</h2>
+                    <p className="text-xs text-neutral-500">
+                      {Object.keys(answers).length} / {questions.length} Answered
+                    </p>
+                  </div>
 
-              {/* Coding Questions Section */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Code2 className="w-4 h-4 text-blue-400" />
-                  <h3 className="text-sm font-semibold text-neutral-300">
-                    Coding Problems
-                  </h3>
-                </div>
-                <div className="space-y-2">
-                  {questions
-                    .filter((q) => q.type === "coding")
-                    .map((question, idx) => {
-                      const isAnswered = !!answers[question.id];
-                      return (
-                        <button
-                          key={question.id}
-                          onClick={() => setCurrentQuestionId(question.id)}
-                          className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${
-                            currentQuestionId === question.id
-                              ? "bg-blue-600 text-white"
-                              : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold">
-                                {idx + 1}
-                              </span>
-                              <span className="text-sm">{question.title}</span>
-                            </div>
-                            {isAnswered && (
-                              <CheckCircle2 className="w-4 h-4 text-green-400" />
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
-                </div>
-              </div>
+                  {/* Coding Questions Section */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Code2 className="w-4 h-4 text-blue-400" />
+                      <h3 className="text-sm font-semibold text-neutral-300">
+                        Coding Problems
+                      </h3>
+                    </div>
+                    <div className="space-y-2">
+                      {questions
+                        .filter((q) => q.type === "coding")
+                        .map((question, idx) => {
+                          const isAnswered = !!answers[question.id];
+                          return (
+                            <button
+                              key={question.id}
+                              onClick={() => setCurrentQuestionId(question.id)}
+                              className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${
+                                currentQuestionId === question.id
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-bold">
+                                    {idx + 1}
+                                  </span>
+                                  <span className="text-sm">{question.title}</span>
+                                </div>
+                                {isAnswered && (
+                                  <CheckCircle2 className="w-4 h-4 text-green-400" />
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                    </div>
+                  </div>
 
-              {/* MCQ Questions Section */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <ListChecks className="w-4 h-4 text-green-400" />
-                  <h3 className="text-sm font-semibold text-neutral-300">
-                    Multiple Choice
-                  </h3>
+                  {/* MCQ Questions Section */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <ListChecks className="w-4 h-4 text-green-400" />
+                      <h3 className="text-sm font-semibold text-neutral-300">
+                        Multiple Choice
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-5 gap-2">
+                      {questions
+                        .filter((q) => q.type === "mcq")
+                        .map((question, idx) => {
+                          const isAnswered = !!answers[question.id];
+                          return (
+                            <button
+                              key={question.id}
+                              onClick={() => setCurrentQuestionId(question.id)}
+                              className={`relative w-10 h-10 rounded-full transition-all duration-200 text-center font-medium ${
+                                currentQuestionId === question.id
+                                  ? "bg-green-600 text-white"
+                                  : isAnswered
+                                    ? "bg-green-600/30 text-green-300 hover:bg-green-600/40"
+                                    : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
+                              }`}
+                            >
+                              {idx + 1}
+                              {isAnswered && currentQuestionId !== question.id && (
+                                <CheckCircle2 className="absolute -top-1 -right-1 w-4 h-4 text-green-400 bg-neutral-900 rounded-full" />
+                              )}
+                            </button>
+                          );
+                        })}
+                    </div>
+                  </div>
                 </div>
-                <div className="grid grid-cols-5 gap-2">
-                  {questions
-                    .filter((q) => q.type === "mcq")
-                    .map((question, idx) => {
-                      const isAnswered = !!answers[question.id];
-                      return (
-                        <button
-                          key={question.id}
-                          onClick={() => setCurrentQuestionId(question.id)}
-                          className={`relative w-10 h-10 rounded-full transition-all duration-200 text-center font-medium ${
-                            currentQuestionId === question.id
-                              ? "bg-green-600 text-white"
-                              : isAnswered
-                                ? "bg-green-600/30 text-green-300 hover:bg-green-600/40"
-                                : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
-                          }`}
-                        >
-                          {idx + 1}
-                          {isAnswered && currentQuestionId !== question.id && (
-                            <CheckCircle2 className="absolute -top-1 -right-1 w-4 h-4 text-green-400 bg-neutral-900 rounded-full" />
-                          )}
-                        </button>
-                      );
-                    })}
-                </div>
-              </div>
+              )}
             </div>
-          ) : (
-            <div className="p-2 space-y-2 mt-4">
-              {questions.map((question) => (
-                <button
-                  key={question.id}
-                  onClick={() => setCurrentQuestionId(question.id)}
-                  className={`w-full p-2 rounded-lg transition-all duration-200 ${
-                    currentQuestionId === question.id
-                      ? question.type === "coding"
-                        ? "bg-blue-600"
-                        : "bg-green-600"
-                      : "bg-neutral-800 hover:bg-neutral-700"
-                  }`}
-                >
-                  {question.type === "coding" ? (
-                    <Code2 className="w-5 h-5 text-white" />
-                  ) : (
-                    <ListChecks className="w-5 h-5 text-white" />
+            
+            <div className={`absolute top-0 left-0 w-13 h-full overflow-y-auto transition-opacity duration-200 ${!sidebarOpen ? "opacity-100 z-10" : "opacity-0 pointer-events-none"}`}>
+              {!sidebarOpen && (
+                <div className="flex flex-col items-center p-2 space-y-4 mt-4 pb-4">
+                  {/* Coding Questions Quick Jump */}
+                  {questions.some(q => q.type === "coding") && (
+                    <button
+                      onClick={() => {
+                        const firstCoding = questions.find(q => q.type === "coding");
+                        if (firstCoding) setCurrentQuestionId(firstCoding.id);
+                        setSidebarOpen(true);
+                      }}
+                      className={`w-9 h-9 flex items-center justify-center shrink-0 rounded-lg transition-all duration-200 ${
+                        currentQuestion?.type === "coding"
+                          ? "bg-blue-600 shadow-md shadow-blue-500/20"
+                          : "bg-neutral-800 hover:bg-neutral-700"
+                      }`}
+                      title="Coding Problems"
+                    >
+                      <Code2 className="w-5 h-5 text-white" />
+                    </button>
                   )}
-                </button>
-              ))}
+
+                  {/* MCQ Questions Quick Jump */}
+                  {questions.some(q => q.type === "mcq") && (
+                    <button
+                      onClick={() => {
+                        const firstMcq = questions.find(q => q.type === "mcq");
+                        if (firstMcq) setCurrentQuestionId(firstMcq.id);
+                        setSidebarOpen(true);
+                      }}
+                      className={`w-9 h-9 flex items-center justify-center shrink-0 rounded-lg transition-all duration-200 ${
+                        currentQuestion?.type === "mcq"
+                          ? "bg-green-600 shadow-md shadow-green-500/20"
+                          : "bg-neutral-800 hover:bg-neutral-700"
+                      }`}
+                      title="Multiple Choice"
+                    >
+                      <ListChecks className="w-5 h-5 text-white" />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </aside>
 
         <div
-          className={`absolute top-8 transition-all duration-300 ease-in-out ${sidebarOpen ? "left-69" : "left-13"} bg-neutral-700 hover:bg-orange-500 scale-95 hover:scale-100 rounded-full p-2 cursor-pointer text-neutral-200 shadow-lg z-10`}
+          className={`absolute top-8 transition-all duration-300 ease-in-out ${sidebarOpen ? "left-69" : "left-10"} bg-neutral-700 hover:bg-orange-500 scale-95 hover:scale-100 rounded-full p-2 cursor-pointer text-neutral-200 shadow-lg z-10`}
           onClick={toggleSidebar}
         >
           <PanelRightOpen
@@ -316,14 +343,14 @@ export const AssessmentLayout = () => {
       </main>
 
       {/* 🎯 Proctoring Overlay - Only active during assessment */}
-      <ProctorOverlay
+      {/* <ProctorOverlay
         active={proctor.active && isFullscreen}
         sessionId={proctor.sessionId}
         reportEvent={proctor.reportEvent}
         enrollIdentityFromVideo={proctor.enrollIdentityFromVideo}
         verifyIdentityFromVideo={proctor.verifyIdentityFromVideo}
         shouldRunIdentityVerification={proctor.shouldRunIdentityVerification}
-      />
+      /> */}
     </div>
   );
 };

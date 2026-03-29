@@ -10,10 +10,11 @@ export const DashboardLayout = () => {
       
       <div className="flex flex-1">
         <aside className="sticky top-14 h-[calc(100vh-3.5rem)] shrink-0">
+        {/* <aside className="sticky top-0 h-screen shrink-0"> */}
           <Sidebar navigation={studentNavigation} />
         </aside>
 
-        <main className="w-full max-w-4xl mx-auto p-6">
+        <main className="w-full max-w-5xl mx-auto p-6">
           <Outlet />
         </main>
       </div>

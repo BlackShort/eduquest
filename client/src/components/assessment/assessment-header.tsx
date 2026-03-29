@@ -4,7 +4,7 @@ import eduquest from '@/assets/logo/favicon.png'
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
 import { useState, useEffect } from 'react';
-
+import { SettingsModal } from "../code/settings-modal";
 
 interface EditorHeaderProps {
     onSubmit: () => void;
@@ -14,6 +14,7 @@ interface EditorHeaderProps {
 
 export const AssessmentHeader = ({ onSubmit, isRunning, initialTime = 3600 }: EditorHeaderProps) => {
     const [timeRemaining, setTimeRemaining] = useState(initialTime);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     useEffect(() => {
         if (timeRemaining <= 0) {
@@ -33,7 +34,7 @@ export const AssessmentHeader = ({ onSubmit, isRunning, initialTime = 3600 }: Ed
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
-        
+
         if (hours > 0) {
             return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
@@ -85,15 +86,15 @@ export const AssessmentHeader = ({ onSubmit, isRunning, initialTime = 3600 }: Ed
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-center">
+                    <div className="flex items-center justify-center gap-4">
                         <ButtonGroup className="flex gap-0.5">
                             <Button
                                 className={`rounded-sm bg-neutral-800 hover:bg-neutral-700/50 ${timeRemaining <= 300 ? 'text-red-500 animate-pulse' : 'text-blue-500'}`}
                             >
-                                <AlarmClock className="h-5 w-5"/>
+                                <AlarmClock className="h-5 w-5" />
                             </Button>
                             <Button
-                                
+
                                 className={`text-base rounded-sm bg-neutral-800 hover:bg-neutral-700/50 font-mono ${getTimerColor()}`}
                             >
                                 {formatTime(timeRemaining)}
@@ -104,7 +105,10 @@ export const AssessmentHeader = ({ onSubmit, isRunning, initialTime = 3600 }: Ed
                     <div className="flex items-center gap-4">
                         <div className="flex gap-4">
                             <LayoutPanelLeft className="w-5 h-5 text-gray-400 cursor-pointer hover:text-white" />
-                            <Settings className="w-5 h-5 text-gray-400 cursor-pointer hover:text-white" />
+                            <Settings 
+                                className="w-5 h-5 text-gray-400 cursor-pointer hover:text-white" 
+                                onClick={() => setIsSettingsOpen(true)}
+                            />
                         </div>
 
                         <div className="flex items-center justify-center">
@@ -112,7 +116,7 @@ export const AssessmentHeader = ({ onSubmit, isRunning, initialTime = 3600 }: Ed
                                 size={'sm'}
                                 className="cursor-pointer rounded-sm bg-neutral-800 text-amber-500 hover:bg-neutral-700/50"
                                 onClick={onSubmit}
-                                disabled={isRunning}
+                                disabled={!isRunning}
                             >
                                 <CloudUpload /> <span>Submit</span>
                             </Button>
@@ -120,6 +124,14 @@ export const AssessmentHeader = ({ onSubmit, isRunning, initialTime = 3600 }: Ed
                     </div>
                 </div>
             </div>
+
+            <SettingsModal 
+                isOpen={isSettingsOpen} 
+                onClose={() => setIsSettingsOpen(false)} 
+                currentLayout="editor-bottom"
+                onLayoutChange={() => {}}
+                isAssessmentMode={true}
+            />
         </header>
     )
 }

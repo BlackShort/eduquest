@@ -6,12 +6,10 @@ import {
   Flame,
   TrendingUp,
   Calendar,
-  Clock,
   Award,
   BookOpen,
   Users,
   ChevronRight,
-  Sparkles,
 } from "lucide-react";
 import { dummyAssignments, dummyCoding } from "@/data/dummy-data";
 import { useContextAPI } from "@/hooks/useContext";
@@ -65,309 +63,209 @@ export const DashboardHome = () => {
     { action: "Participated in", item: "Weekly Contest #42", time: "3 days ago", type: "contest" },
   ];
 
+  // Configuration to reduce redundancy
+  const statCards = [
+    { title: "Problems", icon: Code2, value: stats.problemsSolved, subValue: `/ ${stats.totalProblems}`, iconClasses: "text-blue-400/50 group-hover:text-blue-400", badgeInner: <span className="text-xs text-blue-400 bg-blue-400/10 border border-blue-400/20 px-2 py-1 rounded-md font-medium tracking-wide">+12 this week</span> },
+    { title: "Assignments", icon: BookOpen, value: stats.assignmentsCompleted, subValue: `/ ${stats.totalAssignments}`, iconClasses: "text-purple-400/50 group-hover:text-purple-400", badgeInner: <span className="text-xs text-purple-400 bg-purple-400/10 border border-purple-400/20 px-2 py-1 rounded-md font-medium tracking-wide">+3 this week</span> },
+    { title: "Accuracy", icon: Target, value: stats.accuracy, subValue: "%", iconClasses: "text-emerald-400/50 group-hover:text-emerald-400", badgeInner: <div className="flex items-center gap-1.5 text-xs text-emerald-400/80 font-medium tracking-wide"><TrendingUp className="w-3.5 h-3.5" /> Improving</div> },
+    { title: "Rank", icon: Trophy, value: "#142", subValue: "", iconClasses: "text-orange-400/50 group-hover:text-orange-400", badgeInner: <div className="flex items-center gap-1.5 text-xs text-orange-400/80 font-medium tracking-wide"><Award className="w-3.5 h-3.5" /> Top 15%</div> }
+  ];
+
+  const quickActions = [
+    { to: "/problems", icon: Code2, label: "Start Practicing", primary: true },
+    { to: "/contest", icon: Calendar, label: "View Contests", primary: false },
+    { to: "/dashboard/assignments", icon: BookOpen, label: "My Assignments", primary: false },
+  ];
+
+  const activityThemes: Record<string, string> = {
+    problem: 'bg-blue-400',
+    assignment: 'bg-purple-400',
+    contest: 'bg-orange-400'
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 p-2 lg:p-4 max-w-7xl mx-auto">
       {/* Welcome Section */}
-      <div className="bg-linear-to-br from-orange-500/30 to-blue-500/30 rounded-xl p-8 text-neutral-100 border border-neutral-700">
-        <div className="flex items-start justify-between">
+      <div className="relative overflow-hidden bg-[#0F0F12] rounded-2xl p-6 border border-white/5">
+        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-125 h-125 bg-orange-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3 w-125 h-125 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div className="relative z-10 flex flex-col md:flex-row items-start justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-bold mb-2">
-              {`Welcome back, ${user?.username || "Student"}! 👋`}
+            <h1 className="text-3xl font-semibold mb-1 text-neutral-100">
+              Welcome back, {user?.username ? String(user.username) : "Student"}! 👋
             </h1>
-            <p className="text-orange-100 text-lg">
-              Ready to continue your learning journey?
+            <p className="text-neutral-400 text-lg font-light">
+              Ready to continue pushing your limits today?
             </p>
           </div>
-          <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-            <Flame className="w-5 h-5 text-yellow-300" />
-            <span className="font-bold">{stats.currentStreak} Day Streak</span>
+          <div className="flex items-center gap-3 bg-white/3 border border-white/10 backdrop-blur-xl px-5 py-2.5 rounded-full shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)]">
+            <Flame className="w-5 h-5 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
+            <span className="font-semibold text-orange-50 tracking-wide">{stats.currentStreak} Day Streak</span>
           </div>
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Problems Solved */}
-        <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700 hover:border-blue-500/50 transition-all">
-          <div className="flex items-start justify-between mb-3">
-            <div className="w-12 h-12 bg-blue-900/30 rounded-lg flex items-center justify-center">
-              <Code2 className="w-6 h-6 text-blue-400" />
-            </div>
-            <span className="text-xs font-medium text-green-400 bg-green-900/30 px-2 py-1 rounded-full">
-              +12 this week
-            </span>
-          </div>
-          <h3 className="text-gray-400 text-sm font-medium mb-1">Problems Solved</h3>
-          <p className="text-3xl font-bold text-white">
-            {stats.problemsSolved}
-            <span className="text-lg text-gray-500">/{stats.totalProblems}</span>
-          </p>
-          <div className="mt-3 h-1.5 bg-neutral-700 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-blue-500 rounded-full"
-              style={{ width: `${(stats.problemsSolved / stats.totalProblems) * 100}%` }}
-            ></div>
-          </div>
-        </div>
+      {/* Command Stats Bar - Completely Redesigned */}
+      <div className="bg-white/2 rounded-2xl border border-white/5 shadow-2xl relative overflow-hidden flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-white/5">
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-[80px] pointer-events-none mix-blend-overlay"></div>
 
-        {/* Assignments */}
-        <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700 hover:border-purple-500/50 transition-all">
-          <div className="flex items-start justify-between mb-3">
-            <div className="w-12 h-12 bg-purple-900/30 rounded-lg flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-purple-400" />
+        {statCards.map((stat, idx) => (
+          <div key={idx} className="flex-1 p-8 group hover:bg-white/2 transition-colors relative">
+            <div className="flex justify-between items-start mb-4">
+              <p className="text-neutral-400 font-medium tracking-wide text-sm uppercase">{stat.title}</p>
+              <stat.icon className={`w-5 h-5 transition-colors ${stat.iconClasses}`} />
             </div>
-            <span className="text-xs font-medium text-green-400 bg-green-900/30 px-2 py-1 rounded-full">
-              +3 this week
-            </span>
-          </div>
-          <h3 className="text-gray-400 text-sm font-medium mb-1">Assignments</h3>
-          <p className="text-3xl font-bold text-white">
-            {stats.assignmentsCompleted}
-            <span className="text-lg text-gray-500">/{stats.totalAssignments}</span>
-          </p>
-          <div className="mt-3 h-1.5 bg-neutral-700 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-purple-500 rounded-full"
-              style={{ width: `${(stats.assignmentsCompleted / stats.totalAssignments) * 100}%` }}
-            ></div>
-          </div>
-        </div>
-
-        {/* Accuracy */}
-        <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700 hover:border-green-500/50 transition-all">
-          <div className="flex items-start justify-between mb-3">
-            <div className="w-12 h-12 bg-green-900/30 rounded-lg flex items-center justify-center">
-              <Target className="w-6 h-6 text-green-400" />
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-4xl font-light text-white tracking-tighter">{stat.value}</h3>
+              {stat.subValue && <span className="text-sm text-neutral-600 font-medium">{stat.subValue}</span>}
             </div>
-            <span className="text-xs font-medium text-green-400 bg-green-900/30 px-2 py-1 rounded-full">
-              +2.5%
-            </span>
-          </div>
-          <h3 className="text-gray-400 text-sm font-medium mb-1">Accuracy Rate</h3>
-          <p className="text-3xl font-bold text-white">{stats.accuracy}%</p>
-          <div className="mt-3 flex items-center gap-2 text-sm text-gray-400">
-            <TrendingUp className="w-4 h-4 text-green-500" />
-            <span>Improving steadily</span>
-          </div>
-        </div>
-
-        {/* Rank/Leaderboard */}
-        <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700 hover:border-orange-500/50 transition-all">
-          <div className="flex items-start justify-between mb-3">
-            <div className="w-12 h-12 bg-orange-900/30 rounded-lg flex items-center justify-center">
-              <Trophy className="w-6 h-6 text-orange-400" />
+            <div className="mt-4 flex items-center">
+              {stat.badgeInner}
             </div>
-            <span className="text-xs font-medium text-orange-400 bg-orange-900/30 px-2 py-1 rounded-full">
-              Top 15%
-            </span>
           </div>
-          <h3 className="text-gray-400 text-sm font-medium mb-1">Global Rank</h3>
-          <p className="text-3xl font-bold text-white">#142</p>
-          <div className="mt-3 flex items-center gap-2 text-sm text-gray-400">
-            <Award className="w-4 h-4 text-orange-500" />
-            <span>Gold Badge</span>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - 2/3 width */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Recent Assignments */}
-          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Recent Assignments</h2>
-              <Link
-                to="/dashboard/assignments"
-                className="text-sm font-medium text-orange-400 hover:text-orange-300 flex items-center gap-1"
+      {/* Main Two-Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column - Wider */}
+        <div className="lg:col-span-8 space-y-8">
+
+          {/* Action Header / Quick Actions Redesigned as Inline Pills */}
+          <div className="flex flex-wrap items-center gap-3">
+            {quickActions.map((action, idx) => (
+              <Link 
+                key={idx} 
+                to={action.to} 
+                className={`inline-flex items-center gap-2 px-6 py-2.5 font-medium rounded-full transition-all ${
+                  action.primary 
+                  ? "bg-neutral-100/20 border border-neutral-100/20 text-white font-medium shadow-lg" 
+                  : "bg-neutral-100/1 border border-white/5 text-neutral-200 hover:bg-white/5 hover:border-white/20"
+                }`}
               >
-                View All
-                <ChevronRight className="w-4 h-4" />
+                <action.icon className={`w-4 h-4 ${!action.primary && "text-neutral-400"}`} /> {action.label}
               </Link>
+            ))}
+          </div>
+
+          {/* Elegant Task List */}
+          <div className="bg-white/2 border border-white/5 rounded-2xl p-8">
+            <div className="flex justify-between items-end mb-8">
+              <div>
+                <h2 className="text-2xl text-neutral-100 mb-1">Active Priorities</h2>
+                <p className="text-sm text-neutral-500">Your pending assignments and tasks</p>
+              </div>
+              <Link to="/dashboard/assignments" className="text-sm font-medium text-neutral-400 hover:text-white transition-colors">View all</Link>
             </div>
+
             <div className="space-y-3">
               {recentAssignments.map((assignment) => (
-                <Link
-                  key={assignment._id}
-                  to={`/assignments/${assignment.test_id}`}
-                  className="block p-4 bg-neutral-700 rounded-lg border border-neutral-600 hover:border-orange-500/50 hover:bg-neutral-700/70 transition-all group"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-white group-hover:text-orange-400 transition-colors">
-                        {assignment.test_id}
-                      </h3>
-                      <p className="text-sm text-gray-400 mt-1">
-                        Subject: {assignment.subject_id} • {assignment.num_questions} Questions
-                      </p>
+                <Link key={assignment._id} to={`/assignments/${assignment.test_id}`} className="group flex items-center justify-between p-4 rounded-2xl border border-transparent hover:border-white/5 hover:bg-white/2 transition-colors">
+                  <div className="flex items-center gap-5">
+                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/5 group-hover:border-white/10 transition-colors">
+                      <BookOpen className="w-5 h-5 text-neutral-500 group-hover:text-white transition-colors" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium bg-blue-900/30 text-blue-400 px-2 py-1 rounded-full">
-                        Active
-                      </span>
+                    <div>
+                      <h4 className="text-white font-medium text-lg leading-tight group-hover:text-blue-400 transition-colors">{assignment.test_id}</h4>
+                      <p className="text-sm text-neutral-500 mt-1">{assignment.subject_id} • {assignment.num_questions} Questions</p>
                     </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="hidden sm:inline-flex text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-full">Active</span>
+                    <ChevronRight className="w-5 h-5 text-neutral-600 group-hover:text-white transition-all translate-x-0 group-hover:translate-x-1" />
                   </div>
                 </Link>
               ))}
             </div>
           </div>
 
-          {/* Skills Progress */}
-          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Skill Progress</h2>
-              <Sparkles className="w-5 h-5 text-orange-500" />
-            </div>
-            <div className="space-y-5">
-              {skills.map((skill) => (
+          {/* Sleek Skill Progress */}
+          <div className="bg-white/2 border border-white/5 rounded-2xl p-8">
+            <h2 className="text-2xl text-neutral-100 mb-8">Skill Proficiency</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {skills.map(skill => (
                 <div key={skill.name}>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="font-medium text-gray-300">{skill.name}</span>
-                    <span className="font-semibold text-white">{skill.level}%</span>
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-sm text-neutral-400 font-medium">{skill.name}</span>
+                    <span className="text-sm text-white font-medium">{skill.level}%</span>
                   </div>
-                  <div className="h-2.5 bg-neutral-700 rounded-full overflow-hidden">
+                  {/* Very thin elegant line */}
+                  <div className="h-1 w-full bg-neutral-900 rounded-full relative">
                     <div
-                      className={`h-full ${skill.color} rounded-full transition-all duration-500`}
+                      className={`absolute top-0 left-0 h-full rounded-full ${skill.color} opacity-80`}
                       style={{ width: `${skill.level}%` }}
-                    ></div>
+                    >
+                      {/* Glowing dot at the end */}
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"></div>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Recent Activity */}
-          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
-            <h2 className="text-xl font-bold text-white mb-6">Recent Activity</h2>
-            <div className="space-y-4">
-              {recentActivity.map((activity, idx) => (
-                <div key={idx} className="flex items-start gap-4">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                      activity.type === "problem"
-                        ? "bg-blue-900/30"
-                        : activity.type === "assignment"
-                        ? "bg-purple-900/30"
-                        : "bg-orange-900/30"
-                    }`}
-                  >
-                    {activity.type === "problem" ? (
-                      <Code2
-                        className={`w-5 h-5 ${
-                          activity.type === "problem" ? "text-blue-400" : ""
-                        }`}
-                      />
-                    ) : activity.type === "assignment" ? (
-                      <BookOpen className="w-5 h-5 text-purple-400" />
-                    ) : (
-                      <Trophy className="w-5 h-5 text-orange-400" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-white">
-                      <span className="font-medium">{activity.action}</span>{" "}
-                      <span className="text-gray-300">{activity.item}</span>
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1">{activity.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
-        {/* Right Column - 1/3 width */}
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
-            <h2 className="text-lg font-bold text-white mb-4">Quick Actions</h2>
-            <div className="space-y-3">
-              <Link
-                to="/problems"
-                className="block w-full px-4 py-3 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 transition-colors text-center"
-              >
-                Start Practicing
-              </Link>
-              <Link
-                to="/contest"
-                className="block w-full px-4 py-3 bg-neutral-700 text-white font-medium rounded-lg hover:bg-neutral-600 transition-colors text-center border border-neutral-600"
-              >
-                View Contests
-              </Link>
-              <Link
-                to="/dashboard/assignments"
-                className="block w-full px-4 py-3 bg-neutral-700 text-white font-medium rounded-lg hover:bg-neutral-600 transition-colors text-center border border-neutral-600"
-              >
-                My Assignments
-              </Link>
+        {/* Right Column - Narrower */}
+        <div className="lg:col-span-4 space-y-8">
+
+          {/* Badge / Profile Card - very minimalist */}
+          <div className="bg-linear-to-b from-[#18181b] to-white/5 border border-white/5 rounded-2xl p-8 text-center relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-full h-full bg-[url('https://res.cloudinary.com/dhe1ygeid/image/upload/v1714495861/grid_m4tnsi.svg')] opacity-[0.03] pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-full h-full bg-linear-to-br from-orange-500/10 via-transparent to-purple-500/5 pointer-events-none"></div>
+            <div className="mx-auto w-24 h-24 mb-6 rounded-2xl rotate-12 bg-linear-to-tr from-orange-400 to-amber-300 flex items-center justify-center shadow-[0_0_30px_rgba(249,115,22,0.3)] relative z-10 transition-transform group-hover:rotate-0 group-hover:scale-105 duration-500">
+              <Award className="w-10 h-10 text-orange-950 -rotate-12 group-hover:rotate-0 transition-transform duration-500" />
+            </div>
+            <h3 className="text-xl font-medium text-white mb-2 relative z-10">Gold Scholar</h3>
+            <p className="text-sm text-neutral-500 mb-6 relative z-10 leading-relaxed">Ranked in the top 15% globally with 50+ problems solved.</p>
+            <Link to="/profile" className="inline-block text-sm font-medium text-white pb-1 border-b border-white/20 hover:border-white transition-colors relative z-10">
+              View Achievements
+            </Link>
+          </div>
+
+          {/* Vertical Timeline Activity */}
+          <div className="bg-white/2 border border-white/5 rounded-2xl p-8">
+            <h2 className="text-lg font-medium text-white mb-6">Recent Activity</h2>
+            <div className="relative border-l border-neutral-800 ml-3 space-y-8">
+              {recentActivity.map((activity, idx) => (
+                <div key={idx} className="relative pl-6">
+                  <span className={`absolute -left-1.25 top-1.5 w-2.5 h-2.5 rounded-full ring-4 shadow-sm ring-white/5 ${
+                    activityThemes[activity.type] || 'bg-neutral-400'
+                  }`}></span>
+
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm text-neutral-300 leading-tight">
+                      <span className="font-semibold text-white">{activity.action}</span> {activity.item}
+                    </p>
+                    <span className="text-xs text-neutral-600 font-medium mt-1">{activity.time}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Upcoming Contests */}
-          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-white">Upcoming Contests</h2>
-              <Calendar className="w-5 h-5 text-gray-500" />
+          {/* Minimal Upcoming Contests */}
+          <div className="bg-white/2 border border-white/5 rounded-2xl p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-medium text-white">Upcoming Events</h2>
             </div>
             <div className="space-y-4">
-              {upcomingContests.map((contest) => (
-                <Link
-                  key={contest.id}
-                  to={`/contest/${contest.id}`}
-                  className="block p-4 bg-neutral-700 rounded-lg border border-neutral-600 hover:border-orange-500/50 hover:bg-neutral-700/70 transition-all group"
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`w-10 h-10 ${
-                        contest.color === "blue" ? "bg-blue-900/30" : "bg-purple-900/30"
-                      } rounded-lg flex items-center justify-center shrink-0`}
-                    >
-                      <Trophy
-                        className={`w-5 h-5 ${
-                          contest.color === "blue" ? "text-blue-400" : "text-purple-400"
-                        }`}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-white text-sm group-hover:text-orange-400 transition-colors">
-                        {contest.name}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>{contest.time}</span>
-                      </div>
-                      <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
-                        <Users className="w-3.5 h-3.5" />
-                        <span>{contest.participants.toLocaleString()} participants</span>
-                      </div>
-                    </div>
+              {upcomingContests.map((contest, idx) => (
+                <Link key={idx} to={`/contest/${contest.id}`} className="group flex items-start gap-4 p-3 -mx-3 rounded-2xl hover:bg-white/2 transition-colors border border-transparent hover:border-white/5">
+                  <div className="flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-white/5 border border-white/5 shrink-0 group-hover:border-white/10 transition-colors">
+                    <Trophy className={`w-5 h-5 mb-1 ${contest.color === 'blue' ? 'text-blue-400' : 'text-purple-400'}`} />
+                    <span className="text-[10px] text-neutral-500 font-semibold uppercase">{contest.time.substring(0, 3)}</span>
+                  </div>
+                  <div className="pt-0.5">
+                    <h4 className="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors mb-1">{contest.name}</h4>
+                    <span className="text-xs text-neutral-500 flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> {contest.participants.toLocaleString()} enrolled</span>
                   </div>
                 </Link>
               ))}
             </div>
           </div>
 
-          {/* Achievement Badge */}
-          <div className="bg-linear-to-br from-purple-500 to-pink-500 rounded-lg p-6 text-white">
-            <div className="flex items-center justify-center mb-4">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                <Award className="w-8 h-8" />
-              </div>
-            </div>
-            <h3 className="text-lg font-bold text-center mb-2">Gold Badge</h3>
-            <p className="text-sm text-purple-100 text-center mb-4">
-              You've completed 50+ problems! Keep up the great work.
-            </p>
-            <div className="flex justify-center">
-              <Link
-                to="/profile"
-                className="text-sm font-medium bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/30 transition-colors"
-              >
-                View All Badges
-              </Link>
-            </div>
-          </div>
         </div>
       </div>
     </div>

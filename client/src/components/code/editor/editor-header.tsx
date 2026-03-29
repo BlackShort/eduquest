@@ -4,15 +4,20 @@ import eduquest from '@/assets/logo/favicon.png'
 import { useContextAPI } from '@/hooks/useContext';
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
+import { SettingsModal, type LayoutOption } from "../settings-modal";
+import { useState } from "react";
 
 interface EditorHeaderProps {
     onRun: () => void;
     onSubmit: () => void;
     isRunning: boolean;
+    layout?: LayoutOption;
+    onLayoutChange?: (layout: LayoutOption) => void;
 }
 
-export const EditorHeader = ({ onRun, onSubmit, isRunning }: EditorHeaderProps) => {
+export const EditorHeader = ({ onRun, onSubmit, isRunning, layout = "global-header", onLayoutChange }: EditorHeaderProps) => {
     const { isLoggedIn, user } = useContextAPI();
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     return (
         <header className="w-full h-12">
@@ -58,7 +63,7 @@ export const EditorHeader = ({ onRun, onSubmit, isRunning }: EditorHeaderProps) 
                     </div>
 
                     <div className="flex items-center justify-center">
-                        <ButtonGroup className="flex gap-0.5">
+                        <ButtonGroup className={`flex gap-0.5 ${layout !== 'global-header' ? 'invisible pointer-events-none' : ''}`}>
                             <Button
                                 size={'sm'}
                                 className="rounded-sm bg-neutral-800 text-blue-500 hover:bg-neutral-700/50"
@@ -81,7 +86,10 @@ export const EditorHeader = ({ onRun, onSubmit, isRunning }: EditorHeaderProps) 
                     <div className="flex items-center gap-4">
                         <div className="flex gap-4">
                             <LayoutPanelLeft className="w-5 h-5 text-gray-400 cursor-pointer hover:text-white" />
-                            <Settings className="w-5 h-5 text-gray-400 cursor-pointer hover:text-white" />
+                            <Settings 
+                                className="w-5 h-5 text-gray-400 cursor-pointer hover:text-white" 
+                                onClick={() => setIsSettingsOpen(true)}
+                            />
                         </div>
                         {isLoggedIn && user ? (
                             <Link to={'/profile'}>
@@ -108,6 +116,13 @@ export const EditorHeader = ({ onRun, onSubmit, isRunning }: EditorHeaderProps) 
                     </div>
                 </div>
             </div>
+
+            <SettingsModal 
+                isOpen={isSettingsOpen} 
+                onClose={() => setIsSettingsOpen(false)} 
+                currentLayout={layout}
+                onLayoutChange={onLayoutChange || (() => {})}
+            />
         </header>
     )
 }

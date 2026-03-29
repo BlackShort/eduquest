@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import { dummyCoding } from "@/data/dummy-data";
 import {
@@ -26,11 +26,15 @@ import {
   CodeXml,
   Maximize,
   ChevronDown,
-  Maximize2,
   SquareCheck,
   Terminal,
+  Loader2,
+  Play,
+  CloudUpload
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { Testcase } from "@/types/types";
+import { EditorSettingsModal } from "../editor-settings-modal";
 
 interface TestResult {
   index: number;
@@ -50,27 +54,78 @@ const languageTemplates = {
 
 interface ProblemDetailProps {
   problemId?: string;
-  onSubmit?: (code: string, language: string, testCase: Testcase[], mode:string) => void;
-  onRun?: (code: string, language: string, testCase: Testcase[], mode:string) => void;
+  onSubmit?: (code: string, language: string, testCase: Testcase[], mode: string) => void;
+  onRun?: (code: string, language: string, testCase: Testcase[], mode: string) => void;
   onCodeChange?: (code: string) => void;
   onLanguageChange?: (language: string) => void;
   isRunning?: boolean;
   testResults?: TestResult[];
   sendTestCase?: (testCases: Testcase[]) => void;
+  actionBarLayout?: "global-header" | "editor-top" | "editor-bottom";
 }
 
-export const ProblemDetail = ({ 
-  problemId, 
+export const ProblemDetail = ({
+  problemId,
+  onSubmit,
+  onRun,
   onCodeChange,
   onLanguageChange,
+  isRunning = false,
   testResults: externalTestResults = [],
   sendTestCase,
+  actionBarLayout = "global-header",
 }: ProblemDetailProps) => {
   const [language, setLanguage] = useState("javascript");
   const [code, setCode] = useState(languageTemplates[language as keyof typeof languageTemplates]);
+  const [activeResultTab, setActiveResultTab] = useState("testcase");
+  const [isEditorSettingsOpen, setIsEditorSettingsOpen] = useState(false);
+  const [fontSize, setFontSize] = useState(14);
+  const [tabSize, setTabSize] = useState(2);
 
   // Find the problem from dummy data
   const problem = dummyCoding[0]?.questions.find(q => q.question_id === problemId) || dummyCoding[0]?.questions[0];
+
+  // Auto-switch to result tab when running starts
+  useEffect(() => {
+    if (isRunning) {
+      setActiveResultTab("result");
+    }
+  }, [isRunning]);
+
+  useEffect(() => {
+    if (problem) {
+      sendTestCase?.(problem.test_cases || []);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [problem?.question_id]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts if already running/submitting
+      if (isRunning) return;
+
+      // Run shortcut: Ctrl + ' or Cmd + '
+      if ((e.ctrlKey || e.metaKey) && e.key === "'") {
+        e.preventDefault();
+        e.stopPropagation();
+        if (problem && onRun) {
+          onRun(code, language, problem.test_cases, (problem as { mode?: string }).mode || "practice");
+        }
+      }
+
+      // Submit shortcut: Ctrl + Enter or Cmd + Enter
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+        if (problem && onSubmit) {
+          onSubmit(code, language, problem.test_cases, (problem as { mode?: string }).mode || "practice");
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
+  }, [code, language, isRunning, problem, onRun, onSubmit]);
 
   if (!problem) {
     return (
@@ -79,8 +134,6 @@ export const ProblemDetail = ({
       </div>
     );
   }
-
-  sendTestCase?.(problem.test_cases || []);
 
   const handleLanguageChange = (newLang: string) => {
     setLanguage(newLang);
@@ -94,6 +147,49 @@ export const ProblemDetail = ({
     const codeValue = newCode || "";
     setCode(codeValue);
     onCodeChange?.(codeValue);
+  };
+
+  const handleRun = () => {
+    if (problem) {
+      onRun?.(code, language, problem.test_cases, (problem as { mode?: string }).mode || "practice");
+    }
+  };
+
+  const handleSubmit = () => {
+    if (problem) {
+      onSubmit?.(code, language, problem.test_cases, (problem as { mode?: string }).mode || "practice");
+    }
+  };
+
+  const renderActionButtons = () => {
+    if (actionBarLayout === "global-header") return null;
+
+    return (
+      <div className="flex gap-2 items-center">
+        {onRun && (
+          <Button
+            size="sm"
+            disabled={isRunning}
+            onClick={handleRun}
+            className="bg-neutral-600 hover:bg-neutral-700 text-neutral-200 cursor-pointer"
+          >
+            {isRunning ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Play className="w-4 h-4 mr-1.5 text-green-500" />}
+            Run
+          </Button>
+        )}
+        {onSubmit && (
+          <Button
+            size="sm"
+            disabled={isRunning}
+            onClick={handleSubmit}
+            className="bg-green-600 hover:bg-green-700 text-neutral-200 cursor-pointer"
+          >
+            <CloudUpload className="w-4 h-4 mr-1.5" />
+            Submit
+          </Button>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -189,17 +285,21 @@ export const ProblemDetail = ({
 
       <ResizablePanel defaultSize="50%">
         <ResizablePanelGroup orientation="vertical" className="gap-0.75">
-          <ResizablePanel defaultSize="75%" minSize="7%" className="overflow-hidden border border-neutral-500 rounded-lg bg-neutral-800">
-            <div className="bg-neutral-700/50 px-3 flex h-10 items-center justify-between">
+          <ResizablePanel defaultSize={70} minSize={7} className="overflow-hidden border border-neutral-500 rounded-lg bg-neutral-800 flex flex-col">
+            <div className="bg-neutral-700/50 px-3 flex h-10 items-center justify-between shrink-0">
               <div className="flex gap-1 items-center justify-center text-sm text-neutral-200 font-normal">
                 <CodeXml className="h-5 w-5 text-green-500" />
                 Code
               </div>
+
+              {actionBarLayout === "editor-top" && renderActionButtons()}
+
               <div className="flex gap-3 items-center justify-center">
                 <Maximize className="h-4 w-4 text-gray-400" />
                 <ChevronDown className="h-5 w-5 text-gray-400" />
               </div>
             </div>
+
             <div className="flex items-center justify-between bg-neutral-800">
               <div className="flex items-center px-1">
                 <Select value={language} onValueChange={handleLanguageChange}>
@@ -217,7 +317,7 @@ export const ProblemDetail = ({
                     data-[state=open]:outline-none
                     data-[state=open]:shadow-none"
                   >
-                  <SelectValue />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[#2d2d2d] border-[#3a3a3a] text-gray-300">
                     <SelectItem value="javascript" className="hover:bg-[#3a3a3a]">JavaScript</SelectItem>
@@ -228,18 +328,22 @@ export const ProblemDetail = ({
                 </Select>
               </div>
               <div className="flex items-center gap-5 px-3">
-                <RotateCcw 
-                  className="h-4 w-4 text-gray-400 cursor-pointer hover:text-white" 
+                <RotateCcw
+                  className="h-4 w-4 text-gray-400 cursor-pointer hover:text-white"
                   onClick={() => {
                     const resetCode = languageTemplates[language as keyof typeof languageTemplates];
                     setCode(resetCode);
                     onCodeChange?.(resetCode);
                   }}
                 />
-                <Settings className="h-4 w-4 text-gray-400 cursor-pointer hover:text-white" />
-                <Maximize2 className="h-4 w-4 text-gray-400 cursor-pointer hover:text-white" />
+
+                <Settings 
+                  className="h-4 w-4 text-gray-400 cursor-pointer hover:text-white" 
+                  onClick={() => setIsEditorSettingsOpen(true)}
+                />
               </div>
             </div>
+
             <div className="h-full flex-1 overflow-hidden">
               <Editor
                 height="100%"
@@ -249,30 +353,35 @@ export const ProblemDetail = ({
                 onChange={handleCodeChange}
                 options={{
                   minimap: { enabled: false },
-                  fontSize: 14,
+                  fontSize: fontSize,
                   scrollBeyondLastLine: false,
                   automaticLayout: true,
-                  tabSize: 2,
+                  tabSize: tabSize,
                 }}
               />
             </div>
+            {actionBarLayout === "editor-bottom" && (
+              <div className="flex items-center justify-end px-3 py-1 border-t border-neutral-700 bg-neutral-800">
+                {renderActionButtons()}
+              </div>
+            )}
           </ResizablePanel>
 
           <ResizableHandle withHandle />
 
-          <ResizablePanel defaultSize="25%" minSize="7%" className="overflow-hidden border border-neutral-500 rounded-lg bg-neutral-800">
-            <Tabs defaultValue="testcase" className="w-full h-full text-neutral-100 gap-0">
-              <TabsList className="p-1 w-full bg-neutral-700/50 rounded-t-lg rounded-b-none">
+            <ResizablePanel defaultSize={30} minSize={7} className="overflow-hidden border border-neutral-500 rounded-lg bg-neutral-800">
+            <Tabs value={activeResultTab} onValueChange={setActiveResultTab} className="w-full h-full text-neutral-100 gap-0">
+              <TabsList className="flex items-center justify-start gap-2 p-1 w-full bg-neutral-700/50 rounded-t-lg rounded-b-none">
                 <TabsTrigger
                   value="testcase"
-                  className="w-max border-0 data-[state=active]:bg-neutral-700/60 bg-transparent text-neutral-400 hover:text-neutral-400 data-[state=active]:text-neutral-200 pb-2 px-0 font-normal"
+                  className="flex items-center justify-center gap-1.5 max-w-32 w-max data-[state=active]:bg-transparent text-neutral-400 hover:text-neutral-400 data-[state=active]:text-neutral-200 p-1 font-normal hover:bg-neutral-700/50 data-[state=active]:shadow-none"
                 >
                   <SquareCheck className="h-4 w-5 text-green-500" />
                   Testcase
                 </TabsTrigger>
                 <TabsTrigger
                   value="result"
-                  className="w-max border-0 data-[state=active]:bg-neutral-700/60 bg-transparent text-neutral-400 hover:text-neutral-400 data-[state=active]:text-neutral-200 pb-2 px-0 font-normal"
+                  className="flex items-center justify-center gap-1.5 max-w-32 w-max data-[state=active]:bg-transparent text-neutral-400 hover:text-neutral-400 data-[state=active]:text-neutral-200 p-1 font-normal hover:bg-neutral-700/50 data-[state=active]:shadow-none"
                 >
                   <Terminal className="h-4 w-5 text-green-500" />
                   Test Result
@@ -320,71 +429,96 @@ export const ProblemDetail = ({
                 </Tabs>
               </TabsContent>
 
-              <TabsContent value="result" className="flex-1 overflow-y-auto p-3 mt-0">
-                {externalTestResults.length === 0 ? (
+              <TabsContent value="result" className="flex-1 overflow-y-auto mt-0">
+                {isRunning ? (
+                  <div className="flex flex-col items-center justify-center h-full gap-3">
+                    <Loader2 className="w-6 h-6 text-neutral-400 animate-spin" />
+                    <p className="text-sm text-[#7c7c7c]">Running test cases...</p>
+                  </div>
+                ) : externalTestResults.length === 0 ? (
                   <div className="flex items-center justify-center h-full">
                     <p className="text-sm text-[#7c7c7c]">You must run your code first.</p>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 px-3 py-2 bg-[#2d2d2d] rounded-lg border border-[#3a3a3a]">
-                      <CheckCircle2 className="w-4 h-4 text-[#00b8a3]" />
-                      <span className="text-sm text-[#00b8a3] font-medium">
-                        Accepted
-                      </span>
-                    </div>
-
-                    {externalTestResults.map((result) => (
-                      <div
-                        key={result.index}
-                        className="rounded-lg p-3 bg-[#2d2d2d] border border-[#3a3a3a]"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-white">
-                            Case {result.index}
-                          </span>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-gray-400 flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {result.runtime}
-                            </span>
-                            {result.passed ? (
-                              <CheckCircle2 className="w-4 h-4 text-[#00b8a3]" />
-                            ) : (
-                              <XCircle className="w-4 h-4 text-red-500" />
-                            )}
-                          </div>
-                        </div>
-                        <div className="space-y-2 text-xs">
-                          <div>
-                            <div className="text-gray-400 mb-1">Input</div>
-                            <div className="text-white bg-[#1a1a1a] p-2 rounded font-mono">
-                              {result.input}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-gray-400 mb-1">Output</div>
-                            <div className="text-white bg-[#1a1a1a] p-2 rounded font-mono">
-                              {result.actualOutput}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-gray-400 mb-1">Expected</div>
-                            <div className="text-white bg-[#1a1a1a] p-2 rounded font-mono">
-                              {result.expectedOutput}
-                            </div>
-                          </div>
+                ) : (() => {
+                  const allPassed = externalTestResults.every(r => r.passed);
+                  const totalRuntime = externalTestResults.reduce((sum, r) => sum + parseInt(r.runtime), 0);
+                  return (
+                    <>
+                      {/* Verdict banner */}
+                      <div className="flex items-center justify-between gap-2 px-4 pt-4">
+                        <h2 className={`text-xl font-semibold ${allPassed ? "text-green-500" : "text-red-500"}`}>
+                          {allPassed ? "Accepted" : "Wrong Answer"}
+                        </h2>
+                        <div className="flex items-center gap-1.5 text-xs text-neutral-400">
+                          <Clock className="w-3.5 h-3.5" />
+                          Runtime: {totalRuntime} ms
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+
+                      {/* Per-case tabs */}
+                      <div className="p-3">
+                        <Tabs defaultValue="res-0" className="w-full h-full text-neutral-100">
+                          <TabsList className="p-1 w-full bg-neutral-800 rounded-md flex items-center justify-start gap-2">
+                            {externalTestResults.map((result, index) => (
+                              <TabsTrigger
+                                key={index}
+                                value={`res-${index}`}
+                                className={`max-w-18 px-3 py-1.5 text-xs rounded-sm border bg-transparent shadow-none hover:bg-neutral-700/50
+                                  ${result.passed
+                                    ? "text-neutral-400 data-[state=active]:bg-neutral-700 data-[state=active]:text-neutral-100 hover:text-neutral-200 cursor-pointer"
+                                    : "text-neutral-400 data-[state=active]:bg-red-500/10 data-[state=active]:text-red-400 hover:text-red-100 cursor-pointer"
+                                  }`}
+                              >
+                                {result.passed
+                                  ? <CheckCircle2 className="w-3 h-3 text-green-500" />
+                                  : <XCircle className="w-3 h-3 text-red-500" />
+                                }
+                                Case {index + 1}
+                              </TabsTrigger>
+                            ))}
+                          </TabsList>
+
+                          {externalTestResults.map((result, index) => (
+                            <TabsContent key={index} value={`res-${index}`} className="mt-0 space-y-3">
+                              <div>
+                                <div className="text-xs text-neutral-400 mb-1.5">Input</div>
+                                <div className="text-sm text-neutral-100 bg-neutral-700/50 p-2.5 rounded-md font-mono">
+                                  {result.input}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-neutral-400 mb-1.5">Output</div>
+                                <div className={`text-sm p-2.5 rounded-md font-mono ${result.passed ? "text-neutral-100 bg-neutral-700/50" : "text-red-400 bg-red-500/5"}`}>
+                                  {result.actualOutput}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-neutral-400 mb-1.5">Expected</div>
+                                <div className="text-sm text-neutral-100 bg-neutral-700/50 p-2.5 rounded-md font-mono">
+                                  {result.expectedOutput}
+                                </div>
+                              </div>
+                            </TabsContent>
+                          ))}
+                        </Tabs>
+                      </div>
+                    </>
+                  );
+                })()}
               </TabsContent>
             </Tabs>
           </ResizablePanel>
         </ResizablePanelGroup>
       </ResizablePanel >
 
+      <EditorSettingsModal
+        isOpen={isEditorSettingsOpen}
+        onClose={() => setIsEditorSettingsOpen(false)}
+        fontSize={fontSize}
+        setFontSize={setFontSize}
+        tabSize={tabSize}
+        setTabSize={setTabSize}
+      />
     </ResizablePanelGroup >
   );
 };

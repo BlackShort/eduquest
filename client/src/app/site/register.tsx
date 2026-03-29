@@ -67,11 +67,14 @@ export const Register = () => {
                 <div className="w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl">
                     {/* Logo + Title */}
                     <div className="flex items-start justify-center mb-7">
-                        <div className="flex items-center justify-center gap-2">
-                            <img src={logo} alt="EduQuest" className="w-8 h-8 object-cover" />
-                            <h1 className="text-2xl font-bold text-white tracking-tight">EduQuest</h1>
-                        </div>
+                        <Link to={'/'}>
+                            <div className="flex items-center justify-center gap-2">
+                                <img src={logo} alt="EduQuest" className="w-8 h-8 object-cover" />
+                                <h1 className="text-2xl font-bold text-white tracking-tight">EduQuest</h1>
+                            </div>
+                        </Link>
                     </div>
+
                     <form onSubmit={handleLogin} className="flex flex-col gap-4" method="post">
 
                         {/* Username */}

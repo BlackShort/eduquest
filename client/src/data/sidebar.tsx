@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { CodeXml, FileCodeCorner, ChartNoAxesColumn, UserRound, Settings, ListTodo, LayoutDashboard, ChartColumnDecreasing, Upload, FileText } from "lucide-react";
+import { CodeXml, FileCodeCorner, ChartNoAxesColumn, ListTodo, LayoutDashboard, ChartColumnDecreasing, Upload, FileText } from "lucide-react";
 
 export interface NavigationItem {
     featured?: boolean;
@@ -17,9 +17,9 @@ export const studentNavigation: Navigation = {
     dashboard: [
         { featured: false, path: `/dashboard`, icon: LayoutDashboard, title: 'Dashboard' },
         { featured: true, path: `assessment`, icon: ListTodo, title: 'Assessment' },
-        { featured: false, path: `/contest`, icon: ChartNoAxesColumn, title: 'Contests' },
-        { featured: false, path: `/problems`, icon: CodeXml, title: 'Problems' },
-        { featured: false, path: `/leaderboard`, icon: ChartColumnDecreasing, title: 'Leaderboard' },
+        { featured: false, path: `contest`, icon: ChartNoAxesColumn, title: 'Contests' },
+        // { featured: false, path: `/problems`, icon: CodeXml, title: 'Problems' },
+        // { featured: false, path: `/leaderboard`, icon: ChartColumnDecreasing, title: 'Leaderboard' },
     ],
 
     learning: [
@@ -28,10 +28,10 @@ export const studentNavigation: Navigation = {
         // { path: `resources`, icon: FolderClosed, title: 'Resources' },
     ],
 
-    account: [
-        { featured: false, path: `me`, icon: UserRound, title: 'Profile' },
-        { featured: false, path: `settings`, icon: Settings, title: 'Settings' },
-    ],
+    // account: [
+    //     { featured: false, path: `me`, icon: UserRound, title: 'Profile' },
+    //     { featured: false, path: `settings`, icon: Settings, title: 'Settings' },
+    // ],
 
     // app: [
     //     { path: `appshare`, icon: QrCode, title: 'Share App' },
@@ -51,11 +51,6 @@ export const facultyNavigation: Navigation = {
         { featured: false, path: `problems`, icon: CodeXml, title: 'Problems' },
         { featured: false, path: `bulk-import`, icon: Upload, title: 'Bulk Import' },
         { featured: false, path: `reports`, icon: FileText, title: 'Reports' },
-    ],
-
-    account: [
-        { featured: false, path: `/me`, icon: UserRound, title: 'Profile' },
-        { featured: false, path: `settings`, icon: Settings, title: 'Settings' },
     ],
 };
 
