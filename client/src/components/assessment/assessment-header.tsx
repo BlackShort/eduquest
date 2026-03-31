@@ -99,6 +99,13 @@ export const AssessmentHeader = ({ onSubmit, isRunning, initialTime = 3600 }: Ed
                             >
                                 {formatTime(timeRemaining)}
                             </Button>
+                            <Button
+                                className="cursor-pointer rounded-sm bg-neutral-800 text-amber-500 hover:bg-neutral-700/50"
+                                onClick={onSubmit}
+                                disabled={!isRunning}
+                            >
+                                <CloudUpload /> <span>Submit</span>
+                            </Button>
                         </ButtonGroup>
                     </div>
 
@@ -111,7 +118,7 @@ export const AssessmentHeader = ({ onSubmit, isRunning, initialTime = 3600 }: Ed
                             />
                         </div>
 
-                        <div className="flex items-center justify-center">
+                        {/* <div className="flex items-center justify-center">
                             <Button
                                 size={'sm'}
                                 className="cursor-pointer rounded-sm bg-neutral-800 text-amber-500 hover:bg-neutral-700/50"
@@ -120,7 +127,7 @@ export const AssessmentHeader = ({ onSubmit, isRunning, initialTime = 3600 }: Ed
                             >
                                 <CloudUpload /> <span>Submit</span>
                             </Button>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>

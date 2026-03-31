@@ -72,17 +72,17 @@ const mcqQuestions: Record<string, MCQQuestionData> = {
   }
 };
 
-const MCQQuestion = ({ 
-  data, 
+const MCQQuestion = ({
+  data,
   questionId,
-  onNext, 
-  onPrevious, 
+  onNext,
+  onPrevious,
   onAnswerChange,
-  savedAnswer 
-}: { 
-  data: MCQQuestionData; 
+  savedAnswer
+}: {
+  data: MCQQuestionData;
   questionId: string;
-  onNext?: () => void; 
+  onNext?: () => void;
   onPrevious?: () => void;
   onAnswerChange?: (questionId: string, answer: string) => void;
   savedAnswer?: string | null;
@@ -110,11 +110,10 @@ const MCQQuestion = ({
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-white">{data.title}</h2>
-            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-              data.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' :
-              data.difficulty === 'Medium' ? 'bg-orange-500/20 text-orange-400' :
-              'bg-red-500/20 text-red-400'
-            }`}>
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${data.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' :
+                data.difficulty === 'Medium' ? 'bg-orange-500/20 text-orange-400' :
+                  'bg-red-500/20 text-red-400'
+              }`}>
               {data.difficulty}
             </span>
           </div>
@@ -130,16 +129,14 @@ const MCQQuestion = ({
               <button
                 key={option.id}
                 onClick={() => handleOptionSelect(option.id)}
-                className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
-                  isSelected
+                className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer ${isSelected
                     ? 'bg-blue-600 border-blue-500 text-white'
                     : 'bg-neutral-800 border-neutral-700 text-neutral-300 hover:bg-neutral-700 hover:border-neutral-600'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-4">
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    isSelected ? 'border-white' : 'border-neutral-500'
-                  }`}>
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-white' : 'border-neutral-500'
+                    }`}>
                     {isSelected && <Circle className="w-3 h-3 fill-current" />}
                   </div>
                   <div className="flex-1">
@@ -175,13 +172,13 @@ const MCQQuestion = ({
   );
 };
 
-export const AssessmentDetail = ({ 
-  questionType, 
-  questionId, 
-  onNext, 
-  onPrevious, 
+export const AssessmentDetail = ({
+  questionType,
+  questionId,
+  onNext,
+  onPrevious,
   onAnswerChange,
-  savedAnswer 
+  savedAnswer
 }: AssessmentDetailProps) => {
 
   // --- Isolated State for Coding Questions ---
@@ -202,7 +199,7 @@ export const AssessmentDetail = ({
       setIsRunning(true);
       // Run public test cases just like regular practice mode
       const result = await codeSubmission(currentCode, currentLanguage, testCases.slice(0, 3), "run", questionId);
-      
+
       const mapped = (result.data.executionResult?.testcaseResults ?? []).map(
         (tc: { input: string; expectedOutput: string; actualOutput: string; status: string; timeTakenMs: number }, i: number) => ({
           index: i + 1,
@@ -220,29 +217,27 @@ export const AssessmentDetail = ({
       setIsRunning(false);
     }
   };
-  
+
   if (questionType === 'coding') {
     // Use ProblemDetail for coding questions with isolated assessment runner
     return (
       <div className='flex flex-col h-full w-full overflow-hidden'>
-        <div className="flex-1 overflow-hidden">
-          <ProblemDetail 
-            problemId={questionId}
-            onCodeChange={(code) => {
-              setCurrentCode(code);
-              // Autosave to the master answers dictionary via parent callback
-              if (onAnswerChange) {
-                onAnswerChange(questionId, code);
-              }
-            }}
-            onLanguageChange={(lang) => setCurrentLanguage(lang)}
-            onRun={() => runCode()}
-            isRunning={isRunning}
-            testResults={testResults}
-            sendTestCase={(tc) => setTestCases(tc)}
-            actionBarLayout="editor-bottom"
-          />
-        </div>
+        <ProblemDetail
+          problemId={questionId}
+          onCodeChange={(code) => {
+            setCurrentCode(code);
+            // Autosave to the master answers dictionary via parent callback
+            if (onAnswerChange) {
+              onAnswerChange(questionId, code);
+            }
+          }}
+          onLanguageChange={(lang) => setCurrentLanguage(lang)}
+          onRun={() => runCode()}
+          isRunning={isRunning}
+          testResults={testResults}
+          sendTestCase={(tc) => setTestCases(tc)}
+          actionBarLayout="editor-bottom"
+        />
       </div>
     );
   }
@@ -260,10 +255,10 @@ export const AssessmentDetail = ({
 
   return (
     <div className='rounded-md border border-neutral-800 bg-neutral-900 h-full w-full p-6 overflow-hidden'>
-      <MCQQuestion 
-        data={data} 
+      <MCQQuestion
+        data={data}
         questionId={questionId}
-        onNext={onNext} 
+        onNext={onNext}
         onPrevious={onPrevious}
         onAnswerChange={onAnswerChange}
         savedAnswer={savedAnswer}

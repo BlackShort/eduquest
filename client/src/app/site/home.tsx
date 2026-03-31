@@ -410,11 +410,11 @@ export const Home = () => {
                   <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-linear-to-tr from-orange-500 to-amber-300 flex items-center justify-center text-black font-bold text-sm">
-                        JD
+                        AG
                       </div>
                       <div>
-                        <h3 className="text-sm font-medium text-neutral-200 leading-none">John Doe</h3>
-                        <span className="text-xs text-neutral-500">Student � Computer Science</span>
+                        <h3 className="text-sm font-medium text-neutral-200 leading-none">Akash Gupta</h3>
+                        <span className="text-xs text-neutral-500">Student Computer Science</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 bg-orange-500/10 px-2.5 py-1 rounded-full border border-orange-500/20">
@@ -585,7 +585,7 @@ export const Home = () => {
             Join thousands of engineering students already improving their technical skills on EduQuest's enterprise-grade platform.
           </p>
 
-          <Link to={'/login'} className="group w-max">
+          <Link to={isLoggedIn ? '/dashboard' : '/auth/login'} className="group w-max">
             <div className="relative inline-flex h-12 items-center justify-center overflow-hidden rounded-full p-px focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 focus:ring-offset-black">
               <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)] group-hover:bg-[conic-gradient(from_90deg_at_50%_50%,#f97316_0%,#fbbf24_50%,#f97316_100%)] transition-colors duration-500" />
               <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-neutral-950 px-8 py-1 text-base font-medium text-neutral-200 backdrop-blur-3xl transition-all duration-300 group-hover:bg-neutral-900 gap-2">

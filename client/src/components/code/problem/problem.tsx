@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
+import type { editor, IPosition } from "monaco-editor";
 import { dummyCoding } from "@/data/dummy-data";
 import {
   ResizableHandle,
@@ -10,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -21,6 +23,7 @@ import {
   XCircle,
   Clock,
   FileText,
+  BookOpen,
   FlaskConical,
   History,
   CodeXml,
@@ -30,11 +33,15 @@ import {
   Terminal,
   Loader2,
   Play,
-  CloudUpload
+  CloudUpload,
+  Maximize2,
+  Braces,
+  ChartNoAxesGantt
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Testcase } from "@/types/types";
 import { EditorSettingsModal } from "../editor-settings-modal";
+
 
 interface TestResult {
   index: number;
@@ -75,12 +82,28 @@ export const ProblemDetail = ({
   sendTestCase,
   actionBarLayout = "global-header",
 }: ProblemDetailProps) => {
-  const [language, setLanguage] = useState("javascript");
+  const [language, setLanguage] = useState("java");
   const [code, setCode] = useState(languageTemplates[language as keyof typeof languageTemplates]);
   const [activeResultTab, setActiveResultTab] = useState("testcase");
   const [isEditorSettingsOpen, setIsEditorSettingsOpen] = useState(false);
   const [fontSize, setFontSize] = useState(14);
   const [tabSize, setTabSize] = useState(2);
+  const [cursorPosition, setCursorPosition] = useState<IPosition>({ lineNumber: 1, column: 1 });
+
+  const PROBLEM_TABS = [
+    { value: "description", icon: <FileText className="w-4 h-4 text-blue-500" />, label: "Description" },
+    { value: "test-cases", icon: <BookOpen className="w-4 h-4 text-purple-500" />, label: "Test Cases" },
+    { value: "solutions", icon: <FlaskConical className="w-4 h-4 text-green-500" />, label: "Solutions" },
+    { value: "submissions", icon: <History className="w-4 h-4 text-yellow-500" />, label: "Submissions" },
+  ];
+
+  const LANGUAGES = [
+    { label: 'Java', value: 'java' },
+    { label: 'JavaScript', value: 'javascript' },
+    { label: 'TypeScript ', value: 'typescript' },
+    { label: 'C++', value: 'cpp' },
+    { label: 'Python', value: 'python' },
+  ];
 
   // Find the problem from dummy data
   const problem = dummyCoding[0]?.questions.find(q => q.question_id === problemId) || dummyCoding[0]?.questions[0];
@@ -161,6 +184,12 @@ export const ProblemDetail = ({
     }
   };
 
+  const handleEditorMount = (editorInstance: editor.IStandaloneCodeEditor) => {
+    editorInstance.onDidChangeCursorPosition((e: editor.ICursorPositionChangedEvent) => {
+      setCursorPosition(e.position);
+    });
+  };
+
   const renderActionButtons = () => {
     if (actionBarLayout === "global-header") return null;
 
@@ -173,7 +202,7 @@ export const ProblemDetail = ({
             onClick={handleRun}
             className="bg-neutral-600 hover:bg-neutral-700 text-neutral-200 cursor-pointer"
           >
-            {isRunning ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Play className="w-4 h-4 mr-1.5 text-green-500" />}
+            {isRunning ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Play className="w-4 h-4 mr-1 text-green-500" />}
             Run
           </Button>
         )}
@@ -184,7 +213,7 @@ export const ProblemDetail = ({
             onClick={handleSubmit}
             className="bg-green-600 hover:bg-green-700 text-neutral-200 cursor-pointer"
           >
-            <CloudUpload className="w-4 h-4 mr-1.5" />
+            <CloudUpload className="w-4 h-4 mr-1" />
             Submit
           </Button>
         )}
@@ -197,28 +226,30 @@ export const ProblemDetail = ({
       orientation="horizontal"
       className="h-full w-full gap-0.75"
     >
-      <ResizablePanel defaultSize="50%" minSize="3.5%" className="border border-neutral-500 rounded-lg bg-neutral-800">
+      <ResizablePanel defaultSize={"45"} minSize={"30"} className="border border-neutral-500 rounded-lg bg-neutral-800">
         <Tabs defaultValue="description" className="w-full h-full text-neutral-100">
-          <TabsList className="p-1 w-full flex-wrap bg-neutral-700/50 rounded-t-lg rounded-b-none">
-            <TabsTrigger value="description"
-              className="w-max border-0 data-[state=active]:bg-neutral-700/60 bg-transparent text-neutral-400 hover:text-neutral-400 data-[state=active]:text-neutral-200 pb-2 px-0 font-normal"
-            >
-              <FileText className="text-blue-500" />
-              Description
-            </TabsTrigger>
-            <TabsTrigger value="solutions"
-              className="w-max border-0 data-[state=active]:bg-neutral-700/60 bg-transparent text-neutral-400 hover:text-neutral-400 data-[state=active]:text-neutral-200 pb-2 px-0 font-normal"
-            >
-              <FlaskConical className="text-green-500" />
-              Solutions
-            </TabsTrigger>
-            <TabsTrigger value="submissions"
-              className="w-max border-0 data-[state=active]:bg-neutral-700/60 bg-transparent text-neutral-400 hover:text-neutral-400 data-[state=active]:text-neutral-200 pb-2 px-0 font-normal"
-            >
-              <History className="text-yellow-500" />
-              Submissions
-            </TabsTrigger>
+          <TabsList className="relative w-full bg-neutral-700/50 rounded-t-lg rounded-b-none p-0 m-0">
+            <div className="w-full gap-1 px-1 flex items-center justify-start no-scrollbar overflow-x-auto">
+              {
+                PROBLEM_TABS.map((tab, index) => (
+                  <>
+                    <TabsTrigger
+                      key={index}
+                      value={tab.value}
+                      className="data-[state=active]:focus:ring-0 focus-visible:ring-0 focus-visible:outline-none focus-visible:ring-offset-0 group-data-[variant=default]/tabs-list:data-[state=active]:shadow-none flex items-center justify-center gap-1.5 px-2 py-1.5 max-w-32 w-max text-neutral-400 font-normal hover:text-neutral-200 data-[state=active]:text-neutral-100 data-[state=active]:font-medium data-[state=active]:bg-white/5 hover:bg-neutral-100/5  bg-transparent shadow-none data-[state=active]:shadow-none transition-colors border-none rounded-sm"
+                    >
+                      {tab.icon}
+                      {tab.label}
+                    </TabsTrigger>
+                    {index < PROBLEM_TABS.length - 1 && (
+                      <div key={`separator-${index}`} className="w-px h-4 bg-neutral-700 mx-1"></div>
+                    )}
+                  </>
+                ))
+              }
+            </div>
           </TabsList>
+
           <TabsContent value="description" className="flex-1 overflow-y-auto px-4 py-4 text-gray-100 mt-0">
             <div className="space-y-4">
               {/* Problem Title */}
@@ -268,6 +299,11 @@ export const ProblemDetail = ({
               </div>
             </div>
           </TabsContent>
+          <TabsContent value="test-cases" className="flex-1 overflow-y-auto px-4 py-4 text-gray-100">
+            <div className="text-center py-12">
+              <p className="text-sm text-[#7c7c7c]">Test Case Result will be shown here</p>
+            </div>
+          </TabsContent>
           <TabsContent value="solutions" className="flex-1 overflow-y-auto px-4 py-4 text-gray-100">
             <div className="text-center py-12">
               <p className="text-sm text-[#7c7c7c]">Community solutions coming soon...</p>
@@ -283,30 +319,29 @@ export const ProblemDetail = ({
 
       <ResizableHandle withHandle />
 
-      <ResizablePanel defaultSize="50%">
+      <ResizablePanel defaultSize={"55"} minSize={"30"}>
         <ResizablePanelGroup orientation="vertical" className="gap-0.75">
-          <ResizablePanel defaultSize={70} minSize={7} className="overflow-hidden border border-neutral-500 rounded-lg bg-neutral-800 flex flex-col">
+          <ResizablePanel defaultSize={"70"} minSize={"6.7"} className="overflow-hidden border border-neutral-500 rounded-lg bg-neutral-800 flex flex-col">
             <div className="bg-neutral-700/50 px-3 flex h-10 items-center justify-between shrink-0">
               <div className="flex gap-1 items-center justify-center text-sm text-neutral-200 font-normal">
-                <CodeXml className="h-5 w-5 text-green-500" />
+                <CodeXml className="h-4 w-4 text-green-500" />
                 Code
               </div>
 
               {actionBarLayout === "editor-top" && renderActionButtons()}
 
-              <div className="flex gap-3 items-center justify-center">
-                <Maximize className="h-4 w-4 text-gray-400" />
-                <ChevronDown className="h-5 w-5 text-gray-400" />
+              <div className="flex gap-4 items-center justify-center">
+                <Maximize className="h-4 w-4 text-gray-400 hover:text-white cursor-pointer" />
+                <ChevronDown className="h-5 w-5 text-gray-400 hover:text-white cursor-pointer" />
               </div>
             </div>
 
             <div className="flex items-center justify-between bg-neutral-800">
               <div className="flex items-center px-1">
                 <Select value={language} onValueChange={handleLanguageChange}>
-                  <SelectTrigger className="
-                    w-max h-8 text-gray-300 text-sm 
+                  <SelectTrigger className="w-full max-w-48 text-gray-300 text-sm font-normal
                     border-0 bg-transparent shadow-none
-                    hover:bg-transparent
+                    hover:text-neutral-100 transition-all duration-300
                     focus:outline-none
                     focus:ring-0
                     focus-visible:outline-none
@@ -315,31 +350,38 @@ export const ProblemDetail = ({
                     ring-0
                     data-[state=open]:ring-0
                     data-[state=open]:outline-none
-                    data-[state=open]:shadow-none"
-                  >
-                    <SelectValue />
+                    data-[state=open]:shadow-none">
+                    <SelectValue placeholder="Select a language" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#2d2d2d] border-[#3a3a3a] text-gray-300">
-                    <SelectItem value="javascript" className="hover:bg-[#3a3a3a]">JavaScript</SelectItem>
-                    <SelectItem value="python" className="hover:bg-[#3a3a3a]">Python</SelectItem>
-                    <SelectItem value="cpp" className="hover:bg-[#3a3a3a]">C++</SelectItem>
-                    <SelectItem value="java" className="hover:bg-[#3a3a3a]">Java</SelectItem>
+                  <SelectContent className="bg-[#2d2d2d] border-[#3a3a3a] text-gray-300 cursor-pointer transition-all duration-300">
+                    <SelectGroup>
+                      {LANGUAGES.map((lang) => (
+                        <SelectItem key={lang.value} value={lang.value}>
+                          {lang.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center gap-5 px-3">
+
+              <div className="flex items-center gap-4 px-3 text-gray-400">
+                <ChartNoAxesGantt className="h-4 w-4 cursor-pointer hover:text-neural-100" />
+                <Braces className="h-4 w-4 cursor-pointer hover:text-neural-100" />
                 <RotateCcw
-                  className="h-4 w-4 text-gray-400 cursor-pointer hover:text-white"
+                  className="h-4 w-4 cursor-pointer hover:text-neural-100"
                   onClick={() => {
                     const resetCode = languageTemplates[language as keyof typeof languageTemplates];
                     setCode(resetCode);
                     onCodeChange?.(resetCode);
                   }}
                 />
-
-                <Settings 
-                  className="h-4 w-4 text-gray-400 cursor-pointer hover:text-white" 
+                <Settings
+                  className="h-4 w-4 cursor-pointer hover:text-white"
                   onClick={() => setIsEditorSettingsOpen(true)}
+                />
+                <Maximize2
+                  className="h-4 w-4 cursor-pointer hover:text-white"
                 />
               </div>
             </div>
@@ -351,6 +393,7 @@ export const ProblemDetail = ({
                 theme="vs-dark"
                 value={code}
                 onChange={handleCodeChange}
+                onMount={handleEditorMount}
                 options={{
                   minimap: { enabled: false },
                   fontSize: fontSize,
@@ -360,28 +403,32 @@ export const ProblemDetail = ({
                 }}
               />
             </div>
-            {actionBarLayout === "editor-bottom" && (
-              <div className="flex items-center justify-end px-3 py-1 border-t border-neutral-700 bg-neutral-800">
-                {renderActionButtons()}
+
+            <div className="flex items-center justify-between px-1 py-1 min-h-10 h-max bg-[#1e1e1e]">
+              <div className="text-xs text-gray-500 pl-2 font-sans">
+                Ln {cursorPosition.lineNumber}, Col {cursorPosition.column}
               </div>
-            )}
+              {actionBarLayout === "editor-bottom" && (
+                renderActionButtons()
+              )}
+            </div>
           </ResizablePanel>
 
           <ResizableHandle withHandle />
 
-            <ResizablePanel defaultSize={30} minSize={7} className="overflow-hidden border border-neutral-500 rounded-lg bg-neutral-800">
+          <ResizablePanel defaultSize={"30"} minSize={"6.5"} className="overflow-hidden border border-neutral-500 rounded-lg bg-neutral-800">
             <Tabs value={activeResultTab} onValueChange={setActiveResultTab} className="w-full h-full text-neutral-100 gap-0">
               <TabsList className="flex items-center justify-start gap-2 p-1 w-full bg-neutral-700/50 rounded-t-lg rounded-b-none">
                 <TabsTrigger
                   value="testcase"
-                  className="flex items-center justify-center gap-1.5 max-w-32 w-max data-[state=active]:bg-transparent text-neutral-400 hover:text-neutral-400 data-[state=active]:text-neutral-200 p-1 font-normal hover:bg-neutral-700/50 data-[state=active]:shadow-none"
+                  className="flex items-center justify-center gap-1.5 max-w-32 w-max data-[state=active]:bg-transparent text-neutral-400 hover:text-neutral-400 data-[state=active]:text-neutral-200 p-1 font-normal hover:bg-neutral-700/50 data-[state=active]:shadow-none shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:ring-offset-0 group-data-[variant=default]/tabs-list:data-[state=active]:shadow-none"
                 >
                   <SquareCheck className="h-4 w-5 text-green-500" />
                   Testcase
                 </TabsTrigger>
                 <TabsTrigger
                   value="result"
-                  className="flex items-center justify-center gap-1.5 max-w-32 w-max data-[state=active]:bg-transparent text-neutral-400 hover:text-neutral-400 data-[state=active]:text-neutral-200 p-1 font-normal hover:bg-neutral-700/50 data-[state=active]:shadow-none"
+                  className="flex items-center justify-center gap-1.5 max-w-32 w-max data-[state=active]:bg-transparent text-neutral-400 hover:text-neutral-400 data-[state=active]:text-neutral-200 p-1 font-normal hover:bg-neutral-700/50 data-[state=active]:shadow-none shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:ring-offset-0 group-data-[variant=default]/tabs-list:data-[state=active]:shadow-none"
                 >
                   <Terminal className="h-4 w-5 text-green-500" />
                   Test Result
@@ -396,7 +443,7 @@ export const ProblemDetail = ({
                       <TabsTrigger
                         key={index}
                         value={`case-${index}`}
-                        className="max-w-18 px-3 py-1.5 text-xs rounded-sm data-[state=active]:bg-neutral-700 data-[state=active]:text-white text-neutral-400 hover:bg-neutral-700/50 hover:text-neutral-200 cursor-pointer"
+                        className="max-w-18 px-3 py-1.5 text-xs rounded-sm data-[state=active]:bg-neutral-700 data-[state=active]:text-white text-neutral-400 hover:bg-neutral-700/50 hover:text-neutral-200 cursor-pointer data-[state=active]:shadow-none shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:ring-offset-0 group-data-[variant=default]/tabs-list:data-[state=active]:shadow-none"
                       >
                         Case {index + 1}
                       </TabsTrigger>
@@ -463,7 +510,7 @@ export const ProblemDetail = ({
                               <TabsTrigger
                                 key={index}
                                 value={`res-${index}`}
-                                className={`max-w-18 px-3 py-1.5 text-xs rounded-sm border bg-transparent shadow-none hover:bg-neutral-700/50
+                                className={`max-w-18 px-3 py-1.5 text-xs rounded-sm border bg-transparent shadow-none hover:bg-neutral-700/50 data-[state=active]:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:ring-offset-0 group-data-[variant=default]/tabs-list:data-[state=active]:shadow-none
                                   ${result.passed
                                     ? "text-neutral-400 data-[state=active]:bg-neutral-700 data-[state=active]:text-neutral-100 hover:text-neutral-200 cursor-pointer"
                                     : "text-neutral-400 data-[state=active]:bg-red-500/10 data-[state=active]:text-red-400 hover:text-red-100 cursor-pointer"

@@ -181,7 +181,7 @@ export const AssessmentLayout = () => {
         isRunning={!isSubmitted}
       />
 
-      <main className="m-2 relative flex flex-row flex-1 gap-2 overflow-hidden">
+      <main className="p-2 h-[calc(100vh-3rem)] relative flex flex-row gap-2 overflow-hidden">
         <aside
           className={`relative rounded-md border border-neutral-800 bg-neutral-900 h-full transition-all duration-300 ease-in-out shrink-0 ${sidebarOpen ? "w-72" : "w-13"} overflow-hidden flex flex-col`}
         >
@@ -214,11 +214,10 @@ export const AssessmentLayout = () => {
                             <button
                               key={question.id}
                               onClick={() => setCurrentQuestionId(question.id)}
-                              className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${
-                                currentQuestionId === question.id
-                                  ? "bg-blue-600 text-white"
-                                  : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
-                              }`}
+                              className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${currentQuestionId === question.id
+                                ? "bg-blue-600 text-white"
+                                : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
+                                }`}
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -254,13 +253,12 @@ export const AssessmentLayout = () => {
                             <button
                               key={question.id}
                               onClick={() => setCurrentQuestionId(question.id)}
-                              className={`relative w-10 h-10 rounded-full transition-all duration-200 text-center font-medium ${
-                                currentQuestionId === question.id
-                                  ? "bg-green-600 text-white"
-                                  : isAnswered
-                                    ? "bg-green-600/30 text-green-300 hover:bg-green-600/40"
-                                    : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
-                              }`}
+                              className={`relative w-10 h-10 rounded-full transition-all duration-200 text-center font-medium ${currentQuestionId === question.id
+                                ? "bg-green-600 text-white"
+                                : isAnswered
+                                  ? "bg-green-600/30 text-green-300 hover:bg-green-600/40"
+                                  : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
+                                }`}
                             >
                               {idx + 1}
                               {isAnswered && currentQuestionId !== question.id && (
@@ -274,10 +272,10 @@ export const AssessmentLayout = () => {
                 </div>
               )}
             </div>
-            
+
             <div className={`absolute top-0 left-0 w-13 h-full overflow-y-auto transition-opacity duration-200 ${!sidebarOpen ? "opacity-100 z-10" : "opacity-0 pointer-events-none"}`}>
               {!sidebarOpen && (
-                <div className="flex flex-col items-center p-2 space-y-4 mt-4 pb-4">
+                <div className="flex flex-col items-center p-2 space-y-4 mt-2 pb-4">
                   {/* Coding Questions Quick Jump */}
                   {questions.some(q => q.type === "coding") && (
                     <button
@@ -286,11 +284,10 @@ export const AssessmentLayout = () => {
                         if (firstCoding) setCurrentQuestionId(firstCoding.id);
                         setSidebarOpen(true);
                       }}
-                      className={`w-9 h-9 flex items-center justify-center shrink-0 rounded-lg transition-all duration-200 ${
-                        currentQuestion?.type === "coding"
-                          ? "bg-blue-600 shadow-md shadow-blue-500/20"
-                          : "bg-neutral-800 hover:bg-neutral-700"
-                      }`}
+                      className={`w-9 h-9 flex items-center justify-center shrink-0 rounded-lg transition-all duration-200 ${currentQuestion?.type === "coding"
+                        ? "bg-blue-600 shadow-md shadow-blue-500/20"
+                        : "bg-neutral-800 hover:bg-neutral-700"
+                        }`}
                       title="Coding Problems"
                     >
                       <Code2 className="w-5 h-5 text-white" />
@@ -305,11 +302,10 @@ export const AssessmentLayout = () => {
                         if (firstMcq) setCurrentQuestionId(firstMcq.id);
                         setSidebarOpen(true);
                       }}
-                      className={`w-9 h-9 flex items-center justify-center shrink-0 rounded-lg transition-all duration-200 ${
-                        currentQuestion?.type === "mcq"
-                          ? "bg-green-600 shadow-md shadow-green-500/20"
-                          : "bg-neutral-800 hover:bg-neutral-700"
-                      }`}
+                      className={`w-9 h-9 flex items-center justify-center shrink-0 rounded-lg transition-all duration-200 ${currentQuestion?.type === "mcq"
+                        ? "bg-green-600 shadow-md shadow-green-500/20"
+                        : "bg-neutral-800 hover:bg-neutral-700"
+                        }`}
                       title="Multiple Choice"
                     >
                       <ListChecks className="w-5 h-5 text-white" />
@@ -322,7 +318,7 @@ export const AssessmentLayout = () => {
         </aside>
 
         <div
-          className={`absolute top-8 transition-all duration-300 ease-in-out ${sidebarOpen ? "left-69" : "left-10"} bg-neutral-700 hover:bg-orange-500 scale-95 hover:scale-100 rounded-full p-2 cursor-pointer text-neutral-200 shadow-lg z-10`}
+          className={`absolute top-13 transition-all duration-300 ease-in-out ${sidebarOpen ? "left-71" : "left-12"} bg-neutral-700 hover:bg-orange-500 scale-95 hover:scale-100 rounded-full p-2 cursor-pointer text-neutral-200 shadow-lg z-10`}
           onClick={toggleSidebar}
         >
           <PanelRightOpen
@@ -330,16 +326,14 @@ export const AssessmentLayout = () => {
           />
         </div>
 
-        <div className={`flex-1 transition-all duration-300 ease-in-out`}>
-          <AssessmentDetail
-            questionType={currentQuestion?.type || "coding"}
-            questionId={currentQuestionId}
-            onNext={showNext ? handleNext : undefined}
-            onPrevious={showPrevious ? handlePrevious : undefined}
-            onAnswerChange={handleAnswerChange}
-            savedAnswer={answers[currentQuestionId] || null}
-          />
-        </div>
+        <AssessmentDetail
+          questionType={currentQuestion?.type || "coding"}
+          questionId={currentQuestionId}
+          onNext={showNext ? handleNext : undefined}
+          onPrevious={showPrevious ? handlePrevious : undefined}
+          onAnswerChange={handleAnswerChange}
+          savedAnswer={answers[currentQuestionId] || null}
+        />
       </main>
 
       {/* 🎯 Proctoring Overlay - Only active during assessment */}
