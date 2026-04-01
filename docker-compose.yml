@@ -12,7 +12,7 @@ services:
     depends_on:
       - auth
       # - content
-      # - code
+      - code
       - proctor
     restart: always
 
@@ -34,14 +34,14 @@ services:
   #     - PORT=5002
   #   restart: always
 
-  # code:
-  #   build: ./services/code
-  #   container_name: code
-  #   env_file:
-  #     - /home/ubuntu/secrets/eduquest.env
-  #   environment:
-  #     - PORT=5003
-  #   restart: always
+  code:
+    build: ./services/code
+    container_name: code
+    env_file:
+      - /home/ubuntu/secrets/eduquest.env
+    environment:
+      - PORT=5003
+    restart: always
 
   proctor:
     build: ./services/proctor

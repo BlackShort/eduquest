@@ -1,11 +1,11 @@
 import axios from 'axios';
 import type { Test } from '@/types/types';
+import { contentUrl } from './server-api';
 
-const API_URL = 'http://localhost:5002';
 
 // Create axios instance with default config
 const facultyApi = axios.create({
-    baseURL: API_URL,
+    baseURL: contentUrl,
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json'

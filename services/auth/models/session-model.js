@@ -47,7 +47,6 @@ const sessionSchema = new mongoose.Schema({
 
 // Index for faster queries
 sessionSchema.index({ userId: 1 });
-sessionSchema.index({ token: 1 });
 sessionSchema.index({ expiresAt: 1 });
 
 const sessionModel = mongoose.model("Session", sessionSchema);

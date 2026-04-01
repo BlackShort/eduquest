@@ -1,10 +1,10 @@
 import type { Testcase } from "@/types/types";
 import axios from "axios";
-const API_URL = 'http://localhost:5003';
+import { codeUrl } from "./server-api";
 
 // Create axios instance with default config
 const codeApi = axios.create({
-    baseURL: API_URL,
+    baseURL: codeUrl,
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json'

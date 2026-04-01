@@ -1,10 +1,9 @@
 import axios, { AxiosError } from 'axios';
-
-const API_URL = import.meta.env.VITE_AUTH_URL ?? 'http://localhost:5001';
+import { authUrl } from './server-api';
 
 // Create axios instance with default config
 const authApi = axios.create({
-    baseURL: API_URL,
+    baseURL: authUrl,
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json'
