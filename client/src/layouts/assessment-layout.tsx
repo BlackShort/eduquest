@@ -1,5 +1,6 @@
 import { AssessmentDetail } from "@/app/assessment/assessment-detail";
 import { AssessmentHeader } from "@/components/assessment/assessment-header";
+import ProctorOverlay from "@/components/proctor/ProctorOverlay";
 import { useProctor } from "@/hooks/useProctor";
 // import ProctorOverlay from "@/components/proctor/ProctorOverlay";
 import { PanelRightOpen, Code2, ListChecks, CheckCircle2 } from "lucide-react";
@@ -337,14 +338,14 @@ export const AssessmentLayout = () => {
       </main>
 
       {/* 🎯 Proctoring Overlay - Only active during assessment */}
-      {/* <ProctorOverlay
+      <ProctorOverlay
         active={proctor.active && isFullscreen}
         sessionId={proctor.sessionId}
         reportEvent={proctor.reportEvent}
         enrollIdentityFromVideo={proctor.enrollIdentityFromVideo}
         verifyIdentityFromVideo={proctor.verifyIdentityFromVideo}
         shouldRunIdentityVerification={proctor.shouldRunIdentityVerification}
-      /> */}
+      />
     </div>
   );
 };
