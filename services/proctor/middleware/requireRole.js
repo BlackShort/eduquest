@@ -1,6 +1,6 @@
 function requireRole(allowed) {
   return (req, res, next) => {
-    const role = req.headers["user-role"];
+    const role = req.headers["x-user-role"];
 
     if (!role) {
       return res.status(401).json({ error: "Role missing from request" });
