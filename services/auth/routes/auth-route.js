@@ -28,4 +28,4 @@ authRouter.get('/me', verifyToken, getCurrentUser);
 authRouter.get('/sessions', verifyToken, getUserSessions);
 
 // Token verification endpoint (for microservices)
-authRouter.post('/verify-token', verifyToken, verifyUserToken);
+authRouter.get('/verify-token', verifyToken, verifyUserToken);

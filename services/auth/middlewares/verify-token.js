@@ -9,13 +9,12 @@ import userModel from '../models/user-model.js';
 export const verifyToken = async (req, res, next) => {
     try {
         // Get token from headers or cookies
-        const token = req.cookies.accessToken || req.headers.authorization?.split(' ')[1];
+        const token = req.cookies?.accessToken || (req.headers.authorization?.startsWith('Bearer ')
+            ? req.headers.authorization.split(' ')[1]
+            : null);
 
         if (!token) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'No token provided' 
-            });
+            return res.sendStatus(401);
         }
 
         // Verify JWT signature
@@ -29,20 +28,14 @@ export const verifyToken = async (req, res, next) => {
         });
 
         if (!session) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Session expired or invalid' 
-            });
+            return res.sendStatus(401);
         }
 
         // Get user details
         const user = await userModel.findById(decoded.userId);
 
         if (!user || !user.isActive) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'User not found or inactive' 
-            });
+            return res.sendStatus(401);
         }
 
         // Update last activity
@@ -60,20 +53,15 @@ export const verifyToken = async (req, res, next) => {
             sessionId: session._id
         };
 
-        next();
+        return next();
     } catch (error) {
         console.log(error)
         if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Token expired' 
-            });
+            console.log('Token expired:', error.expiredAt);
+            return res.sendStatus(401);
         }
         
-        return res.status(401).json({ 
-            success: false, 
-            message: 'Invalid token' 
-        });
+        return res.sendStatus(401);
     }
 };
 
