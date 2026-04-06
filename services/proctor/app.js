@@ -19,6 +19,7 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE']
 }));
 
+
 app.get("/health", (req, res) => {
     res.json({ service: "proctor-service", status: "ok" });
 });
