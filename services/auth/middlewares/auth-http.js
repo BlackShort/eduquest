@@ -24,12 +24,11 @@ export const verifyTokenHTTP = async (req, res, next) => {
         }
 
         // Call auth service to verify token
-        const response = await axios.post(
+        const response = await axios.get(
             `${AUTH_SERVICE_URL}/v1/verify-token`,
-            {},
             {
-                headers: { 'Authorization': `Bearer ${token}` },
-                timeout: 5000 // 5 second timeout
+                headers: { Authorization: `Bearer ${token}` },
+                timeout: 5000
             }
         );
 

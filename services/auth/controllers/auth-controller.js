@@ -143,15 +143,15 @@ export const login = async (req, res) => {
         // Set cookies
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: true,
+            sameSite: 'none',
             maxAge: getTokenExpiry()
         });
 
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: true,
+            sameSite: 'none',
             maxAge: getTokenExpiry('7d')
         });
 
@@ -164,10 +164,6 @@ export const login = async (req, res) => {
                 email: user.email,
                 role: user.role
             },
-            tokens: {
-                accessToken,
-                refreshToken
-            }
         });
 
     } catch (error) {
