@@ -3,13 +3,14 @@ import { useEffect, useState } from "react";
 import toast from 'react-hot-toast';
 import { Eye, EyeOff } from "lucide-react";
 import { useContextAPI } from "@/hooks/useContext.js";
-import { login } from "@/apis/auth-api";
+import { login, verifyToken } from "@/apis/auth-api";
 import logo from "@/assets/logo/favicon.png";
 import { Loader } from "@/components/site/loader";
 
 export const Login = () => {
     const navigate = useNavigate();
     const { setIsLoggedIn, setUser } = useContextAPI();
+
     const [loading, setLoading] = useState(false);
     const [authChecking, setAuthChecking] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
@@ -20,28 +21,42 @@ export const Login = () => {
     });
 
     useEffect(() => {
-        const checkAuth = localStorage.getItem("isAuthenticated");
-        if (checkAuth === "true") {
-            setIsLoggedIn(true);
-            navigate('/dashboard');
-        } else {
-            setAuthChecking(false);
-        }
-    }, [setIsLoggedIn, navigate]);
+        const checkAuth = async () => {
+            try {
+                const data = await verifyToken();
+                setUser(data.user);
+                setIsLoggedIn(true);
+                navigate("/dashboard");
+            } catch {
+                setIsLoggedIn(false);
+            } finally {
+                setAuthChecking(false);
+            }
+        };
+
+        checkAuth();
+    }, [navigate, setIsLoggedIn, setUser]);
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
+
         try {
             const data = await login(loginData.email, loginData.password);
-            setLoginData({ email: "", password: "" });
-            toast.success(data.message);
+
             setUser(data.user);
             setIsLoggedIn(true);
-            localStorage.setItem("isAuthenticated", "true");
-            navigate('/dashboard');
+
+            toast.success(data.message);
+            navigate("/dashboard");
+
+            setLoginData({ email: "", password: "" });
         } catch (error: unknown) {
-            const errormsg = error instanceof Error ? error.message : "An unknown error occurred";
+            const errormsg =
+                error instanceof Error
+                    ? error.message
+                    : "An unknown error occurred";
+
             setIsLoggedIn(false);
             toast.error(errormsg);
         } finally {

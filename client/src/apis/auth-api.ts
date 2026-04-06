@@ -33,3 +33,8 @@ export const logout = async () => {
     const response = await authApi.post('/v1/logout');
     return response.data;
 }
+
+export const verifyToken = async () => {
+    const response = await authApi.get('/v1/verify-token');
+    return response.data;
+}
