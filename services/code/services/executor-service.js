@@ -20,7 +20,7 @@ async function submitToJudge0({ languageId, code, stdin }) {
     };
 
     const response = await axios.post(
-        `http://13.54.92.185:2358/submissions?base64_encoded=true&wait=false`,
+        `${JUDGE0_BASE_URL}submissions?base64_encoded=true&wait=false`,
         payload,
         { timeout: 10000 }
     );
