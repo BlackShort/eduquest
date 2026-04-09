@@ -1,4 +1,5 @@
-import { proctorUrl as server } from "./server-api";
+import { createApi } from "@/apis/api-client";
+import { proctorUrl } from "@/apis/server-api"; 
 import type {
   EnrollIdentityPayload,
   ProctorEventPayload,
@@ -6,67 +7,32 @@ import type {
   VerifyIdentityResponse,
 } from "@/types/proctor";
 
-const BASE = `${server}/v1`;
+const proctorApi = createApi(`${proctorUrl}/v1`);
 
-// Auth is handled by the nginx gateway via HttpOnly cookie — no manual token needed.
-const postOptions: RequestInit = {
-  method: "POST",
-  credentials: "include",
-  headers: { "Content-Type": "application/json" },
+export const sendProctorEvent = async (payload: ProctorEventPayload) => {
+  const { data } = await proctorApi.post("/events", payload);
+  return data;
 };
 
-export async function sendProctorEvent(payload: ProctorEventPayload) {
-  const res = await fetch(`${BASE}/events`, {
-    ...postOptions,
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw await res.json();
-  return res.json();
-}
+export const completeProctorSession = async (sessionId: string) => {
+  const { data } = await proctorApi.post(`/sessions/${sessionId}/complete`);
+  return data;
+};
 
-export async function completeProctorSession(sessionId: string) {
-  const res = await fetch(`${BASE}/sessions/${sessionId}/complete`, {
-    ...postOptions,
-  });
-  if (!res.ok) throw await res.json();
-  return res.json();
-}
-
-export async function enrollIdentity(payload: EnrollIdentityPayload) {
-  const res = await fetch(
-    `${BASE}/sessions/${payload.sessionId}/identity/enroll`,
-    {
-      ...postOptions,
-      body: JSON.stringify({
-        examId: payload.examId,
-        baselineEmbedding: payload.baselineEmbedding,
-        baselineImageBase64: payload.baselineImageBase64,
-        baselineImageS3Key: payload.baselineImageS3Key,
-        thresholdUsed: payload.thresholdUsed,
-        qualityChecks: payload.qualityChecks,
-      }),
-    }
+export const enrollIdentity = async (payload: EnrollIdentityPayload) => {
+  const { data } = await proctorApi.post(
+    `/sessions/${payload.sessionId}/identity/enroll`,
+    payload
   );
-  if (!res.ok) throw await res.json();
-  return res.json();
-}
+  return data;
+};
 
-export async function verifyIdentity(
+export const verifyIdentity = async (
   payload: VerifyIdentityPayload
-): Promise<VerifyIdentityResponse> {
-  const res = await fetch(
-    `${BASE}/sessions/${payload.sessionId}/identity/verify`,
-    {
-      ...postOptions,
-      body: JSON.stringify({
-        examId: payload.examId,
-        liveEmbedding: payload.liveEmbedding,
-        confidence: payload.confidence,
-        liveImageBase64: payload.liveImageBase64,
-        liveImageS3Key: payload.liveImageS3Key,
-      }),
-    }
+): Promise<VerifyIdentityResponse> => {
+  const { data } = await proctorApi.post(
+    `/sessions/${payload.sessionId}/identity/verify`,
+    payload
   );
-  if (!res.ok) throw await res.json();
-  return res.json();
-}
+  return data;
+};

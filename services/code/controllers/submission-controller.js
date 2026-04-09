@@ -8,25 +8,15 @@ import { checkSubmissionPlagiarism } from '../services/plagiarism-service.js';
 
 export const executeSubmission = async (req, res) => {
     try {
-        const {  studentId, questionId, testId, language, code, mode, testCase } = req.body;
-        // const studentId = req.headers["x-student-id"];
-
-        // const role = req.headers["x-user-role"];
-        if (!studentId || !questionId || !language || !code || !mode) {
+        const { questionId, testId, language, code, mode, testCase } = req.body;
+        const studentId = req.headers["x-student-id"];
+        const role = req.headers["x-user-role"];
+        if (!role || !studentId || !questionId || !language || !code || !mode) {
             return res.status(400).json({
                 message: 'studentId, questionId, testId, language, code and mode are required',
             });
         }
 
-        console.log('Received submission execution request:', {
-            studentId,
-            questionId,
-            testId,
-            language,
-            mode,
-            code, 
-            testCase,});
-        // const testcases = await getTestcasesForQuestion(questionId, mode);
         const executionResult = await runCodeForQuestion({
             code,
             language,
@@ -38,6 +28,7 @@ export const executeSubmission = async (req, res) => {
 
         if (mode === 'submit') {
             savedSubmission = await Submission.create({
+                role,
                 studentId,
                 questionId,
                 testId,

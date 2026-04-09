@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import toast from 'react-hot-toast';
 import { Eye, EyeOff } from "lucide-react";
 import { useContextAPI } from "@/hooks/useContext.js";
-import { login, verifyToken } from "@/apis/auth-api";
+import { login } from "@/apis/auth-api";
 import logo from "@/assets/logo/favicon.png";
 import { Loader } from "@/components/site/loader";
 
@@ -12,30 +12,20 @@ export const Login = () => {
     const { setIsLoggedIn, setUser } = useContextAPI();
 
     const [loading, setLoading] = useState(false);
-    const [authChecking, setAuthChecking] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
+    const { isLoggedIn, appLoading } = useContextAPI();
 
     const [loginData, setLoginData] = useState({
         email: "",
         password: "",
     });
 
-    useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const data = await verifyToken();
-                setUser(data.user);
-                setIsLoggedIn(true);
-                navigate("/dashboard");
-            } catch {
-                setIsLoggedIn(false);
-            } finally {
-                setAuthChecking(false);
-            }
-        };
 
-        checkAuth();
-    }, [navigate, setIsLoggedIn, setUser]);
+    useEffect(() => {
+        if (!appLoading && isLoggedIn) {
+            navigate("/dashboard");
+        }
+    }, [isLoggedIn, appLoading, navigate]);
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -70,7 +60,7 @@ export const Login = () => {
         setLoginData({ ...loginData, [name]: newValue });
     };
 
-    if (authChecking) {
+    if (appLoading) {
         return (
             <div className="flex items-center justify-center w-full h-screen bg-neutral-950">
                 <Loader />

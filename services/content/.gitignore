@@ -12,6 +12,7 @@
 
 #docs files
 /docs
+/uploads
 
 # debug
 npm-debug.log*

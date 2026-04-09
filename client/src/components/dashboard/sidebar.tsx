@@ -34,7 +34,7 @@ export const Sidebar = ({ navigation }: SidebarProps) => {
     };
 
     return (
-        <div className='flex flex-col w-64 h-full bg-neutral-800 border-r border-neutral-700/50 overflow-hidden'>
+        <div className='flex flex-col w-72 md:w-64 h-full bg-neutral-800 border-r border-neutral-700/50 overflow-hidden'>
             <div className='flex-1 overflow-y-auto p-4 space-y-1 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 scrollbar-track-transparent'>
                 {Object.entries(navigation).map(([group, items]) => (
                     <div key={group}>

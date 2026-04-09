@@ -1,10 +1,14 @@
+import { useEffect, useState } from "react";
+import { PanelRightOpen, Code2, ListChecks, CheckCircle2 } from "lucide-react";
+
 import { AssessmentDetail } from "@/app/assessment/assessment-detail";
 import { AssessmentHeader } from "@/components/assessment/assessment-header";
 import ProctorOverlay from "@/components/proctor/ProctorOverlay";
-import { useProctor } from "@/hooks/useProctor";
+// import { FullscreenGate } from "@/components/assessment/FullscreenGate";
+// import { ProctorSetup } from "@/components/assessment/ProctorSetup";
+// import { InstructionsScreen } from "@/components/assessment/InstructionsScreen";
 // import ProctorOverlay from "@/components/proctor/ProctorOverlay";
-import { PanelRightOpen, Code2, ListChecks, CheckCircle2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useProctor } from "@/hooks/useProctor";
 
 interface Question {
   id: string;
@@ -13,14 +17,17 @@ interface Question {
   section: string;
 }
 
+// type Stage = "fullscreen" | "setup" | "instructions" | "exam";
+
 export const AssessmentLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentQuestionId, setCurrentQuestionId] = useState("q_code_001");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+  // const [stage, setStage] = useState<Stage>("fullscreen");
 
-  // 🎯 Proctoring Integration
+  // Proctoring Integration
   const proctor = useProctor({ examId: "assessment_2024" });
 
   const questions: Question[] = [

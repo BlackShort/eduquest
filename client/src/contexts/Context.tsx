@@ -1,4 +1,5 @@
-import { createContext, useState, type ReactNode } from "react";
+import { createContext, useEffect, useState, type ReactNode } from "react";
+import { verifyToken } from "@/apis/auth-api";
 
 interface User {
   _id?: string;
@@ -14,6 +15,7 @@ interface ContextType {
   setUserID: React.Dispatch<React.SetStateAction<null | string | number>>;
   isLoggedIn: boolean;
   setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
+  appLoading: boolean;
 }
 
 const ContextAPI = createContext<ContextType | undefined>(undefined);
@@ -23,6 +25,27 @@ const ContextApp = ({ children }: { children: ReactNode }) => {
   const [isOnline, setIsOnline] = useState(true);
   const [userID, setUserID] = useState<null | string | number>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [appLoading, setAppLoading] = useState(true);
+
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const data = await verifyToken();
+
+        setUser(data.user);
+        setUserID(data.user?._id ?? null);
+        setIsLoggedIn(true);
+      } catch {
+        setUser({});
+        setUserID(null);
+        setIsLoggedIn(false);
+      } finally {
+        setAppLoading(false);
+      }
+    };
+
+    initAuth();
+  }, []);
 
   return (
     <ContextAPI.Provider value={{
@@ -30,6 +53,7 @@ const ContextApp = ({ children }: { children: ReactNode }) => {
       isOnline, setIsOnline,
       userID, setUserID,
       isLoggedIn, setIsLoggedIn,
+      appLoading,
     }}>
       {children}
     </ContextAPI.Provider>

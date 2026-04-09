@@ -1,40 +1,24 @@
-import axios, { AxiosError } from 'axios';
-import { authUrl } from './server-api';
+import { authUrl } from '@/apis/server-api';
+import { createApi } from "@/apis/api-client";
 
-// Create axios instance with default config
-const authApi = axios.create({
-    baseURL: authUrl,
-    withCredentials: true,
-    headers: {
-        'Content-Type': 'application/json'
-    }
-});
-
-// Unwrap server error messages so callers always get a meaningful string.
-authApi.interceptors.response.use(
-    (res) => res,
-    (error: AxiosError<{ message?: string }>) => {
-        const message = error.response?.data?.message ?? error.message ?? 'An unknown error occurred';
-        return Promise.reject(new Error(message));
-    }
-);
+const authApi = createApi(authUrl);
 
 export const login = async (email: string, password: string) => {
-    const response = await authApi.post('/v1/login', { email, password });
-    return response.data;
-}
+    const { data } = await authApi.post("/v1/login", { email, password });
+    return data;
+};
 
 export const register = async (username: string, email: string, password: string) => {
-    const response = await authApi.post('/v1/register', { username, email, password });
-    return response.data;
-}
+    const { data } = await authApi.post("/v1/register", { username, email, password });
+    return data;
+};
 
 export const logout = async () => {
-    const response = await authApi.post('/v1/logout');
-    return response.data;
-}
+    const { data } = await authApi.post("/v1/logout");
+    return data;
+};
 
 export const verifyToken = async () => {
-    const response = await authApi.get('/v1/verify-token');
-    return response.data;
-}
+    const { data } = await authApi.get("/v1/verify-token");
+    return data;
+};
