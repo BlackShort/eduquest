@@ -67,33 +67,47 @@ export default function BulkImportPage() {
   };
 
   const handleAssignmentUpload = async (file: File) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const response = await uploadAssignmentCSV(formData);
-      return {
-        success: true,
-        message: `Successfully uploaded ${response.data.count} assignment questions`,
-        data: {
-          details: [
-            `Total questions: ${response.data.count}`,
-            `Success: ${response.data.success}`,
-            response.data.failed > 0 ? `Failed: ${response.data.failed}` : ''
-          ].filter(d => d !== '')
-        }
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await uploadAssignmentCSV(formData);
+
+    return {
+      success: true,
+      message:
+        response.message ||
+        `Successfully uploaded ${response.total_questions} assignment questions`,
+      data: {
+        details: [
+          `Total questions: ${response.total_questions}`,
+          "Upload completed successfully",
+        ],
+      },
+    };
+  } catch (error: unknown) {
+    const err = error as {
+      response?: {
+        data?: {
+          message?: string;
+          errors?: string[];
+        };
       };
-    } catch (error) {
-      const err = error as { response?: { data?: { message?: string; errors?: string[] } } };
-      return {
-        success: false,
-        message: err.response?.data?.message || 'Failed to upload Assignment CSV',
-        data: {
-          errors: err.response?.data?.errors || ['Unknown error occurred']
-        }
-      };
-    }
-  };
+      message?: string;
+    };
+
+    return {
+      success: false,
+      message:
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to upload Assignment CSV",
+      data: {
+        errors: err.response?.data?.errors || ["Unknown error occurred"],
+      },
+    };
+  }
+};
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
