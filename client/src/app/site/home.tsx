@@ -11,7 +11,7 @@ import { useState } from 'react';
 export const Home = () => {
   const icons = [TbBrandCpp, TbSql, FaRust, FaSwift, FaPython, FaPhp, FaJava, FaJs];
   const [activeTab, setActiveTab] = useState('For Students');
-  const { isLoggedIn } = useContextAPI();
+  const { dashboardPath } = useContextAPI();
 
   const features = [
     {
@@ -124,7 +124,7 @@ export const Home = () => {
                 A platform for coding assessments, real-time proctoring, and performance analytics, designed specifically for engineering education.
               </p>
 
-              <Link to={isLoggedIn ? '/dashboard' : '/auth/login'} className="mt-8">
+              <Link to={dashboardPath} className="mt-8">
                 <button
                   type="button"
                   className="will-change-transform group flex items-center gap-2 cursor-pointer px-5 py-2 text-lg font-semibold text-neutral-200 bg-linear-to-r from-amber-600 via-orange-600 to-orange-500 hover:from-amber-500 hover:via-orange-500 hover:to-orange-400 rounded-full transition-all duration-400 hover:scale-105 border-2 border-orange-400/30 hover:border-orange-300/50"
@@ -268,7 +268,7 @@ export const Home = () => {
                   <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-neutral-200 leading-tight mb-6">
                     {feature.mainTitle}
                   </h2>
-                    <p className="text-justify text-lg text-neutral-400 leading-relaxed font-light mb-8">
+                  <p className="text-justify text-lg text-neutral-400 leading-relaxed font-light mb-8">
                     {feature.mainDescription}
                     <span className="text-neutral-200 font-medium drop-shadow-lg"> {feature.highlight}</span>
                   </p>
@@ -299,7 +299,7 @@ export const Home = () => {
                       </div>
                     </div>
 
-                      <p className="text-neutral-400 text-justify text-base leading-relaxed tracking-wide font-light">{feature.description}</p>
+                    <p className="text-neutral-400 text-justify text-base leading-relaxed tracking-wide font-light">{feature.description}</p>
 
                     {feature.languages && (
                       <div className="flex flex-wrap gap-2 mt-2">
@@ -585,7 +585,7 @@ export const Home = () => {
             Join thousands of engineering students already improving their technical skills on EduQuest's enterprise-grade platform.
           </p>
 
-          <Link to={isLoggedIn ? '/dashboard' : '/auth/login'} className="group w-max">
+          <Link to={dashboardPath} className="group w-max">
             <div className="relative inline-flex h-12 items-center justify-center overflow-hidden rounded-full p-px focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 focus:ring-offset-black">
               <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)] group-hover:bg-[conic-gradient(from_90deg_at_50%_50%,#f97316_0%,#fbbf24_50%,#f97316_100%)] transition-colors duration-500" />
               <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-neutral-950 px-8 py-1 text-base font-medium text-neutral-200 backdrop-blur-3xl transition-all duration-300 group-hover:bg-neutral-900 gap-2">

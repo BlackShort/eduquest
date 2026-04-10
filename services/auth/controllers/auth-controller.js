@@ -85,9 +85,9 @@ export const login = async (req, res) => {
         const user = await userModel.findOne({ email });
 
         if (!user) {
-            return res.status(401).json({ 
+            return res.status(404).json({ 
                 success: false, 
-                message: 'Invalid credentials' 
+                message: 'User not found with this email' 
             });
         }
 
@@ -162,7 +162,9 @@ export const login = async (req, res) => {
                 id: user._id,
                 username: user.username,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                isVerified: user.isVerified,
+                isActive: user.isActive
             },
         });
 

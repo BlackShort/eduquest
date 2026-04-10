@@ -6,26 +6,25 @@ import { useContextAPI } from "@/hooks/useContext.js";
 import { login } from "@/apis/auth-api";
 import logo from "@/assets/logo/favicon.png";
 import { Loader } from "@/components/site/loader";
+import type { ApiError } from "@/types/error";
 
 export const Login = () => {
     const navigate = useNavigate();
-    const { setIsLoggedIn, setUser } = useContextAPI();
+    const { dashboardPath, isLoggedIn, appLoading, setIsLoggedIn, setUser } = useContextAPI();
 
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const { isLoggedIn, appLoading } = useContextAPI();
 
     const [loginData, setLoginData] = useState({
         email: "",
         password: "",
     });
 
-
     useEffect(() => {
         if (!appLoading && isLoggedIn) {
-            navigate("/dashboard");
+            navigate(dashboardPath);
         }
-    }, [isLoggedIn, appLoading, navigate]);
+    }, [isLoggedIn, appLoading, navigate, dashboardPath]);
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -38,17 +37,21 @@ export const Login = () => {
             setIsLoggedIn(true);
 
             toast.success(data.message);
-            navigate("/dashboard");
+            navigate(dashboardPath);
 
             setLoginData({ email: "", password: "" });
         } catch (error: unknown) {
-            const errormsg =
-                error instanceof Error
-                    ? error.message
-                    : "An unknown error occurred";
+            const apiError = error as ApiError;
+            const message = apiError?.message || "An unknown error occurred";
+
+            if (apiError?.status === 404) {
+                toast.error("User does not exist. Please register first.");
+                navigate("/auth/register");
+                return;
+            }
 
             setIsLoggedIn(false);
-            toast.error(errormsg);
+            toast.error(message);
         } finally {
             setLoading(false);
         }

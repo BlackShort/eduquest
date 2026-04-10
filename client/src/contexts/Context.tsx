@@ -1,14 +1,11 @@
 import { createContext, useEffect, useState, type ReactNode } from "react";
 import { verifyToken } from "@/apis/auth-api";
-
-interface User {
-  _id?: string;
-  [key: string]: unknown;
-}
+import type { User } from "@/types/types";
+import { getDashboardPath } from "@/lib/utils";
 
 interface ContextType {
-  user: User;
-  setUser: React.Dispatch<React.SetStateAction<User>>;
+  user: User | null;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   isOnline: boolean;
   setIsOnline: React.Dispatch<React.SetStateAction<boolean>>;
   userID: null | string | number;
@@ -16,16 +13,18 @@ interface ContextType {
   isLoggedIn: boolean;
   setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
   appLoading: boolean;
+  dashboardPath: string;
 }
 
 const ContextAPI = createContext<ContextType | undefined>(undefined);
 
 const ContextApp = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User>({});
-  const [isOnline, setIsOnline] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [isOnline, setIsOnline] = useState<boolean>(true);
   const [userID, setUserID] = useState<null | string | number>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [appLoading, setAppLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [appLoading, setAppLoading] = useState<boolean>(true);
+  const [dashboardPath, setDashboardPath] = useState<string>("/auth/login");
 
   useEffect(() => {
     const initAuth = async () => {
@@ -33,10 +32,11 @@ const ContextApp = ({ children }: { children: ReactNode }) => {
         const data = await verifyToken();
 
         setUser(data.user);
+        setDashboardPath(getDashboardPath(data.user?.role));
         setUserID(data.user?._id ?? null);
         setIsLoggedIn(true);
       } catch {
-        setUser({});
+        setUser(null);
         setUserID(null);
         setIsLoggedIn(false);
       } finally {
@@ -54,6 +54,7 @@ const ContextApp = ({ children }: { children: ReactNode }) => {
       userID, setUserID,
       isLoggedIn, setIsLoggedIn,
       appLoading,
+      dashboardPath
     }}>
       {children}
     </ContextAPI.Provider>

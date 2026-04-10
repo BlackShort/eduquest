@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import type { ApiError } from "@/types/error";
 
 export const createApi = (baseURL: string) => {
     const api = axios.create({
@@ -12,11 +13,14 @@ export const createApi = (baseURL: string) => {
     api.interceptors.response.use(
         (res) => res,
         (error: AxiosError<{ message?: string }>) => {
-            const message =
-                error.response?.data?.message ||
-                error.message ||
-                "Something went wrong";
-            return Promise.reject(new Error(message));
+            const apiError: ApiError = {
+                message:
+                    error.response?.data?.message ||
+                    error.message ||
+                    "Something went wrong",
+                status: error.response?.status,
+            };
+            return Promise.reject(apiError);
         }
     );
 
