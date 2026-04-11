@@ -17,7 +17,7 @@ export const authRouter = express.Router();
 // Public routes
 authRouter.post('/register', register);
 authRouter.post('/login', login);
-authRouter.post('/refresh', refreshAccessToken);
+authRouter.post('/refresh-token', refreshAccessToken);
 
 // Protected routes
 authRouter.post('/logout', verifyToken, logout);

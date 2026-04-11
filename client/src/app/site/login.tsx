@@ -21,8 +21,10 @@ export const Login = () => {
     });
 
     useEffect(() => {
-        if (!appLoading && isLoggedIn) {
-            navigate(dashboardPath);
+        // Only redirect if app has finished loading AND user is logged in
+        // This prevents race conditions and infinite loops
+        if (!appLoading && isLoggedIn && dashboardPath !== "/auth/login") {
+            navigate(dashboardPath, { replace: true });
         }
     }, [isLoggedIn, appLoading, navigate, dashboardPath]);
 
@@ -35,7 +37,6 @@ export const Login = () => {
 
             setUser(data.user);
             setIsLoggedIn(true);
-
             toast.success(data.message);
             navigate(dashboardPath);
 
