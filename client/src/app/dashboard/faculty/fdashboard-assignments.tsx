@@ -25,7 +25,8 @@ interface QuestionSet {
   }>;
 }
 
-export const FDashboardAssignments = () => {
+
+export default function FDashboardAssignments() {
   const [activeType, setActiveType] = useState<QuestionType>('mcq');
   const [questions, setQuestions] = useState<QuestionSet[]>([]);
   const [loading, setLoading] = useState(true);

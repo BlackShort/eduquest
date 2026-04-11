@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router';
 import { getTests, deleteTest, publishTest, archiveTest, duplicateTest } from '@/apis/faculty-api';
 import type { Test } from '@/types/types';
@@ -13,7 +13,8 @@ import {
   Search
 } from 'lucide-react';
 
-export const FDashboardAssessment = () => {
+
+export default function FDashboardAssessment() {
   const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'all' | 'published' | 'draft' | 'archived'>('all');
@@ -25,10 +26,15 @@ export const FDashboardAssessment = () => {
     totalPages: 0
   });
 
-  const fetchTests = async () => {
+  useEffect(() => {
+    // Reset to page 1 when filters change
+    setPagination(prev => ({ ...prev, page: 1 }));
+  }, [activeTab, searchQuery]);
+
+  const fetchTests = useCallback(async () => {
     try {
       setLoading(true);
-      const params: any = {
+      const params: Record<string, string | number> = {
         page: pagination.page,
         limit: pagination.limit
       };
@@ -52,11 +58,11 @@ export const FDashboardAssessment = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.page, pagination.limit, activeTab, searchQuery]);
 
   useEffect(() => {
     fetchTests();
-  }, [activeTab, pagination.page, searchQuery]);
+  }, [fetchTests]);
 
   const handleDelete = async (testId: string) => {
     if (!confirm('Are you sure you want to delete this test?')) return;

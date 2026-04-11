@@ -22,3 +22,8 @@ export const verifyToken = async () => {
     const { data } = await authApi.get("/v1/verify-token");
     return data;
 };
+
+export const refreshAccessToken = async () => {
+    const { data } = await authApi.post("/v1/refresh-token");
+    return data;
+};

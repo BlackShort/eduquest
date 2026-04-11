@@ -1,5 +1,7 @@
 import { NavLink, Link, useNavigate } from 'react-router';
 import { ChevronRight, LogOut, User, Settings, Bell } from "lucide-react";
+import { useState, useRef, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 const USER_MENU_ITEMS = [
     { label: 'Profile', icon: User, path: '/profile' },
@@ -16,21 +18,52 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ navigation }: SidebarProps) => {
-    const { user, setUser, setIsLoggedIn } = useContextAPI();
+    const { user, setUser, setIsLoggedIn, setSidebarOpen, setAppLoading } = useContextAPI();
     const navigate = useNavigate();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
 
     const handleLogout = async () => {
+        setIsLoggingOut(true);
         try {
             await logout();
-        } catch {
-            // proceed with local cleanup even if request fails
+            toast.success('Logged out successfully');
+        } catch (error) {
+            console.error('Logout error:', error);
+            toast.error('Failed to logout, but clearing local session');
         } finally {
+            setAppLoading(true);
+            setSidebarOpen(false);
+            setIsMenuOpen(false);
+            sessionStorage.clear();
+            navigate('/', { replace: true });
+
+            setUser(null);
             setIsLoggedIn(false);
-            setUser({});
-            localStorage.removeItem("isAuthenticated");
-            localStorage.removeItem("user");
-            navigate('/auth/login');
+            setIsLoggingOut(false);
         }
+    };
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsMenuOpen(false);
+            }
+        };
+
+        if (isMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isMenuOpen]);
+
+    const handleMenuItemClick = () => {
+        setIsMenuOpen(false);
     };
 
     return (
@@ -77,9 +110,12 @@ export const Sidebar = ({ navigation }: SidebarProps) => {
             </div>
 
             {/* User info */}
-            <div className='relative group shrink-0 border-t border-neutral-700/50 mt-auto'>
+            <div ref={menuRef} className='relative group shrink-0 border-t border-neutral-700/50 mt-auto'>
                 {/* User Info Trigger */}
-                <div className='flex items-center gap-3 px-4 py-4 cursor-pointer hover:bg-neutral-800 transition-colors duration-200'>
+                <div
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className='flex items-center gap-3 px-4 py-4 cursor-pointer hover:bg-neutral-800 transition-colors duration-200'
+                >
                     <div className='flex items-center justify-center shrink-0 w-9 h-9 rounded-full bg-orange-500/20 text-orange-400'>
                         <User size={18} />
                     </div>
@@ -91,16 +127,20 @@ export const Sidebar = ({ navigation }: SidebarProps) => {
                             {(user as { email?: string }).email ?? ''}
                         </p>
                     </div>
-                    <ChevronRight size={16} className="text-neutral-500 group-hover:text-neutral-300 transition-colors" />
+                    <ChevronRight size={16} className={`text-neutral-500 group-hover:text-neutral-300 transition-colors duration-200 ${isMenuOpen ? 'text-neutral-300 rotate-90' : ''}`} />
                 </div>
 
                 {/* Popup Menu */}
-                <div className="opacity-0 invisible group-hover:opacity-100 group-hover:visible absolute bottom-full left-2 right-2 mb-2 bg-neutral-900 border border-neutral-700/50 rounded-xl shadow-lg shadow-black/40 overflow-hidden transition-all duration-200 translate-y-2 group-hover:translate-y-0 z-50">
+                <div className={`absolute bottom-full left-2 right-2 mb-2 bg-neutral-900 border border-neutral-700/50 rounded-xl shadow-lg shadow-black/40 overflow-hidden transition-all duration-200 z-50 ${isMenuOpen
+                        ? 'opacity-100 visible translate-y-0 md:group-hover:opacity-100 md:group-hover:visible'
+                        : 'opacity-0 invisible translate-y-2 md:group-hover:opacity-100 md:group-hover:visible md:group-hover:translate-y-0'
+                    }`}>
                     <div className="flex flex-col p-1.5 gap-0.5">
                         {USER_MENU_ITEMS.map((item, index) => (
                             <Link
                                 key={index}
                                 to={item.path}
+                                onClick={handleMenuItemClick}
                                 className="flex items-center gap-3 px-3 py-2 cursor-pointer rounded-lg text-sm font-medium text-neutral-300 hover:text-neutral-100 hover:bg-neutral-800 transition-colors"
                             >
                                 <div className="relative flex">
@@ -117,10 +157,20 @@ export const Sidebar = ({ navigation }: SidebarProps) => {
 
                         <button
                             onClick={handleLogout}
-                            className='cursor-pointer flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200'
+                            disabled={isLoggingOut}
+                            className='cursor-pointer flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
                         >
-                            <LogOut size={16} opacity={0.8} />
-                            Log out
+                            {isLoggingOut ? (
+                                <>
+                                    <span className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                                    Logging out...
+                                </>
+                            ) : (
+                                <>
+                                    <LogOut size={16} opacity={0.8} />
+                                    Log out
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>

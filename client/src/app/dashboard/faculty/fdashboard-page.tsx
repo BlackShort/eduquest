@@ -4,7 +4,7 @@ import { getTestStats, getFacultyAnalytics } from '@/apis/faculty-api';
 import type { TestStatistics, FacultyAnalytics } from '@/types/types';
 import { LayoutDashboard, ListTodo, FileCodeCorner, Users, Clock, TrendingUp, Plus } from 'lucide-react';
 
-export const FDashboardHome = () => {
+export default function FDashboardHome() {
   const [stats, setStats] = useState<TestStatistics | null>(null);
   const [analytics, setAnalytics] = useState<FacultyAnalytics | null>(null);
   const [loading, setLoading] = useState(true);

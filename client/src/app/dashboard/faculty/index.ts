@@ -1,4 +1,4 @@
-import { FDashboardHome } from "@/app/dashboard/faculty/fdashboard-page";
+import FDashboardHome from "@/app/dashboard/faculty/fdashboard-page";
 
 export {
     FDashboardHome,

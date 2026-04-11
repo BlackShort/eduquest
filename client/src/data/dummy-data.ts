@@ -3,7 +3,7 @@ import type { Assignment, Coding, Mcq, Question, User } from "@/types/types";
 // ========== USER DUMMY DATA ==========
 export const dummyUsers: User[] = [
     {
-        _id: "usr_001",
+        id: "usr_001",
         username: "john_doe",
         email: "john.doe@example.com",
         role: "user",
@@ -13,7 +13,7 @@ export const dummyUsers: User[] = [
         updatedAt: "2024-01-15T08:30:00.000Z"
     },
     {
-        _id: "usr_002",
+        id: "usr_002",
         username: "jane_smith",
         email: "jane.smith@example.com",
         role: "user",
@@ -23,7 +23,7 @@ export const dummyUsers: User[] = [
         updatedAt: "2024-01-16T10:45:00.000Z"
     },
     {
-        _id: "usr_003",
+        id: "usr_003",
         username: "admin_user",
         email: "admin@eduquest.com",
         role: "admin",
