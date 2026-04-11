@@ -86,7 +86,7 @@ export const DashboardHome = () => {
   return (
     <div className="space-y-8 p-2 lg:p-4 max-w-7xl mx-auto">
       {/* Welcome Section */}
-      <div className="relative overflow-hidden bg-[#0F0F12] rounded-2xl p-6 border border-white/5">
+      <div className="relative overflow-hidden bg-[#0F0F12] rounded-2xl p-4 md:p-6 border border-white/5">
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-125 h-125 bg-orange-500/10 rounded-full blur-[100px] pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3 w-125 h-125 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
@@ -111,7 +111,7 @@ export const DashboardHome = () => {
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-[80px] pointer-events-none mix-blend-overlay"></div>
 
         {statCards.map((stat, idx) => (
-          <div key={idx} className="flex-1 p-8 group hover:bg-white/2 transition-colors relative">
+          <div key={idx} className="flex-1 p-4 md:p-8 group hover:bg-white/2 transition-colors relative">
             <div className="flex justify-between items-start mb-4">
               <p className="text-neutral-400 font-medium tracking-wide text-sm uppercase">{stat.title}</p>
               <stat.icon className={`w-5 h-5 transition-colors ${stat.iconClasses}`} />
@@ -133,12 +133,12 @@ export const DashboardHome = () => {
         <div className="lg:col-span-8 space-y-8">
 
           {/* Action Header / Quick Actions Redesigned as Inline Pills */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-row items-center gap-3 overflow-x-auto no-scrollbar">
             {quickActions.map((action, idx) => (
               <Link 
                 key={idx} 
                 to={action.to} 
-                className={`inline-flex items-center gap-2 px-6 py-2.5 font-medium rounded-full transition-all ${
+                className={`min-w-fit inline-flex items-center gap-2 px-6 py-2.5 font-medium rounded-full transition-all ${
                   action.primary 
                   ? "bg-neutral-100/20 border border-neutral-100/20 text-white font-medium shadow-lg" 
                   : "bg-neutral-100/1 border border-white/5 text-neutral-200 hover:bg-white/5 hover:border-white/20"
@@ -150,7 +150,7 @@ export const DashboardHome = () => {
           </div>
 
           {/* Elegant Task List */}
-          <div className="bg-white/2 border border-white/5 rounded-2xl p-8">
+          <div className="bg-white/2 border border-white/5 rounded-2xl p-4 md:p-8">
             <div className="flex justify-between items-end mb-8">
               <div>
                 <h2 className="text-2xl text-neutral-100 mb-1">Active Priorities</h2>
@@ -161,7 +161,7 @@ export const DashboardHome = () => {
 
             <div className="space-y-3">
               {recentAssignments.map((assignment) => (
-                <Link key={assignment._id} to={`/assignments/${assignment.test_id}`} className="group flex items-center justify-between p-4 rounded-2xl border border-transparent hover:border-white/5 hover:bg-white/2 transition-colors">
+                <Link key={assignment._id} to={`/assignments/${assignment.test_id}`} className="group flex items-center justify-between p-0 md:p-4 rounded-2xl border border-transparent hover:border-white/5 hover:bg-white/2 transition-colors">
                   <div className="flex items-center gap-5">
                     <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/5 group-hover:border-white/10 transition-colors">
                       <BookOpen className="w-5 h-5 text-neutral-500 group-hover:text-white transition-colors" />
@@ -181,7 +181,7 @@ export const DashboardHome = () => {
           </div>
 
           {/* Sleek Skill Progress */}
-          <div className="bg-white/2 border border-white/5 rounded-2xl p-8">
+          <div className="bg-white/2 border border-white/5 rounded-2xl p-4 md:p-8">
             <h2 className="text-2xl text-neutral-100 mb-8">Skill Proficiency</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {skills.map(skill => (
@@ -211,7 +211,7 @@ export const DashboardHome = () => {
         <div className="lg:col-span-4 space-y-8">
 
           {/* Badge / Profile Card - very minimalist */}
-          <div className="bg-linear-to-b from-[#18181b] to-white/5 border border-white/5 rounded-2xl p-8 text-center relative overflow-hidden group">
+          <div className="bg-linear-to-b from-[#18181b] to-white/5 border border-white/5 rounded-2xl p-4 md:p-8 text-center relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-full h-full bg-[url('https://res.cloudinary.com/dhe1ygeid/image/upload/v1714495861/grid_m4tnsi.svg')] opacity-[0.03] pointer-events-none"></div>
             <div className="absolute top-0 right-0 w-full h-full bg-linear-to-br from-orange-500/10 via-transparent to-purple-500/5 pointer-events-none"></div>
             <div className="mx-auto w-24 h-24 mb-6 rounded-2xl rotate-12 bg-linear-to-tr from-orange-400 to-amber-300 flex items-center justify-center shadow-[0_0_30px_rgba(249,115,22,0.3)] relative z-10 transition-transform group-hover:rotate-0 group-hover:scale-105 duration-500">
@@ -225,7 +225,7 @@ export const DashboardHome = () => {
           </div>
 
           {/* Vertical Timeline Activity */}
-          <div className="bg-white/2 border border-white/5 rounded-2xl p-8">
+          <div className="bg-white/2 border border-white/5 rounded-2xl p-4 md:p-8">
             <h2 className="text-lg font-medium text-white mb-6">Recent Activity</h2>
             <div className="relative border-l border-neutral-800 ml-3 space-y-8">
               {recentActivity.map((activity, idx) => (
@@ -246,7 +246,7 @@ export const DashboardHome = () => {
           </div>
 
           {/* Minimal Upcoming Contests */}
-          <div className="bg-white/2 border border-white/5 rounded-2xl p-8">
+          <div className="bg-white/2 border border-white/5 rounded-2xl p-4 md:p-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-medium text-white">Upcoming Events</h2>
             </div>

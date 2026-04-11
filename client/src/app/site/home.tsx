@@ -11,7 +11,7 @@ import { useState } from 'react';
 export const Home = () => {
   const icons = [TbBrandCpp, TbSql, FaRust, FaSwift, FaPython, FaPhp, FaJava, FaJs];
   const [activeTab, setActiveTab] = useState('For Students');
-  const { isLoggedIn } = useContextAPI();
+  const { dashboardPath } = useContextAPI();
 
   const features = [
     {
@@ -101,7 +101,7 @@ export const Home = () => {
   return (
     <div className="w-full min-h-screen">
       {/* Hero Section */}
-      <section className="relative pt-32 pb-24 px-6 bg-linear-to-b from-neutral-900 via-neutral-800 to-black overflow-hidden">
+      <section className="relative pt-20 md:pt-32 pb-24 px-6 bg-linear-to-b from-neutral-900 via-neutral-800 to-black overflow-hidden">
         <div className="max-w-7xl mx-auto relative z-20">
           <div className="w-full flex flex-col items-center">
             {/* <div className="inline-flex p-px rounded-full bg-linear-to-r from-neutral-500 to-neutral-700 mb-4">
@@ -115,16 +115,16 @@ export const Home = () => {
             </div> */}
 
             <div className="flex flex-col items-center justify-center my-5">
-              <div className="relative flex flex-col items-center text-center gap-4">
-                <h1 className="text-7xl font-bold text-neutral-200">Built by Engineers</h1>
-                <h1 className="text-7xl font-bold text-neutral-200">for Engineers</h1>
+              <div className="relative flex flex-col items-center text-center text-4xl md:text-7xl font-bold text-neutral-200 gap-4">
+                <h1>Built by Engineers</h1>
+                <h1>for Engineers</h1>
               </div>
 
-              <p className="text-center text-lg text-neutral-400 max-w-xl mt-6 leading-relaxed">
+              <p className="hidden md:block text-center text-base md:text-lg text-neutral-400 max-w-xl mt-6 leading-relaxed">
                 A platform for coding assessments, real-time proctoring, and performance analytics, designed specifically for engineering education.
               </p>
 
-              <Link to={isLoggedIn ? '/dashboard' : '/auth/login'} className="mt-8">
+              <Link to={dashboardPath} className="mt-8">
                 <button
                   type="button"
                   className="will-change-transform group flex items-center gap-2 cursor-pointer px-5 py-2 text-lg font-semibold text-neutral-200 bg-linear-to-r from-amber-600 via-orange-600 to-orange-500 hover:from-amber-500 hover:via-orange-500 hover:to-orange-400 rounded-full transition-all duration-400 hover:scale-105 border-2 border-orange-400/30 hover:border-orange-300/50"
@@ -136,7 +136,7 @@ export const Home = () => {
             </div>
 
 
-            <div className="my-20 relative h-120 w-full max-w-5xl mx-auto flex items-start justify-center">
+            <div className="my-20 relative h-28 md:h-120 w-full max-w-5xl mx-auto flex items-start justify-center">
               {heroImages.map((image, idx) => (
                 <div key={idx} className={`${image.scale} ${image.width} overflow-hidden absolute top-0 transform ${image.translate} rounded-2xl border border-neutral-700 shadow-[0_40px_80px_-20px_rgba(0,0,0,${idx === 0 ? '0.6' : '0.7'})] ${image.zIndex} ${idx === 2 ? 'relative' : ''}`}>
                   <img
@@ -193,7 +193,7 @@ export const Home = () => {
       </section>
 
       {/* Features Section */}
-      <section className="pb-32  px-6 relative flex flex-col gap-32 bg-linear-to-b from-black via-neutral-950 to-black text-neutral-200 overflow-hidden">
+      <section className="pb-32 px-6 relative flex flex-col gap-10 md:gap-32 bg-linear-to-b from-black via-neutral-950 to-black text-neutral-200 overflow-hidden">
         {/* Background gradient overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent" />
 
@@ -201,7 +201,7 @@ export const Home = () => {
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide uppercase bg-blue-500/10 text-blue-400 border border-blue-500/20 mb-6 mx-auto">
             Platform Capabilities
           </div>
-          <h2 className="text-center text-5xl md:text-6xl font-bold tracking-tight text-neutral-200 mb-6">
+          <h2 className="text-center text-4xl md:text-6xl font-bold tracking-tight text-neutral-200 mb-3 md:mb-6">
             Powerful <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-cyan-300">Features</span>
           </h2>
           <p className="text-lg text-center text-neutral-400 max-w-2xl mx-auto font-light leading-relaxed">
@@ -210,14 +210,14 @@ export const Home = () => {
         </div>
 
         {features.map((feature, idx) => (
-          <div key={idx} className="relative max-w-6xl mx-auto grid md:grid-cols-2 gap-16 lg:gap-24 items-center z-10 group/section">
+          <div key={idx} className="relative max-w-6xl mx-auto grid md:grid-cols-2 gap-10 lg:gap-24 items-center z-10 group/section">
             {/* Conditionally render card on left or right based on layout */}
             {feature.layout === 'left' ? (
               <>
                 {/* LEFT SIDE CARD */}
                 <div className="relative group">
                   <div className="absolute -inset-1 bg-linear-to-r from-white/10 to-white/0 rounded-[32px] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                  <div className="relative flex flex-col gap-6 bg-[#0a0a0a] border border-white/5 hover:border-white/10 rounded-[24px] p-8 lg:p-10 shadow-2xl transition-all duration-500 hover:-translate-y-1">
+                  <div className="relative flex flex-col gap-6 bg-[#0a0a0a] border border-white/5 hover:border-white/10 rounded-[24px] p-6 lg:p-10 shadow-2xl transition-all duration-500 hover:-translate-y-1">
                     <div className="flex items-center gap-4 border-b border-white/5 pb-6">
                       <div className={`w-14 h-14 rounded-2xl bg-linear-to-br ${feature.iconGradient} flex items-center justify-center border border-white/10 shadow-lg group-hover:scale-110 transition-transform duration-500`}>
                         <feature.icon className="w-7 h-7 text-neutral-200" />
@@ -227,7 +227,7 @@ export const Home = () => {
                         <h3 className="text-xl font-medium text-neutral-200">{feature.title}</h3>
                       </div>
                     </div>
-                    <p className="text-neutral-400 text-base leading-relaxed tracking-wide font-light">{feature.description}</p>
+                    <p className="text-neutral-400 text-justify text-base leading-relaxed tracking-wide font-light">{feature.description}</p>
 
                     {feature.languages && (
                       <div className="flex flex-wrap gap-2 mt-2">
@@ -241,10 +241,10 @@ export const Home = () => {
 
                 {/* RIGHT SIDE CONTENT */}
                 <div className="pl-0 lg:pl-8">
-                  <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-neutral-200 leading-tight mb-6">
+                  <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-neutral-200 leading-tight mb-6">
                     {feature.mainTitle}
                   </h2>
-                  <p className="text-lg text-neutral-400 leading-relaxed font-light mb-8">
+                  <p className="text-justify text-lg text-neutral-400 leading-relaxed font-light mb-8">
                     {feature.mainDescription}
                     <span className="text-neutral-200 font-medium drop-shadow-lg"> {feature.highlight}</span>
                   </p>
@@ -265,10 +265,10 @@ export const Home = () => {
               <>
                 {/* LEFT SIDE CONTENT */}
                 <div className="pr-0 lg:pr-8 md:order-1 order-2">
-                  <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-neutral-200 leading-tight mb-6">
+                  <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-neutral-200 leading-tight mb-6">
                     {feature.mainTitle}
                   </h2>
-                  <p className="text-lg text-neutral-400 leading-relaxed font-light mb-8">
+                  <p className="text-justify text-lg text-neutral-400 leading-relaxed font-light mb-8">
                     {feature.mainDescription}
                     <span className="text-neutral-200 font-medium drop-shadow-lg"> {feature.highlight}</span>
                   </p>
@@ -288,7 +288,7 @@ export const Home = () => {
                 {/* RIGHT SIDE CARD */}
                 <div className="relative group md:order-2 order-1">
                   <div className="absolute -inset-1 bg-linear-to-l from-white/10 to-white/0 rounded-[32px] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                  <div className="relative flex flex-col gap-6 bg-[#0a0a0a] border border-white/5 hover:border-white/10 rounded-[24px] p-8 lg:p-10 shadow-2xl transition-all duration-500 hover:-translate-y-1">
+                  <div className="relative flex flex-col gap-6 bg-[#0a0a0a] border border-white/5 hover:border-white/10 rounded-[24px] p-6 lg:p-10 shadow-2xl transition-all duration-500 hover:-translate-y-1">
                     <div className="flex items-center gap-4 border-b border-white/5 pb-6">
                       <div className={`w-14 h-14 rounded-2xl bg-linear-to-br ${feature.iconGradient} flex items-center justify-center border border-white/10 shadow-lg group-hover:scale-110 transition-transform duration-500`}>
                         <feature.icon className="w-7 h-7 text-neutral-200" />
@@ -299,7 +299,7 @@ export const Home = () => {
                       </div>
                     </div>
 
-                    <p className="text-neutral-400 text-base leading-relaxed tracking-wide font-light">{feature.description}</p>
+                    <p className="text-neutral-400 text-justify text-base leading-relaxed tracking-wide font-light">{feature.description}</p>
 
                     {feature.languages && (
                       <div className="flex flex-wrap gap-2 mt-2">
@@ -406,7 +406,7 @@ export const Home = () => {
                   </div>
                 </div>
 
-                <div className="p-8">
+                <div className="p-4 md:p-8">
                   <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-linear-to-tr from-orange-500 to-amber-300 flex items-center justify-center text-black font-bold text-sm">
@@ -493,7 +493,7 @@ export const Home = () => {
                   </div>
                 </div>
 
-                <div className="p-8">
+                <div className="p-4 md:p-8">
                   <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
                     <h3 className="text-lg font-medium text-neutral-200">Instructor Overview</h3>
                     <div className="flex items-center gap-2">
@@ -574,18 +574,18 @@ export const Home = () => {
             Start Excellence Today
           </div>
 
-          <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight text-neutral-200 leading-tight">
+          <h2 className="text-4xl md:text-7xl font-bold mb-4 md:mb-8 tracking-tight text-neutral-200 leading-tight">
             Ready to start your <br />
             <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-500 via-amber-400 to-orange-400">
               coding journey?
             </span>
           </h2>
 
-          <p className="text-xl text-neutral-400 mb-12 leading-relaxed font-light max-w-2xl">
+          <p className="text-base md:text-xl text-neutral-400 mb-12 leading-relaxed font-light max-w-2xl">
             Join thousands of engineering students already improving their technical skills on EduQuest's enterprise-grade platform.
           </p>
 
-          <Link to={isLoggedIn ? '/dashboard' : '/auth/login'} className="group w-max">
+          <Link to={dashboardPath} className="group w-max">
             <div className="relative inline-flex h-12 items-center justify-center overflow-hidden rounded-full p-px focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 focus:ring-offset-black">
               <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)] group-hover:bg-[conic-gradient(from_90deg_at_50%_50%,#f97316_0%,#fbbf24_50%,#f97316_100%)] transition-colors duration-500" />
               <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-neutral-950 px-8 py-1 text-base font-medium text-neutral-200 backdrop-blur-3xl transition-all duration-300 group-hover:bg-neutral-900 gap-2">

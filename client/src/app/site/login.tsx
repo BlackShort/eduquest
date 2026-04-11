@@ -3,16 +3,16 @@ import { useEffect, useState } from "react";
 import toast from 'react-hot-toast';
 import { Eye, EyeOff } from "lucide-react";
 import { useContextAPI } from "@/hooks/useContext.js";
-import { login, verifyToken } from "@/apis/auth-api";
+import { login } from "@/apis/auth-api";
 import logo from "@/assets/logo/favicon.png";
 import { Loader } from "@/components/site/loader";
+import type { ApiError } from "@/types/error";
 
 export const Login = () => {
     const navigate = useNavigate();
-    const { setIsLoggedIn, setUser } = useContextAPI();
+    const { dashboardPath, isLoggedIn, appLoading, setIsLoggedIn, setUser } = useContextAPI();
 
     const [loading, setLoading] = useState(false);
-    const [authChecking, setAuthChecking] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
 
     const [loginData, setLoginData] = useState({
@@ -21,21 +21,10 @@ export const Login = () => {
     });
 
     useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const data = await verifyToken();
-                setUser(data.user);
-                setIsLoggedIn(true);
-                navigate("/dashboard");
-            } catch {
-                setIsLoggedIn(false);
-            } finally {
-                setAuthChecking(false);
-            }
-        };
-
-        checkAuth();
-    }, [navigate, setIsLoggedIn, setUser]);
+        if (!appLoading && isLoggedIn) {
+            navigate(dashboardPath);
+        }
+    }, [isLoggedIn, appLoading, navigate, dashboardPath]);
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -48,17 +37,21 @@ export const Login = () => {
             setIsLoggedIn(true);
 
             toast.success(data.message);
-            navigate("/dashboard");
+            navigate(dashboardPath);
 
             setLoginData({ email: "", password: "" });
         } catch (error: unknown) {
-            const errormsg =
-                error instanceof Error
-                    ? error.message
-                    : "An unknown error occurred";
+            const apiError = error as ApiError;
+            const message = apiError?.message || "An unknown error occurred";
+
+            if (apiError?.status === 404) {
+                toast.error("User does not exist. Please register first.");
+                navigate("/auth/register");
+                return;
+            }
 
             setIsLoggedIn(false);
-            toast.error(errormsg);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -70,7 +63,7 @@ export const Login = () => {
         setLoginData({ ...loginData, [name]: newValue });
     };
 
-    if (authChecking) {
+    if (appLoading) {
         return (
             <div className="flex items-center justify-center w-full h-screen bg-neutral-950">
                 <Loader />

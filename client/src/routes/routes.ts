@@ -2,6 +2,8 @@ import { createBrowserRouter } from "react-router";
 import { AssignmentLayout, EditorLayout, ContestLayout, DashboardLayout, ProblemListLayout, RootLayout, SiteLayout, AssessmentLayout, FDashboardLayout } from "@/layouts";
 import { Home, About, Privacy, Terms, Cookies, Contact, Login, Register } from "@/app/site";
 import { ProtectedRoute } from "@/components/site/protected-route";
+import { StudentRoleRoute, FacultyRoleRoute } from "@/components/site/role-wrappers";
+import { Unauthorized } from "@/app/error/unauthorized";
 import { DashboardHome, DashboardSettings } from "@/app/dashboard";
 import { ContestHome, ContestDetails, ProblemHome, ProblemCategory, ContestDashboard } from "@/app/code";
 import { ErrorPage } from "@/app/error/error";
@@ -46,101 +48,119 @@ export const router = createBrowserRouter([
             {
                 path: "auth",
                 children: [
-                    {index: true, Component: Login },
+                    { index: true, Component: Login },
                     { path: "login", Component: Login },
                     { path: "register", Component: Register },
                 ]
             },
             {
-                // Pathless protected route — redirects to /auth/login if not authenticated
+                path: "/not-found",
+                Component: ErrorPage
+            },
+            {
+                path: "/unauthorized",
+                Component: Unauthorized
+            },
+            {
+                path: "contest",
+                Component: ContestLayout,
+                children: [
+                    { index: true, Component: ContestHome },
+                    { path: ":contestId", Component: ContestDetails },
+                ],
+            },
+            {
+                path: "leaderboard",
+                Component: ContestLayout,
+                children: [
+                    { index: true, Component: LeaderboardHome },
+                ],
+            },
+            {
+                path: "contest/:contestId/:problemId",
+                Component: EditorLayout,
+            },
+            {
+                path: "problems/:problemId",
+                Component: EditorLayout,
+            },
+            {
+                path: "problems",
+                Component: ProblemListLayout,
+                children: [
+                    { index: true, Component: ProblemHome },
+                ],
+            },
+            {
+                path: "problemset",
+                Component: ProblemListLayout,
+                children: [
+                    { index: true, Component: ProblemHome },
+                    { path: ":category", Component: ProblemCategory },
+                ],
+            },
+            // STUDENT ROUTES - Protected and role-based
+            {
                 Component: ProtectedRoute,
                 children: [
                     {
-                        path: "dashboard",
-                        Component: DashboardLayout,
+                        Component: StudentRoleRoute,
                         children: [
-                            { index: true, Component: DashboardHome },
-                            { path: "settings", Component: DashboardSettings },
-                            { path: "assignments", Component: Assignment },
-                            { path: "assessment", Component: AssessmentHome },
-                            { path: "contest", Component: ContestDashboard },
-
+                            {
+                                path: "dashboard",
+                                Component: DashboardLayout,
+                                children: [
+                                    { index: true, Component: DashboardHome },
+                                    { path: "settings", Component: DashboardSettings },
+                                    { path: "assignments", Component: Assignment },
+                                    { path: "assessment", Component: AssessmentHome },
+                                    { path: "contest", Component: ContestDashboard },
+                                ],
+                            },
+                            {
+                                path: "assessment",
+                                Component: AssessmentLayout,
+                                children: [
+                                    { index: true, Component: AssessmentHome },
+                                    { path: ":assessmentId", Component: AssignmentDetail },
+                                ],
+                            },
+                            {
+                                path: "assignments",
+                                Component: AssignmentLayout,
+                                children: [
+                                    { path: ":assignmentId", Component: AssignmentDetail },
+                                ],
+                            },
+                            {
+                                path: "proctor-test",
+                                Component: ProctorTestPage,
+                            },
                         ],
                     },
+                    // FACULTY ROUTES - Protected and role-based
                     {
-                        path: "faculty-dashboard",
-                        Component: FDashboardLayout,
+                        Component: FacultyRoleRoute,
                         children: [
-                            { index: true, Component: FDashboardHome },
-                            { path: "assessment", Component: FDashboardAssessment },
-                            { path: "assignments", Component: FDashboardAssignments },
-                            { path: "analytics", Component: FacultyAnalyticsPage },
-                            { path: "problems", Component: FacultyProblemBankPage },
-                            { path: "settings", Component: FacultySettingsPage },
-                            { path: "tests/create", Component: CreateTestPage },
-                            { path: "tests/:testId/edit", Component: EditTestPage },
-                            { path: "tests/:testId/results", Component: TestResultsPage },
-                            { path: "attempt/:attemptId", Component: AttemptDetailPage },
-                            { path: "bulk-import", Component: BulkImportPage },
-                            { path: "reports", Component: ReportsPage },
+                            {
+                                path: "faculty-dashboard",
+                                Component: FDashboardLayout,
+                                children: [
+                                    { index: true, Component: FDashboardHome },
+                                    { path: "assessment", Component: FDashboardAssessment },
+                                    { path: "assignments", Component: FDashboardAssignments },
+                                    { path: "analytics", Component: FacultyAnalyticsPage },
+                                    { path: "problems", Component: FacultyProblemBankPage },
+                                    { path: "settings", Component: FacultySettingsPage },
+                                    { path: "tests/create", Component: CreateTestPage },
+                                    { path: "tests/:testId/edit", Component: EditTestPage },
+                                    { path: "tests/:testId/results", Component: TestResultsPage },
+                                    { path: "attempt/:attemptId", Component: AttemptDetailPage },
+                                    { path: "bulk-import", Component: BulkImportPage },
+                                    { path: "reports", Component: ReportsPage },
+                                ],
+                            },
                         ],
-                    },
-                    {
-                        path: "assessment",
-                        Component: AssessmentLayout,
-                        children: [
-                            { index: true, Component: AssessmentHome },
-                            { path: ":assessmentId", Component: AssignmentDetail },
-                        ],
-                    },
-                    {
-                        path: "assignments",
-                        Component: AssignmentLayout,
-                        children: [
-                            { path: ":assignmentId", Component: AssignmentDetail },
-                        ],
-                    },
-                    {
-                        path: "contest",
-                        Component: ContestLayout,
-                        children: [
-                            { index: true, Component: ContestHome },
-                            { path: ":contestId", Component: ContestDetails },
-                        ],
-                    },
-                    {
-                        path: "leaderboard",
-                        Component: ContestLayout,
-                        children: [
-                            { index: true, Component: LeaderboardHome },
-                        ],
-                    },
-                    {
-                        path: "contest/:contestId/:problemId",
-                        Component: EditorLayout,
-                    },
-                    {
-                        path: "problems/:problemId",
-                        Component: EditorLayout,
-                    },
-                    {
-                        path: "problems",
-                        Component: ProblemListLayout,
-                        children: [
-                            { index: true, Component: ProblemHome },
-                        ],
-                    },
-                    {
-                        path: "problemset",
-                        Component: ProblemListLayout,
-                        children: [
-                            { index: true, Component: ProblemHome },
-                            { path: ":category", Component: ProblemCategory },
-                        ],
-                    },
-                    {
-                        path: "proctor-test",
-                        Component: ProctorTestPage,
                     },
                 ],
             },

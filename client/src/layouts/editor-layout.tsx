@@ -39,7 +39,7 @@ export const EditorLayout = () => {
       // mode , questionId, testId will be used in future for fetching testcases from backend
       const result = await codeSubmission(code, language, testCases, mode, problemId);
       console.log("Code execution result:", result.data);
-      const mapped = (result.data.executionResult?.testcaseResults ?? []).map(
+      const mapped = (result.executionResult?.testcaseResults ?? []).map(
         (tc: { input: string; expectedOutput: string; actualOutput: string; status: string; timeTakenMs: number }, i: number) => ({
           index: i + 1,
           input: tc.input,

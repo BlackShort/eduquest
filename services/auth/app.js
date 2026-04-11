@@ -11,7 +11,7 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173', // removed the hardcoded origin : https://www.codealpha.app
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE']
 }));

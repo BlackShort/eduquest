@@ -85,9 +85,9 @@ export const login = async (req, res) => {
         const user = await userModel.findOne({ email });
 
         if (!user) {
-            return res.status(401).json({ 
+            return res.status(404).json({ 
                 success: false, 
-                message: 'Invalid credentials' 
+                message: 'User not found with this email' 
             });
         }
 
@@ -162,7 +162,9 @@ export const login = async (req, res) => {
                 id: user._id,
                 username: user.username,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                isVerified: user.isVerified,
+                isActive: user.isActive
             },
         });
 
@@ -233,8 +235,8 @@ export const refreshAccessToken = async (req, res) => {
         // Set new cookie
         res.cookie('accessToken', newAccessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: true,
+            sameSite: 'none',
             maxAge: getTokenExpiry()
         });
 
@@ -272,8 +274,8 @@ export const logout = async (req, res) => {
         // Clear cookies — options must match how they were set
         const cookieOptions = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict'
+            secure: true,
+            sameSite: 'none',
         };
         res.clearCookie('accessToken', cookieOptions);
         res.clearCookie('refreshToken', cookieOptions);
@@ -379,8 +381,8 @@ export const logoutAllSessions = async (req, res) => {
 
         const cookieOptions = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict'
+            secure: true,
+            sameSite: 'none',
         };
         res.clearCookie('accessToken', cookieOptions);
         res.clearCookie('refreshToken', cookieOptions);

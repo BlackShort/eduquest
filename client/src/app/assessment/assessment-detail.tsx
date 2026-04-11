@@ -200,7 +200,7 @@ export const AssessmentDetail = ({
       // Run public test cases just like regular practice mode
       const result = await codeSubmission(currentCode, currentLanguage, testCases.slice(0, 3), "run", questionId);
 
-      const mapped = (result.data.executionResult?.testcaseResults ?? []).map(
+      const mapped = (result.executionResult?.testcaseResults ?? []).map(
         (tc: { input: string; expectedOutput: string; actualOutput: string; status: string; timeTakenMs: number }, i: number) => ({
           index: i + 1,
           input: tc.input,
