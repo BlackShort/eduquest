@@ -8,6 +8,9 @@ import Assignment from '../models/Assignment.js';
  */
 export const createTest = async (req, res) => {
     try {
+        console.log("USER FROM TOKEN:", req.user);
+        console.log("BODY:", req.body);
+
         const testData = {
             ...req.body,
             creatorId: req.user.userId

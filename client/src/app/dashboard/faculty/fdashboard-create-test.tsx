@@ -61,23 +61,32 @@ export default function CreateTestPage() {
   };
 
   const handleSubmit = async (publishNow = false) => {
-    try {
-      setLoading(true);
-      const status: 'draft' | 'published' | 'archived' = publishNow ? 'published' : 'draft';
-      const dataToSubmit: Partial<Test> = {
-        ...formData,
-        status
-      };
-      
-      await createTest(dataToSubmit);
-      navigate('/faculty-dashboard/assessment');
-    } catch (error) {
-      console.error('Error creating test:', error);
-      alert('Failed to create test. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    setLoading(true);
+
+    const status: 'draft' | 'published' | 'archived' =
+      publishNow ? 'published' : 'draft';
+
+    const dataToSubmit = {
+      ...formData,
+      status,
+      ...(formData.scheduledStart
+        ? { scheduledStart: formData.scheduledStart }
+        : {}),
+      ...(formData.scheduledEnd
+        ? { scheduledEnd: formData.scheduledEnd }
+        : {})
+    };
+
+    await createTest(dataToSubmit);
+    navigate('/faculty-dashboard/assessment');
+  } catch (error) {
+    console.error('Error creating test:', error);
+    alert('Failed to create test. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
