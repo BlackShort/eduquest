@@ -3,7 +3,7 @@ import { lazy } from "react";
 import {
     AssignmentLayout, EditorLayout, ContestLayout,
     DashboardLayout, ProblemListLayout, RootLayout,
-    SiteLayout, AssessmentLayout, FDashboardLayout
+    SiteLayout, AssessmentView, FDashboardLayout
 } from "@/layouts";
 import { ProtectedRoute } from "@/components/site/protected-route";
 import { StudentRoleRoute, FacultyRoleRoute } from "@/components/site/role-wrappers";
@@ -133,7 +133,7 @@ export const router = createBrowserRouter([
                             },
                             {
                                 path: "assessment",
-                                Component: AssessmentLayout,
+                                Component: AssessmentView,
                                 children: [
                                     { index: true, Component: AssessmentHome },
                                     { path: ":assessmentId", Component: AssignmentDetail },
