@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { ChevronLeft, ChevronRight, Settings, User, ListVideo, CloudUpload, Play, LayoutPanelLeft, Shuffle } from 'lucide-react';
-import eduquest from '@/assets/logo/favicon.png'
+import { logo } from '@/assets/logo'
 import { useContextAPI } from '@/hooks/useContext';
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
@@ -26,8 +26,8 @@ export const EditorHeader = ({ onRun, onSubmit, isRunning, layout = "global-head
                     <div className="flex w-max h-7 items-center gap-2">
                         <Link to="/dashboard" className="flex items-center px-2">
                             <img
-                                src={eduquest}
-                                alt="EduQuest"
+                                src={logo.light.logoL128}
+                                alt="CodeAlpha"
                                 className="w-full h-7 object-cover"
                             />
                         </Link>
@@ -86,8 +86,8 @@ export const EditorHeader = ({ onRun, onSubmit, isRunning, layout = "global-head
                     <div className="flex items-center gap-4">
                         <div className="flex gap-4">
                             <LayoutPanelLeft className="w-5 h-5 text-gray-400 cursor-pointer hover:text-white" />
-                            <Settings 
-                                className="w-5 h-5 text-gray-400 cursor-pointer hover:text-white" 
+                            <Settings
+                                className="w-5 h-5 text-gray-400 cursor-pointer hover:text-white"
                                 onClick={() => setIsSettingsOpen(true)}
                             />
                         </div>
@@ -117,11 +117,11 @@ export const EditorHeader = ({ onRun, onSubmit, isRunning, layout = "global-head
                 </div>
             </div>
 
-            <SettingsModal 
-                isOpen={isSettingsOpen} 
-                onClose={() => setIsSettingsOpen(false)} 
+            <SettingsModal
+                isOpen={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
                 currentLayout={layout}
-                onLayoutChange={onLayoutChange || (() => {})}
+                onLayoutChange={onLayoutChange || (() => { })}
             />
         </header>
     )

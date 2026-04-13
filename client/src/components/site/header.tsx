@@ -1,7 +1,6 @@
 import { Link, NavLink } from 'react-router'
 import { User } from 'lucide-react';
-import eduquest from '@/assets/logo/eduquest.png'
-import eduquestLight from '@/assets/logo/eduquest-invert.png'
+import { logo } from '@/assets/logo'
 import { useContextAPI } from '@/hooks/useContext';
 import { CgMenuLeftAlt } from "react-icons/cg";
 
@@ -39,8 +38,8 @@ export function Header({ layout = "site", variant = "default", theme = "light", 
                     <Link to="/" className="flex items-center gap-2 group">
                         <div className="w-full h-8 rounded-lg flex items-center justify-center group-hover:scale-105 transition-all duration-300">
                             <img
-                                src={theme === "light" ? eduquestLight : eduquest}
-                                alt="EduQuest"
+                                src={theme === "light" ? logo.codealpha.codealphaB : logo.codealpha.codealphaL}
+                                alt="CodeAlpha"
                                 className="w-full h-8 object-cover"
                             />
                         </div>

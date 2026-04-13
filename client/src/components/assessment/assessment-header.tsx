@@ -9,7 +9,7 @@ import {
     LayoutPanelLeft,
     AlarmClock,
 } from "lucide-react";
-import eduquest from "@/assets/logo/favicon.png";
+import { logo } from "@/assets/logo";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { SettingsModal } from "@/components/code/settings-modal";
@@ -52,15 +52,15 @@ export const AssessmentHeader = () => {
             <div className="w-full px-6 h-full">
                 <div className="flex items-center justify-between h-full">
                     {/* Left — logo + section nav */}
-                    <div className="flex w-max h-7 items-center gap-2">
-                        <Link to="/dashboard" className="flex items-center px-2">
-                            <img src={eduquest} alt="EduQuest" className="w-full h-7 object-cover" />
-                            <span className="ml-2 text-lg tracking-wide font-medium text-white">
+                    <div className="flex w-max h-10 items-center gap-2">
+                        <Link to="/dashboard" className="flex items-center pl-2">
+                            <img src={logo.light.logoL128} alt="CodeAlpha" className="w-full h-10 object-cover" />
+                            {/* <span className="ml-2 text-lg tracking-wide font-medium text-white">
                                 Assessment
-                            </span>
+                            </span> */}
                         </Link>
 
-                        <div className="h-5 w-px bg-neutral-600" />
+                        <div className="mr-1 h-5 w-px bg-neutral-600" />
 
                         <div className="flex items-center gap-0 text-gray-300 bg-neutral-700/40 rounded transition-colors group">
                             <div className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/10 rounded-l transition-colors cursor-pointer">

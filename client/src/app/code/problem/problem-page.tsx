@@ -68,11 +68,11 @@ export const ProblemHome = () => {
   };
 
   return (
-    <div className="flex justify-center py-10">
+    <div className="realtive flex justify-center py-10">
       {/* Main Content */}
-      <div className="w-full max-w-5xl mx-auto">
+      <div className="w-full max-w-4xl mx-auto">
         {/* Topic Filter Tabs */}
-        <div className="mb-6 overflow-x-auto">
+        <div className="mb-2 overflow-x-auto">
           <div className="flex gap-2 min-w-max pb-2 overflow-x-auto scrollbar-hide">
             {topicCategories.map((topic) => (
               <Button
@@ -92,7 +92,7 @@ export const ProblemHome = () => {
         </div>
 
         {/* Search and Filter Bar */}
-        <div className="mb-6 flex flex-row items-center justify-between gap-3">
+        <div className="bg-neutral-900 sticky top-0 py-4 mb-2 flex flex-row items-center justify-between gap-3">
           <div className="flex-1 flex gap-5"> {/* Changed from w-max to flex-1 */}
             {/* Search Bar */}
             <div className="hidden border border-neutral-600 md:flex items-center gap-2 text-neutral-200 bg-neutral-700/50 rounded-full px-3 py-2 flex-1 max-w-xs focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-200 transition-all duration-200"> {/* Changed w-full to flex-1 */}
@@ -149,50 +149,47 @@ export const ProblemHome = () => {
         </div>
 
         {/* Problem List Table */}
-        <div className="rounded-lg border bg-neutral-700/50 border-neutral-600">
-          {/* Table Body */}
-          <div className="divide-y">
-            {filteredProblems.length === 0 ? (
-              <div className="py-12 text-center text-neutral-300">
-                No problems found matching your filters
-              </div>
-            ) : (
-              filteredProblems.map((problem) => (
-                <Link
-                  key={problem.id}
-                  to={`/problems/${problem.id}`}
-                  className="border-neutral-600 grid grid-cols-12 gap-4 px-4 py-4 hover:bg-neutral-800/50 transition-colors items-center"
-                >
-                  {/* Status */}
-                  <div className="col-span-1">
-                    <div className="size-4 rounded-full border-2 border-neutral-600"></div>
-                  </div>
+        <div>
+          {filteredProblems.length === 0 ? (
+            <div className="py-12 text-center text-neutral-300">
+              No problems found matching your filters
+            </div>
+          ) : (
+            filteredProblems.map((problem, index) => (
+              <Link
+                key={problem.id}
+                to={`/problems/${problem.id}`}
+                className={`cursor-pointer rounded-sm border-neutral-600 grid grid-cols-12 gap-4 px-4 py-3 ${(index % 2 == 0) && "bg-neutral-700/50"} items-center`}
+              >
+                {/* Status */}
+                <div className="col-span-1">
+                  <div className="size-4 rounded-full border-2 border-neutral-600"></div>
+                </div>
 
-                  {/* Title */}
-                  <div className="col-span-7 flex items-center gap-3">
-                    <span className="text-sm font-medium text-neutral-300">
-                      {problem.number}.
-                    </span>
-                    <span className="text-sm font-medium text-neutral-200">
-                      {problem.title}
-                    </span>
-                  </div>
+                {/* Title */}
+                <div className="col-span-7 flex items-center gap-3">
+                  <span className="text-sm font-medium text-neutral-300">
+                    {problem.number}.
+                  </span>
+                  <span className="text-sm font-medium text-neutral-200">
+                    {problem.title}
+                  </span>
+                </div>
 
-                  {/* Acceptance */}
-                  <div className="col-span-2 text-center text-sm text-neutral-300">
-                    {problem.acceptance}
-                  </div>
+                {/* Acceptance */}
+                <div className="col-span-2 text-center text-sm text-neutral-300">
+                  {problem.acceptance}
+                </div>
 
-                  {/* Difficulty */}
-                  <div className="col-span-2 text-center">
-                    <span className={`text-sm capitalize font-normal ${getDifficultyColor(problem.difficulty)}`}>
-                      {problem.difficulty}
-                    </span>
-                  </div>
-                </Link>
-              ))
-            )}
-          </div>
+                {/* Difficulty */}
+                <div className="col-span-2 text-center">
+                  <span className={`text-sm capitalize font-normal ${getDifficultyColor(problem.difficulty)}`}>
+                    {problem.difficulty}
+                  </span>
+                </div>
+              </Link>
+            ))
+          )}
         </div>
       </div>
     </div>

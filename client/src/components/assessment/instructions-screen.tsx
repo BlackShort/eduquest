@@ -105,6 +105,12 @@ export const InstructionsScreen = ({ onStart }: InstructionsScreenProps) => {
                         </div>
                     </div>
                     <p className="text-sm text-neutral-400">Assessment starting automatically...</p>
+                    <button
+                        onClick={onStart}
+                        className="text-xs text-orange-400 hover:text-orange-300 underline underline-offset-2 cursor-pointer transition-colors"
+                    >
+                        Start now
+                    </button>
                 </div>
             )}
 
