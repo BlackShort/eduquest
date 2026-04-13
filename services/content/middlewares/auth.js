@@ -17,7 +17,7 @@ export const verifyToken = async (req, res, next) => {
         }
 
         // Verify JWT signature (should match auth service secret)
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // Attach user info to request
         req.user = {
@@ -55,7 +55,11 @@ export const verifyFaculty = (req, res, next) => {
         });
     }
 
-    if (req.user.role !== 'faculty' && req.user.role !== 'admin') {
+    console.log("Decoded User:", req.user); // ✅ inside function
+
+    const role = req.user.role?.toLowerCase();
+
+    if (role !== 'faculty' && role !== 'admin') {
         return res.status(403).json({ 
             success: false, 
             message: 'Access denied. Faculty privileges required.' 
@@ -68,6 +72,7 @@ export const verifyFaculty = (req, res, next) => {
 /**
  * Generic role verification middleware
  */
+
 export const verifyRole = (...allowedRoles) => {
     return (req, res, next) => {
         if (!req.user) {
