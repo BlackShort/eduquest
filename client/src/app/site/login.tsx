@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { Eye, EyeOff } from "lucide-react";
 import { useContextAPI } from "@/hooks/useContext.js";
 import { login } from "@/apis/auth-api";
-import logo from "@/assets/logo/favicon.png";
+import { logo } from "@/assets/logo";
 import { Loader } from "@/components/site/loader";
 import type { ApiError } from "@/types/error";
 
@@ -81,8 +81,7 @@ export const Login = () => {
                     <div className="flex items-start justify-center mb-7">
                         <Link to={'/'}>
                             <div className="flex items-center justify-center gap-2">
-                                <img src={logo} alt="EduQuest" className="w-8 h-8 object-cover" />
-                                <h1 className="text-2xl font-bold text-white tracking-tight">EduQuest</h1>
+                                <img src={logo.codealpha.codealphaB} alt="CodeAlpha" className="w-max h-9 object-cover" />
                             </div>
                         </Link>
                     </div>

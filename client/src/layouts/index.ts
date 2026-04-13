@@ -7,6 +7,8 @@ import { ProblemListLayout } from "@/layouts/problemlist-layout";
 import { AssignmentLayout } from "@/layouts/assignment-layout";
 import { ContestLayout } from "@/layouts/contest-layout";
 import { AssessmentLayout } from "@/layouts/assessment-layout";
+import { AssessmentView } from "@/app/assessment/assessment-view";
+
 
 export {
     RootLayout,
@@ -17,5 +19,6 @@ export {
     ProblemListLayout,
     AssignmentLayout,
     ContestLayout,
-    AssessmentLayout
+    AssessmentLayout,
+    AssessmentView
 }

@@ -582,7 +582,7 @@ export const Home = () => {
           </h2>
 
           <p className="text-base md:text-xl text-neutral-400 mb-12 leading-relaxed font-light max-w-2xl">
-            Join thousands of engineering students already improving their technical skills on EduQuest's enterprise-grade platform.
+            Join thousands of engineering students already improving their technical skills on CodeAlpha's enterprise-grade platform.
           </p>
 
           <Link to={dashboardPath} className="group w-max">
@@ -600,7 +600,7 @@ export const Home = () => {
       {/* Footer */}
       <footer className="py-4 px-6 bg-black text-neutral-200 border-t border-neutral-800/50">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-neutral-400 text-sm">Copyright &copy; 2026 EduQuest. All rights reserved.</p>
+          <p className="text-neutral-400 text-sm">Copyright &copy; 2026 CodeAlpha. All rights reserved.</p>
           <div className="flex gap-6 text-sm text-neutral-400">
             {footerLinks.map((link, idx) => (
               <a key={idx} href="#" className="hover:text-neutral-200 transition-colors hover:underline">{link}</a>

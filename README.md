@@ -1,6 +1,6 @@
-# **EduQuest**
+# **CodeAlpha**
 
-EduQuest is a modern, e-learning, microservices-driven platform designed for engineering students and faculty.
+CodeAlpha is a modern, e-learning, microservices-driven platform designed for engineering students and faculty.
 It enables **coding practice**, **theory assessments**, **proctoring**, **plagiarism detection**, **leaderboards**, and **performance analytics**, combining academic workflows with industry-grade technology.
 
 ---
@@ -35,7 +35,7 @@ It enables **coding practice**, **theory assessments**, **proctoring**, **plagia
 
 ## **Microservices Architecture**
 
-EduQuest follows a **microservices** design for flexibility and scalability.
+CodeAlpha follows a **microservices** design for flexibility and scalability.
 
 | Service                           | Responsibilities                         |
 | --------------------------------- | ---------------------------------------- |
@@ -149,8 +149,8 @@ Uses Jaccard similarity:
 ### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/blackshort/EduQuest.git
-cd EduQuest
+git clone https://github.com/blackshort/CodeAlpha.git
+cd CodeAlpha
 ```
 
 ### 2️⃣ Environment Variables
@@ -182,14 +182,14 @@ http://localhost:3000
 ### Build Images
 
 ```bash
-docker build -t eduquest-auth ./services/auth
-docker build -t eduquest-test ./services/test
+docker build -t CodeAlpha-auth ./services/auth
+docker build -t CodeAlpha-test ./services/test
 ```
 
 ### Push to Registry
 
 ```bash
-docker push yourrepo/eduquest-auth
+docker push yourrepo/CodeAlpha-auth
 ```
 
 ### Kubernetes Deployment
@@ -256,6 +256,6 @@ Pull requests and feature suggestions are welcome!
 
 ## 📜 **License**
 
-MIT License © 2025 EduQuest Team
+MIT License © 2025 CodeAlpha Team
 
 ---
