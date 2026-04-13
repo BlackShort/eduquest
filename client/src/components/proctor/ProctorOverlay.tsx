@@ -35,8 +35,13 @@ export default function ProctorOverlay({
   shouldRunIdentityVerification,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [warning, setWarning] = useState<string | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
   const [faceCount, setFaceCount] = useState(0);
+  const [warning, setWarning] = useState<string | null>(null);
+  const [panelPos, setPanelPos] = useState(() => {
+    if (typeof window === "undefined") return { x: 20, y: 20 };
+    return { x: 20, y: Math.max(0, window.innerHeight - 170 - 20) };
+  });
 
   const detectionInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const tickCounter = useRef(0);
@@ -44,6 +49,20 @@ export default function ProctorOverlay({
   const identityEnrolledRef = useRef(false);
   const lastEnrollAttemptAtRef = useRef<number | null>(null);
   const identityMismatchRef = useRef(false);
+  const isDraggingRef = useRef(false);
+  const dragOffsetRef = useRef({ x: 0, y: 0 });
+
+  const clampPanelPosition = (x: number, y: number) => {
+    const panelWidth = panelRef.current?.offsetWidth ?? 240;
+    const panelHeight = panelRef.current?.offsetHeight ?? 170;
+    const maxX = Math.max(0, window.innerWidth - panelWidth);
+    const maxY = Math.max(0, window.innerHeight - panelHeight);
+
+    return {
+      x: Math.min(Math.max(0, x), maxX),
+      y: Math.min(Math.max(0, y), maxY),
+    };
+  };
 
   // Keep identity state stable across effect re-runs; reset only on session stop/change.
   useEffect(() => {
@@ -53,6 +72,44 @@ export default function ProctorOverlay({
       identityMismatchRef.current = false;
     }
   }, [active, sessionId]);
+
+  useEffect(() => {
+    if (!active) return;
+
+    const onResize = () => {
+      setPanelPos((prev) => clampPanelPosition(prev.x, prev.y));
+    };
+
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+    };
+  }, [active]);
+
+  const onPanelPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    isDraggingRef.current = true;
+    dragOffsetRef.current = {
+      x: e.clientX - panelPos.x,
+      y: e.clientY - panelPos.y,
+    };
+    panel.setPointerCapture(e.pointerId);
+  };
+
+  const onPanelPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return;
+
+    const nextX = e.clientX - dragOffsetRef.current.x;
+    const nextY = e.clientY - dragOffsetRef.current.y;
+    setPanelPos(clampPanelPosition(nextX, nextY));
+  };
+
+  const onPanelPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    isDraggingRef.current = false;
+    e.currentTarget.releasePointerCapture(e.pointerId);
+  };
 
   // Webcam lifecycle.
 
@@ -132,8 +189,7 @@ export default function ProctorOverlay({
           readyForIdentity &&
           identityEnrolledRef.current &&
           verifyIdentityFromVideo &&
-          // shouldRunIdentityVerification?.(5 * 60 * 1000)
-          shouldRunIdentityVerification?.(5 * 1000)
+          shouldRunIdentityVerification?.(5 * 60 * 1000)
         ) {
           try {
             const verifyResult = await verifyIdentityFromVideo(video);
@@ -209,10 +265,14 @@ export default function ProctorOverlay({
     <>
       {/* Floating proctor panel */}
       <div
+        ref={panelRef}
+        onPointerDown={onPanelPointerDown}
+        onPointerMove={onPanelPointerMove}
+        onPointerUp={onPanelPointerUp}
         style={{
           position: "fixed",
-          bottom: 20,
-          left: 20,
+          top: panelPos.y,
+          left: panelPos.x,
           width: 240,
           background: "linear-gradient(180deg, #1d1d20 0%, #131316 100%)",
           border: "1px solid rgba(255, 122, 0, 0.35)",
@@ -220,24 +280,15 @@ export default function ProctorOverlay({
           padding: 10,
           boxShadow: "0 10px 30px rgba(0, 0, 0, 0.45)",
           backdropFilter: "blur(4px)",
+          cursor: "grab",
+          userSelect: "none",
+          touchAction: "none",
           zIndex: 9999,
         }}
       >
-        <div
-          style={{
-            color: "#ff8a24",
-            fontSize: 12,
-            fontWeight: 700,
-            letterSpacing: 0.3,
-          }}
-        >
-          ● Proctor Active
-        </div>
-
         <div style={{ fontSize: 12, color: "#a8a8af", marginTop: 4 }}>
           Faces detected: {faceCount}
         </div>
-
         <video
           ref={videoRef}
           autoPlay
@@ -245,7 +296,6 @@ export default function ProctorOverlay({
           playsInline
           style={{
             width: "100%",
-            marginTop: 8,
             borderRadius: 8,
             border: "1px solid rgba(255,255,255,0.08)",
             background: "#000",
