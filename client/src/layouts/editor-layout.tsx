@@ -24,20 +24,20 @@ export const EditorLayout = () => {
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [layout, setLayout] = useState<LayoutOption>("global-header");
 
-  const submitCode = (code: string, language: string, testCases: Testcase[], mode:string) => {
+  const submitCode = (code: string, language: string, testCases: Testcase[], mode: string) => {
     runCode(code, language, testCases, mode);
   }
 
-  const runCode = async(code: string, language: string, testCases: Testcase[], mode:string) => {
+  const runCode = async (code: string, language: string, testCases: Testcase[], mode: string) => {
     try {
       console.log("Running code...", { code, language, testCases });
-  
+
       setIsRunning(true);
       if (!problemId) {
         throw Error("no question id");
       }
       // mode , questionId, testId will be used in future for fetching testcases from backend
-      const result = await codeSubmission(code, language, testCases, mode, problemId);
+      const result = await codeSubmission("problem", null, code, language, testCases, mode, problemId);
       console.log("Code execution result:", result.data);
       const mapped = (result.executionResult?.testcaseResults ?? []).map(
         (tc: { input: string; expectedOutput: string; actualOutput: string; status: string; timeTakenMs: number }, i: number) => ({
@@ -50,7 +50,7 @@ export const EditorLayout = () => {
         })
       );
       setTestResults(mapped);
-      
+
     } catch (err) {
       console.error("Error running code:", err);
     } finally {
@@ -69,14 +69,14 @@ export const EditorLayout = () => {
   const handleSendTestCases = (testCase: Testcase[]) => {
     setTestCases(testCase);
   }
-  
+
   if (!problemId) {
     <div>No Question id</div>
   }
   return (
     <div className='flex flex-col h-screen w-full overflow-hidden bg-neutral-950'>
       <EditorHeader
-        onRun={() => runCode(currentCode, currentLanguage, testCases.slice(0, 3),"run")}
+        onRun={() => runCode(currentCode, currentLanguage, testCases.slice(0, 3), "run")}
         onSubmit={() => submitCode(currentCode, currentLanguage, testCases, "submit")}
         isRunning={isRunning}
         layout={layout}

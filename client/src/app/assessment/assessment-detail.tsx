@@ -15,6 +15,7 @@ interface TestResult {
 }
 
 interface AssessmentDetailProps {
+  testId: string,
   questionType: 'coding' | 'mcq';
   questionId: string;
   onNext?: () => void;
@@ -111,8 +112,8 @@ const MCQQuestion = ({
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-white">{data.title}</h2>
             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${data.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' :
-                data.difficulty === 'Medium' ? 'bg-orange-500/20 text-orange-400' :
-                  'bg-red-500/20 text-red-400'
+              data.difficulty === 'Medium' ? 'bg-orange-500/20 text-orange-400' :
+                'bg-red-500/20 text-red-400'
               }`}>
               {data.difficulty}
             </span>
@@ -130,8 +131,8 @@ const MCQQuestion = ({
                 key={option.id}
                 onClick={() => handleOptionSelect(option.id)}
                 className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer ${isSelected
-                    ? 'bg-blue-600 border-blue-500 text-white'
-                    : 'bg-neutral-800 border-neutral-700 text-neutral-300 hover:bg-neutral-700 hover:border-neutral-600'
+                  ? 'bg-blue-600 border-blue-500 text-white'
+                  : 'bg-neutral-800 border-neutral-700 text-neutral-300 hover:bg-neutral-700 hover:border-neutral-600'
                   }`}
               >
                 <div className="flex items-center gap-4">
@@ -173,6 +174,7 @@ const MCQQuestion = ({
 };
 
 export const AssessmentDetail = ({
+  testId,
   questionType,
   questionId,
   onNext,
@@ -198,7 +200,7 @@ export const AssessmentDetail = ({
     try {
       setIsRunning(true);
       // Run public test cases just like regular practice mode
-      const result = await codeSubmission(currentCode, currentLanguage, testCases.slice(0, 3), "run", questionId);
+      const result = await codeSubmission("assessment", testId, currentCode, currentLanguage, testCases.slice(0, 3), "run", questionId);
 
       const mapped = (result.executionResult?.testcaseResults ?? []).map(
         (tc: { input: string; expectedOutput: string; actualOutput: string; status: string; timeTakenMs: number }, i: number) => ({

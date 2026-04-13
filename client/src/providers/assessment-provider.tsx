@@ -151,6 +151,7 @@ export const AssessmentProvider = ({
     return (
         <AssessmentContext.Provider
             value={{
+                examId,
                 // Stage
                 stage,
                 setStage,

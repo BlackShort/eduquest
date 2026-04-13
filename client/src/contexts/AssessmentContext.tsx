@@ -3,6 +3,7 @@ import type { Question, Stage } from "@/types/assessment.types";
 import type { ProctorEventType } from "@/types/proctor";
 
 export interface AssessmentContextType {
+    examId: string;
     // ── Stage ──────────────────────────────────────────────────────────────────
     stage: Stage;
     setStage: (stage: Stage) => void;

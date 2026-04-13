@@ -4,6 +4,7 @@ import { useAssessment } from "@/contexts/AssessmentContext";
 
 export const AssessmentMain = () => {
     const {
+        examId,
         sidebarOpen,
         setSidebarOpen,
         toggleSidebar,
@@ -59,8 +60,8 @@ export const AssessmentMain = () => {
                                                         key={question.id}
                                                         onClick={() => setCurrentQuestionId(question.id)}
                                                         className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${currentQuestionId === question.id
-                                                                ? "bg-blue-600 text-white"
-                                                                : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
+                                                            ? "bg-blue-600 text-white"
+                                                            : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
                                                             }`}
                                                     >
                                                         <div className="flex items-center justify-between">
@@ -96,10 +97,10 @@ export const AssessmentMain = () => {
                                                         key={`${question.id}-${idx}`}
                                                         onClick={() => setCurrentQuestionId(question.id)}
                                                         className={`relative w-10 h-10 rounded-full transition-all duration-200 text-center font-medium ${currentQuestionId === question.id
-                                                                ? "bg-green-600 text-white"
-                                                                : isAnswered
-                                                                    ? "bg-green-600/30 text-green-300 hover:bg-green-600/40"
-                                                                    : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
+                                                            ? "bg-green-600 text-white"
+                                                            : isAnswered
+                                                                ? "bg-green-600/30 text-green-300 hover:bg-green-600/40"
+                                                                : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
                                                             }`}
                                                     >
                                                         {idx + 1}
@@ -130,8 +131,8 @@ export const AssessmentMain = () => {
                                             setSidebarOpen(true);
                                         }}
                                         className={`w-9 h-9 flex items-center justify-center shrink-0 rounded-lg transition-all duration-200 ${currentQuestion?.type === "coding"
-                                                ? "bg-blue-600 shadow-md shadow-blue-500/20"
-                                                : "bg-neutral-800 hover:bg-neutral-700"
+                                            ? "bg-blue-600 shadow-md shadow-blue-500/20"
+                                            : "bg-neutral-800 hover:bg-neutral-700"
                                             }`}
                                         title="Coding Problems"
                                     >
@@ -146,8 +147,8 @@ export const AssessmentMain = () => {
                                             setSidebarOpen(true);
                                         }}
                                         className={`w-9 h-9 flex items-center justify-center shrink-0 rounded-lg transition-all duration-200 ${currentQuestion?.type === "mcq"
-                                                ? "bg-green-600 shadow-md shadow-green-500/20"
-                                                : "bg-neutral-800 hover:bg-neutral-700"
+                                            ? "bg-green-600 shadow-md shadow-green-500/20"
+                                            : "bg-neutral-800 hover:bg-neutral-700"
                                             }`}
                                         title="Multiple Choice"
                                     >
@@ -175,6 +176,7 @@ export const AssessmentMain = () => {
 
             {/* Question panel */}
             <AssessmentDetail
+                testId={examId}
                 questionType={currentQuestion?.type ?? "coding"}
                 questionId={currentQuestionId}
                 onNext={showNext() ? handleNext : undefined}
