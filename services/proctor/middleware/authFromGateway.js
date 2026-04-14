@@ -28,7 +28,6 @@ function authFromGateway(req, res, next) {
   if (process.env.NODE_ENV !== "production") {
     req.studentId = "dev_student";
     req.role = "student";
-    console.log("⚠️ DEV MODE: using fallback identity");
     return next();
   }
 

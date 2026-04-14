@@ -25,7 +25,7 @@ async function enrollIdentity({
   if (!resolvedBaselineImageS3Key && baselineImageBase64) {
     const uploaded = await uploadImageToS3({
       imageBase64: baselineImageBase64,
-      keyPrefix: `${examId}_proctoring/${sessionId}/${studentId}/enroll`,
+      keyPrefix: `proctoring/${examId}/${studentId}/${sessionId}/enroll`,
     });
     resolvedBaselineImageS3Key = uploaded.key;
   }
@@ -103,7 +103,7 @@ async function verifyIdentity({
     if (!resolvedLiveImageS3Key && liveImageBase64) {
       const uploaded = await uploadImageToS3({
         imageBase64: liveImageBase64,
-        keyPrefix: `${examId}_proctoring/${sessionId}/${studentId}/verify`,
+        keyPrefix: `proctoring/${examId}/${studentId}/${sessionId}/verify`,
       });
       resolvedLiveImageS3Key = uploaded.key;
     }
