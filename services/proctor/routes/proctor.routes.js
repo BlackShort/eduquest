@@ -19,6 +19,11 @@ router.post(
   "/sessions/:sessionId/identity/verify",
   identityController.verifyIdentity,
 );
+router.get(
+  "/sessions/:sessionId/identity/enroll-image-url",
+  requireRole(["admin", "faculty"]),
+  identityController.getEnrolledImageUrl,
+);
 // Faculty side
 router.get(
   "/sessions/:sessionId",

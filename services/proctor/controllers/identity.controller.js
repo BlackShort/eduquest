@@ -112,4 +112,44 @@ async function verifyIdentity(req, res, next) {
   }
 }
 
-export { enrollIdentity, verifyIdentity };
+// Return a short-lived signed URL for the enrolled baseline image.
+async function getEnrolledImageUrl(req, res, next) {
+  try {
+    const { sessionId } = req.params;
+    const { examId, expiresIn } = req.query;
+
+    if (!examId || !sessionId) {
+      return res
+        .status(400)
+        .json({ error: "examId query param and sessionId are required" });
+    }
+
+    let resolvedExpiresIn = 120;
+    if (typeof expiresIn !== "undefined") {
+      const parsed = Number(expiresIn);
+      if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 900) {
+        return res.status(400).json({
+          error: "expiresIn must be a positive number <= 900 seconds",
+        });
+      }
+      resolvedExpiresIn = Math.floor(parsed);
+    }
+
+    const payload = await identityService.getEnrolledImageSignedUrl({
+      examId,
+      sessionId,
+      expiresIn: resolvedExpiresIn,
+    });
+
+    res.json({
+      signedUrl: payload.signedUrl,
+      expiresIn: payload.expiresIn,
+      examId: payload.examId,
+      sessionId: payload.sessionId,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export { enrollIdentity, verifyIdentity, getEnrolledImageUrl };

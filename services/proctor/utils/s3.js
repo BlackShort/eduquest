@@ -1,4 +1,9 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 
 let s3Client = null;
@@ -78,4 +83,27 @@ async function uploadImageToS3({ imageBase64, keyPrefix }) {
   return { key, bucket, mimeType };
 }
 
-export { uploadImageToS3 };
+// Return a short-lived GET URL for private image evidence.
+async function createSignedGetUrl({ key, expiresIn = 120 }) {
+  const bucket = process.env.AWS_S3_PROCTOR_BUCKET;
+  if (!bucket) {
+    throw new Error("AWS_S3_PROCTOR_BUCKET is missing");
+  }
+  if (!key) {
+    throw new Error("S3 object key is required");
+  }
+
+  const client = getS3Client();
+  const command = new GetObjectCommand({
+    Bucket: bucket,
+    Key: key,
+  });
+
+  const signedUrl = await getSignedUrl(client, command, {
+    expiresIn,
+  });
+
+  return { signedUrl, expiresIn, key };
+}
+
+export { uploadImageToS3, createSignedGetUrl };

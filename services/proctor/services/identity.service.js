@@ -1,7 +1,7 @@
 import ProctorIdentity from "../models/ProctorIdentity.js";
 import ProctorSession from "../models/ProctorSession.js";
 import * as proctorService from "./proctor.service.js";
-import { uploadImageToS3 } from "../utils/s3.js";
+import { uploadImageToS3, createSignedGetUrl } from "../utils/s3.js";
 import {
   cosineSimilarity,
   isValidEmbedding,
@@ -130,4 +130,41 @@ async function verifyIdentity({
   return { matched, score, threshold, mismatchEventId };
 }
 
-export { enrollIdentity, verifyIdentity };
+// Create signed access URL for the enrolled baseline image by session/exam.
+async function getEnrolledImageSignedUrl({
+  examId,
+  sessionId,
+  expiresIn = 120,
+}) {
+  const identity = await ProctorIdentity.findOne({
+    examId,
+    sessionId,
+  }).select("baselineImageS3Key examId sessionId");
+
+  if (!identity) {
+    const err = new Error("Identity baseline not found for session");
+    err.status = 404;
+    throw err;
+  }
+
+  if (!identity.baselineImageS3Key) {
+    const err = new Error("Baseline image key not found");
+    err.status = 404;
+    throw err;
+  }
+
+  const { signedUrl } = await createSignedGetUrl({
+    key: identity.baselineImageS3Key,
+    expiresIn,
+  });
+
+  return {
+    signedUrl,
+    expiresIn,
+    examId: identity.examId,
+    sessionId: identity.sessionId,
+    key: identity.baselineImageS3Key,
+  };
+}
+
+export { enrollIdentity, verifyIdentity, getEnrolledImageSignedUrl };
