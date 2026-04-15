@@ -12,6 +12,12 @@ async function ensureSession({ studentId, examId, sessionId }) {
       examId,
       sessionId,
     });
+  } else {
+    if (session.studentId !== studentId || session.examId !== examId) {
+      const err = new Error("Session ownership mismatch");
+      err.status = 403;
+      throw err;
+    }
   }
   return session;
 }
@@ -61,9 +67,10 @@ async function recordEvent({
 }
 
 // Session lifecycle update when an attempt is finished.
-async function completeSession(sessionId) {
+async function completeSession(sessionId, studentId) {
+  const filter = studentId ? { sessionId, studentId } : { sessionId };
   return ProctorSession.findOneAndUpdate(
-    { sessionId },
+    filter,
     { $set: { status: "COMPLETED", endedAt: new Date() } },
     { new: true },
   );

@@ -1,4 +1,4 @@
- // function authFromGateway(req, res, next) {
+// function authFromGateway(req, res, next) {
 //   const studentId = req.headers["student-id"];
 //   const userRole = req.headers["user-role"];
 
@@ -16,6 +16,7 @@
 function authFromGateway(req, res, next) {
   const studentId = req.headers["x-student-id"];
   const role = req.headers["x-user-role"];
+  const allowDevFallback = process.env.ALLOW_DEV_AUTH_FALLBACK === "true";
 
   // ✅ normal gateway path
   if (studentId && role) {
@@ -24,8 +25,8 @@ function authFromGateway(req, res, next) {
     return next();
   }
 
-  // ✅ DEV fallback — allow direct frontend testing
-  if (process.env.NODE_ENV !== "production") {
+  // ✅ DEV fallback — explicitly opt-in for local testing only.
+  if (process.env.NODE_ENV !== "production" && allowDevFallback) {
     req.studentId = "dev_student";
     req.role = "student";
     return next();

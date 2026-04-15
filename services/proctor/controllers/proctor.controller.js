@@ -1,5 +1,13 @@
 import * as proctorService from "../services/proctor.service.js";
 
+const ALLOWED_EVENT_TYPES = new Set([
+  "NO_FACE",
+  "MULTIPLE_FACES",
+  "PHONE_DETECTED",
+  "TAB_SWITCH",
+  "IDENTITY_MISMATCH",
+]);
+
 // Record one proctor event from the active student session.
 async function postEvent(req, res, next) {
   try {
@@ -15,6 +23,22 @@ async function postEvent(req, res, next) {
       return res
         .status(400)
         .json({ error: "examId, sessionId, eventType are required" });
+    }
+
+    if (!ALLOWED_EVENT_TYPES.has(eventType)) {
+      return res.status(400).json({ error: "Invalid eventType" });
+    }
+
+    if (
+      typeof confidence !== "undefined" &&
+      (typeof confidence !== "number" ||
+        !Number.isFinite(confidence) ||
+        confidence < 0 ||
+        confidence > 1)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "confidence must be a number between 0 and 1" });
     }
 
     const { eventDoc, deltaScore } = await proctorService.recordEvent({
@@ -40,8 +64,13 @@ async function postEvent(req, res, next) {
 // Mark a session completed when the exam attempt ends.
 async function completeSession(req, res, next) {
   try {
+    const studentId = req.studentId;
+    if (!studentId) {
+      return res.status(401).json({ error: "studentId missing from gateway" });
+    }
+
     const { sessionId } = req.params;
-    const updated = await proctorService.completeSession(sessionId);
+    const updated = await proctorService.completeSession(sessionId, studentId);
     if (!updated) return res.status(404).json({ error: "Session not found" });
     res.json({ message: "Session completed", session: updated });
   } catch (err) {
@@ -113,4 +142,3 @@ export {
   getExamSessionsSummary,
   patchSessionStatus,
 };
-

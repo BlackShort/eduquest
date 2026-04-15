@@ -8,6 +8,7 @@ const router = express.Router();
 
 // All routes expect identity from gateway
 router.use(authFromGateway);
+
 // student side
 router.post("/events", controller.postEvent);
 router.post("/sessions/:sessionId/complete", controller.completeSession);
@@ -19,12 +20,13 @@ router.post(
   "/sessions/:sessionId/identity/verify",
   identityController.verifyIdentity,
 );
+
+// Faculty side
 router.get(
   "/sessions/:sessionId/identity/enroll-image-url",
   requireRole(["admin", "faculty"]),
   identityController.getEnrolledImageUrl,
 );
-// Faculty side
 router.get(
   "/sessions/:sessionId",
   requireRole(["admin", "faculty"]),
