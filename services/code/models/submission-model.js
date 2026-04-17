@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { SUBMISSION_ENV_TYPES } from '../constants/submission-types.js';
 
 const TestcaseResultSchema = new mongoose.Schema(
     {
@@ -57,6 +58,11 @@ const PlagiarismInfoSchema = new mongoose.Schema(
 
 const SubmissionSchema = new mongoose.Schema(
     {
+        env_type: {
+            type: String,
+            enum: Object.values(SUBMISSION_ENV_TYPES),
+            default: SUBMISSION_ENV_TYPES.PROBLEM,
+        },
         testId: {
             type: mongoose.Schema.Types.ObjectId,
             required: true,
@@ -83,7 +89,6 @@ const SubmissionSchema = new mongoose.Schema(
             enum: ['run', 'submit'],
             required: true,
         },
-
         totalTestcases: {
             type: Number,
             default: 0,
@@ -101,9 +106,7 @@ const SubmissionSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
-
         testcaseResults: [TestcaseResultSchema],
-
         plagiarism: {
             type: PlagiarismInfoSchema,
             default: () => ({}),

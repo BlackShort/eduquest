@@ -2,18 +2,24 @@
 import mongoose from 'mongoose';
 import Submission from '../models/submission-model.js';
 
+import { SUBMISSION_ENV_TYPES } from '../constants/submission-types.js';
 import { runCodeForQuestion } from '../services/executor-service.js';
-import { getTestcasesForQuestion } from '../services/testcase-service.js';
 import { checkSubmissionPlagiarism } from '../services/plagiarism-service.js';
 
 export const executeSubmission = async (req, res) => {
     try {
-        const { questionId, testId, language, code, mode, testCase } = req.body;
+        const { questionId, env_type, testId, language, code, mode, testCase } = req.body;
         const studentId = req.headers["x-student-id"];
-        const role = req.headers["x-user-role"];
-        if (!role || !studentId || !questionId || !language || !code || !mode) {
+
+        if (!studentId || !questionId || !language || !code || !mode || !env_type) {
             return res.status(400).json({
-                message: 'studentId, questionId, testId, language, code and mode are required',
+                message: 'studentId, questionId, env_type, language, code and mode are required',
+            });
+        }
+
+        if ((env_type === SUBMISSION_ENV_TYPES.ASSESSMENT || env_type === SUBMISSION_ENV_TYPES.ASSIGNMENT) && !testId) {
+            return res.status(400).json({
+                message: `testId is required for ${env_type}`,
             });
         }
 
@@ -28,9 +34,9 @@ export const executeSubmission = async (req, res) => {
 
         if (mode === 'submit') {
             savedSubmission = await Submission.create({
-                role,
                 studentId,
                 questionId,
+                env_type,
                 testId,
                 language,
                 code,
