@@ -1,9 +1,8 @@
 import dotenv from 'dotenv';
+dotenv.config();
+
 import { app } from './app.js';
 import { connectDB } from './config/db-config.js';
-
-// Load environment variables
-dotenv.config();
 
 const PORT = process.env.PORT || 5002;
 
@@ -13,9 +12,6 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`Content Service is running on port ${PORT}`);
     });
-    // app.listen(PORT, "0.0.0.0", () => {
-    //     console.log(`Content Service is running on port ${PORT}`);
-    // });
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);

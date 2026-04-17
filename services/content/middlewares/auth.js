@@ -18,6 +18,7 @@ export const verifyToken = async (req, res, next) => {
 
         // Verify JWT signature (should match auth service secret)
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log("JWT Decoded:", decoded);
 
         // Attach user info to request
         req.user = {

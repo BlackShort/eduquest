@@ -129,9 +129,11 @@ const testSchema = new mongoose.Schema({
 });
 
 // Calculate total marks before saving
-testSchema.pre('save', function(next) {
-    this.totalMarks = this.marksAllocation.mcq + this.marksAllocation.coding + this.marksAllocation.assignment;
-    next();
+testSchema.pre('save', function () {
+    this.totalMarks =
+        (this.marksAllocation?.mcq || 0) +
+        (this.marksAllocation?.coding || 0) +
+        (this.marksAllocation?.assignment || 0);
 });
 
 // Indexes for better query performance

@@ -12,7 +12,9 @@ import {
 import {
   getTestById,
   updateTest,
-  getQuestions
+  getQuestions,
+  addQuestionToSet,
+  removeQuestionFromSet
 } from '@/apis/faculty-api';
 import type { Test } from '@/types/types';
 
@@ -112,21 +114,64 @@ useEffect(() => {
     }));
   };
 
-  const handleAddQuestion = (questionId: string) => {
-  const key =
-    activeQuestionTab === 'mcq'
-      ? 'mcqIds'
-      : activeQuestionTab === 'coding'
-      ? 'codingIds'
-      : 'assignmentIds';
+  const handleAddQuestion = async (question: QuestionItem) => {
+  try {
+    const key =
+      activeQuestionTab === 'mcq'
+        ? 'mcqIds'
+        : activeQuestionTab === 'coding'
+        ? 'codingIds'
+        : 'assignmentIds';
 
-  setFormData((prev) => ({
-    ...prev,
-    questionRefs: {
-      ...prev.questionRefs!,
-      [key]: [...((prev.questionRefs?.[key] as string[]) || []), questionId]
-    }
-  }));
+    if (isSelected(question._id)) return;
+
+    await addQuestionToSet(activeQuestionTab, testId!, {
+      question_id: question._id,
+      title: question.title || question.question || 'Untitled Question'
+    });
+
+    setFormData((prev) => ({
+      ...prev,
+      questionRefs: {
+        ...prev.questionRefs!,
+        [key]: [
+          ...((prev.questionRefs?.[key] as string[]) || []),
+          question._id
+        ]
+      }
+    }));
+  } catch (error) {
+    console.error('Error adding question:', error);
+  }
+};
+
+const handleRemoveQuestion = async (questionId: string) => {
+  try {
+    const key =
+      activeQuestionTab === 'mcq'
+        ? 'mcqIds'
+        : activeQuestionTab === 'coding'
+        ? 'codingIds'
+        : 'assignmentIds';
+
+    await removeQuestionFromSet(
+      activeQuestionTab,
+      testId!,
+      questionId
+    );
+
+    setFormData((prev) => ({
+      ...prev,
+      questionRefs: {
+        ...prev.questionRefs!,
+        [key]: ((prev.questionRefs?.[key] as string[]) || []).filter(
+          (id) => id !== questionId
+        )
+      }
+    }));
+  } catch (error) {
+    console.error('Error removing question:', error);
+  }
 };
 
 const isSelected = (questionId: string) => {
@@ -451,7 +496,11 @@ const isSelected = (questionId: string) => {
 
           <button
             type="button"
-            onClick={() => handleAddQuestion(question._id)}
+            onClick={() =>
+             isSelected(question._id)
+              ? handleRemoveQuestion(question._id)
+              : handleAddQuestion(question)
+            }
             disabled={isSelected(question._id)}
             className={`px-3 py-1 rounded-lg text-sm ${
               isSelected(question._id)
@@ -459,7 +508,11 @@ const isSelected = (questionId: string) => {
                 : 'bg-blue-600 hover:bg-blue-700 text-white'
             }`}
           >
-            {isSelected(question._id) ? 'Added' : 'Add'}
+            className={`px-3 py-1 rounded-lg text-sm ${
+              isSelected(question._id)
+                ? 'bg-red-600 hover:bg-red-700 text-white'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+          }`}
           </button>
         </div>
       ))

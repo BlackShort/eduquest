@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { 
   Save, 
@@ -10,11 +10,23 @@ import {
   Plus
 } from 'lucide-react';
 import { createTest } from '@/apis/faculty-api';
+import { getQuestions } from '@/apis/faculty-api';
 import type { Test } from '@/types/types';
 
 export default function CreateTestPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  type QuestionItem = {
+  _id: string;
+  title?: string;
+  question?: string;
+};
+
+const [activeQuestionTab, setActiveQuestionTab] = useState<
+  'mcq' | 'coding' | 'assignment'
+>('mcq');
+
+const [questionBank, setQuestionBank] = useState<QuestionItem[]>([]);
   const [formData, setFormData] = useState<Partial<Test>>({
     title: '',
     description: '',
@@ -59,6 +71,49 @@ export default function CreateTestPage() {
       marksAllocation: { ...prev.marksAllocation!, [field]: value }
     }));
   };
+
+  const handleAddQuestion = (questionId: string) => {
+  const key =
+    activeQuestionTab === 'mcq'
+      ? 'mcqIds'
+      : activeQuestionTab === 'coding'
+      ? 'codingIds'
+      : 'assignmentIds';
+
+  setFormData((prev) => ({
+    ...prev,
+    questionRefs: {
+      ...prev.questionRefs!,
+      [key]: [...((prev.questionRefs?.[key] as string[]) || []), questionId]
+    }
+  }));
+};
+
+const isSelected = (questionId: string) => {
+  const key =
+    activeQuestionTab === 'mcq'
+      ? 'mcqIds'
+      : activeQuestionTab === 'coding'
+      ? 'codingIds'
+      : 'assignmentIds';
+
+  return ((formData.questionRefs?.[key] as string[]) || []).includes(questionId);
+}; 
+
+  const fetchQuestionBank = async (
+  type: 'mcq' | 'coding' | 'assignment'
+) => {
+  try {
+    const response = await getQuestions(type);
+    setQuestionBank(response.data || []);
+  } catch (error) {
+    console.error('Error fetching questions:', error);
+  }
+};
+
+useEffect(() => {
+  fetchQuestionBank(activeQuestionTab);
+}, [activeQuestionTab]);
 
   const handleSubmit = async (publishNow = false) => {
   try {
@@ -341,6 +396,57 @@ export default function CreateTestPage() {
           className="w-full px-4 py-2 bg-neutral-900 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
+
+      <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6 space-y-4">
+  <h2 className="text-xl font-semibold text-gray-100">Question Builder</h2>
+
+  <div className="flex gap-2">
+    {(['mcq', 'coding', 'assignment'] as const).map((tab) => (
+      <button
+        key={tab}
+        type="button"
+        onClick={() => setActiveQuestionTab(tab)}
+        className={`px-4 py-2 rounded-lg ${
+          activeQuestionTab === tab
+            ? 'bg-blue-600 text-white'
+            : 'bg-neutral-700 text-gray-300'
+        }`}
+      >
+        {tab.toUpperCase()}
+      </button>
+    ))}
+  </div>
+
+  <div className="space-y-3 max-h-80 overflow-y-auto">
+    {questionBank.length === 0 ? (
+      <p className="text-gray-400">No questions available</p>
+    ) : (
+      questionBank.map((question) => (
+        <div
+          key={question._id}
+          className="flex items-center justify-between bg-neutral-900 border border-neutral-700 rounded-lg p-3"
+        >
+          <p className="text-gray-100">
+            {question.title || question.question || 'Untitled Question'}
+          </p>
+
+          <button
+            type="button"
+            onClick={() => handleAddQuestion(question._id)}
+            disabled={isSelected(question._id)}
+            className={`px-3 py-1 rounded-lg text-sm ${
+              isSelected(question._id)
+                ? 'bg-green-700 text-white'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }`}
+          >
+            {isSelected(question._id) ? 'Added' : 'Add'}
+          </button>
+        </div>
+      ))
+    )}
+  </div>
+</div>
 
       {/* Action Buttons */}
       <div className="flex items-center justify-end gap-4 pb-6">

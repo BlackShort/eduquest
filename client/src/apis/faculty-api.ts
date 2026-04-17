@@ -3,6 +3,7 @@ import type { Test } from '@/types/types';
 import { contentUrl } from './server-api';
 
 
+
 // Create axios instance with default config
 const facultyApi = axios.create({
     baseURL: contentUrl,
@@ -83,19 +84,29 @@ export const getTestStats = async () => {
 // ============= QUESTIONS MANAGEMENT APIs =============
 
 export const getQuestions = async (
-    type: 'mcq' | 'coding' | 'assignment',
-    params?: {
-        page?: number;
-        limit?: number;
-        search?: string;
-        difficulty?: string;
-        tags?: string;
-        isInProblemBank?: boolean;
-        subjectId?: string;
-    }
+  type: 'mcq' | 'coding' | 'assignment',
+  params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    difficulty?: string;
+    tags?: string;
+    isInProblemBank?: boolean;
+    subjectId?: string;
+  }
 ) => {
-    const response = await facultyApi.get(`/v1/faculty/questions/${type}`, { params });
-    return response.data;
+  const response = await axios.get(`${contentUrl}/faculty/${type}`, {
+    params: {
+      ...params,
+      _t: Date.now()
+    },
+    headers: {
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache'
+    }
+  });
+
+  return response.data;
 };
 
 export const getQuestionById = async (type: 'mcq' | 'coding' | 'assignment', questionId: string) => {
@@ -306,6 +317,9 @@ export const uploadAssignmentCSV = async (formData: FormData) => {
     });
     return response.data;
 };
+
+
+
 // ============= ASSIGNMENT APIs =============
 
 export const getAssignments = async () => {

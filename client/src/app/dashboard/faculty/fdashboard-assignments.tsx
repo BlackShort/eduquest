@@ -1,5 +1,14 @@
-import { useEffect, useState, useCallback } from 'react';
-import { getQuestions, deleteQuestion } from '@/apis/faculty-api';
+import { useEffect, useState, useCallback, useRef } from 'react';
+
+import {
+  getQuestions,
+  deleteQuestion,
+  createQuestion,
+  uploadMCQCSV,
+  uploadCodingCSV,
+  uploadAssignmentCSV
+} from '@/apis/faculty-api';
+
 import {
   Plus,
   Edit,
@@ -31,12 +40,21 @@ export default function FDashboardAssignments() {
   const [questions, setQuestions] = useState<QuestionSet[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalPages: 0
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newQuestion, setNewQuestion] = useState({
+   question_text: '',
+   difficulty: 'easy',
+   subject_id: ''
   });
+  const [pagination, setPagination] = useState({
+  page: 1,
+  limit: 10,
+  total: 0,
+  totalPages: 0
+});
+
+const [uploading, setUploading] = useState(false);
+const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const fetchQuestions = useCallback(async () => {
     try {
@@ -51,11 +69,20 @@ export default function FDashboardAssignments() {
       }
 
       const response = await getQuestions(activeType, params);
-      
+      console.log('QUESTIONS API RESPONSE:', response);
       if (response.success) {
-        setQuestions(response.data);
-        setPagination(response.pagination);
-      }
+  const fetchedQuestions =
+    response.data?.questions ||
+    response.data?.data ||
+    response.data ||
+    [];
+
+  setQuestions(Array.isArray(fetchedQuestions) ? fetchedQuestions : []);
+
+  if (response.pagination) {
+    setPagination(response.pagination);
+  }
+}
     } catch (error) {
       console.error('Error fetching questions:', error);
     } finally {
@@ -78,6 +105,82 @@ export default function FDashboardAssignments() {
       alert('Failed to delete question set');
     }
   };
+
+  const handleCreateQuestion = async () => {
+  try {
+    if (!newQuestion.question_text.trim()) {
+      alert('Question text is required');
+      return;
+    }
+
+    if (!newQuestion.subject_id.trim()) {
+      alert('Subject ID is required');
+      return;
+    }
+
+    const payload = {
+      test_id: `QB-${Date.now()}`,
+      subject_id: newQuestion.subject_id,
+      isInProblemBank: true,
+      questions: [
+        {
+          question_id: `Q-${Date.now()}`,
+          question_text: newQuestion.question_text,
+          difficulty: newQuestion.difficulty
+        }
+      ]
+    };
+
+    await createQuestion(activeType, payload);
+
+    setShowAddForm(false);
+
+    setNewQuestion({
+      question_text: '',
+      difficulty: 'easy',
+      subject_id: ''
+    });
+
+    await fetchQuestions();
+  } catch (error) {
+    console.error('Error creating question:', error);
+    alert('Failed to create question');
+  }
+};
+
+const handleCSVUpload = async (
+  event: React.ChangeEvent<HTMLInputElement>
+) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  try {
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    if (activeType === 'mcq') {
+      await uploadMCQCSV(formData);
+    } else if (activeType === 'coding') {
+      await uploadCodingCSV(formData);
+    } else {
+      await uploadAssignmentCSV(formData);
+    }
+
+    await fetchQuestions();
+    alert(`${activeType.toUpperCase()} CSV uploaded successfully`);
+  } catch (error) {
+    console.error('CSV upload failed:', error);
+    alert('CSV upload failed');
+  } finally {
+    setUploading(false);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }
+};
 
   const getDifficultyBadge = (difficulty?: string) => {
     if (!difficulty) return null;
@@ -103,17 +206,102 @@ export default function FDashboardAssignments() {
           <h1 className="text-3xl font-bold text-gray-100">Question Bank</h1>
           <p className="text-gray-400 mt-1">Manage your question library and problem sets</p>
         </div>
-        <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-gray-200 rounded-lg transition-colors">
-            <FileUp size={20} />
-            Upload CSV
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-            <Plus size={20} />
-            Add Questions
-          </button>
-        </div>
-      </div>
+       <div className="flex gap-2">
+  <input
+    ref={fileInputRef}
+    type="file"
+    accept=".csv"
+    className="hidden"
+    onChange={handleCSVUpload}
+  />
+
+  <button
+    type="button"
+    onClick={() => fileInputRef.current?.click()}
+    disabled={uploading}
+    className="flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-gray-200 rounded-lg transition-colors disabled:opacity-50"
+  >
+    <FileUp size={20} />
+    {uploading ? 'Uploading...' : 'Upload CSV'}
+  </button>
+
+  <button
+    type="button"
+    onClick={() => setShowAddForm(true)}
+    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+  >
+    <Plus size={20} />
+    Add Questions
+  </button>
+</div>
+</div>
+
+      {showAddForm && (
+  <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-4 space-y-4">
+    <h3 className="text-lg font-semibold text-white">
+      Add {activeType.toUpperCase()} Question
+    </h3>
+
+    <input
+      type="text"
+      placeholder="Enter question"
+      value={newQuestion.question_text}
+      onChange={(e) =>
+        setNewQuestion((prev) => ({
+          ...prev,
+          question_text: e.target.value
+        }))
+      }
+      className="w-full px-4 py-2 bg-neutral-900 border border-neutral-600 rounded-lg text-white"
+    />
+
+    <input
+      type="text"
+      placeholder="Subject ID"
+      value={newQuestion.subject_id}
+      onChange={(e) =>
+        setNewQuestion((prev) => ({
+          ...prev,
+          subject_id: e.target.value
+        }))
+      }
+      className="w-full px-4 py-2 bg-neutral-900 border border-neutral-600 rounded-lg text-white"
+    />
+
+    <select
+      value={newQuestion.difficulty}
+      onChange={(e) =>
+        setNewQuestion((prev) => ({
+          ...prev,
+          difficulty: e.target.value
+        }))
+      }
+      className="w-full px-4 py-2 bg-neutral-900 border border-neutral-600 rounded-lg text-white"
+    >
+      <option value="easy">Easy</option>
+      <option value="medium">Medium</option>
+      <option value="hard">Hard</option>
+    </select>
+
+    <div className="flex gap-2">
+  <button
+    type="button"
+    onClick={handleCreateQuestion}
+    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+  >
+    Save Question
+  </button>
+
+  <button
+    type="button"
+    onClick={() => setShowAddForm(false)}
+    className="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg"
+  >
+    Cancel
+  </button>
+</div>
+  </div>
+)}
 
       {/* Question Type Tabs */}
       <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">

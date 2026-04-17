@@ -92,16 +92,29 @@ export const getAssignmentByTestId = async (req, res) => {
 
 export const getAllAssignments = async (req, res) => {
   try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-    const assignments = await Assignment.find();
+    const total = await Assignment.countDocuments();
+
+    const assignments = await Assignment.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
     res.status(200).json({
       success: true,
-      data: assignments
+      data: assignments,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
     });
 
   } catch (error) {
-
     console.error("Fetch Assignments Error:", error);
 
     res.status(500).json({
@@ -109,6 +122,5 @@ export const getAllAssignments = async (req, res) => {
       message: "Server error while fetching assignments",
       error: error.message
     });
-
   }
 };
