@@ -34,6 +34,12 @@ async function recordEvent({
 }) {
   const session = await ensureSession({ studentId, examId, sessionId });
 
+  if (session.status !== "ACTIVE" || session.endedAt) {
+    const err = new Error("Session is not active");
+    err.status = 409;
+    throw err;
+  }
+
   const eventDoc = await ProctorEvent.create({
     studentId,
     examId,
@@ -69,20 +75,41 @@ async function recordEvent({
 // Session lifecycle update when an attempt is finished.
 async function completeSession(sessionId, studentId) {
   const filter = studentId ? { sessionId, studentId } : { sessionId };
-  return ProctorSession.findOneAndUpdate(
-    filter,
-    { $set: { status: "COMPLETED", endedAt: new Date() } },
-    { new: true },
-  );
+  const session = await ProctorSession.findOne(filter);
+  if (!session) return null;
+
+  // Keep completion idempotent for repeated client retries.
+  if (session.status === "COMPLETED") {
+    return session;
+  }
+
+  session.status = "COMPLETED";
+  if (!session.endedAt) {
+    session.endedAt = new Date();
+  }
+
+  await session.save();
+  return session;
 }
 
 // Manual status change for faculty/admin review actions.
 async function updateSessionStatus(sessionId, status) {
-  return ProctorSession.findOneAndUpdate(
-    { sessionId },
-    { $set: { status } },
-    { new: true },
-  );
+  const session = await ProctorSession.findOne({ sessionId });
+  if (!session) return null;
+
+  session.status = status;
+
+  if (status === "COMPLETED" && !session.endedAt) {
+    session.endedAt = new Date();
+  }
+
+  // Allow explicit reopen from admin flows.
+  if (status === "ACTIVE") {
+    session.endedAt = null;
+  }
+
+  await session.save();
+  return session;
 }
 
 // Session details endpoint with chronological event history.

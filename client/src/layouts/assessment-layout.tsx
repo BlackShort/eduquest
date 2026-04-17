@@ -12,7 +12,7 @@ export const AssessmentLayout = () => {
     stage,
     setStage,
     startProctorSession,
-    endProctorSession,
+    suspendProctorSession,
     proctorActive,
     proctorSessionId,
     reportEvent,
@@ -22,13 +22,15 @@ export const AssessmentLayout = () => {
   } = useAssessment();
 
   const stageRef = useRef(stage);
-  useEffect(() => { stageRef.current = stage; }, [stage]);
+  useEffect(() => {
+    stageRef.current = stage;
+  }, [stage]);
 
   const handleViolation = useCallback(() => {
     if (stageRef.current === "fullscreen") return;
     setStage("fullscreen");
-    endProctorSession();
-  }, [setStage, endProctorSession]);
+    suspendProctorSession();
+  }, [setStage, suspendProctorSession]);
 
   useEffect(() => {
     // Fullscreen API exit — ESC key, F11, browser chrome buttons
@@ -75,9 +77,7 @@ export const AssessmentLayout = () => {
 
   return (
     <div className="relative flex flex-col h-screen w-full overflow-hidden bg-neutral-950">
-      {stage === "fullscreen" && (
-        <FullscreenGate onEnter={enterFullscreen} />
-      )}
+      {stage === "fullscreen" && <FullscreenGate onEnter={enterFullscreen} />}
 
       {stage === "setup" && (
         <ProctorSetup onComplete={() => setStage("instructions")} />

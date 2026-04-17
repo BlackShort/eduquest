@@ -32,76 +32,94 @@ interface EventLimitTracker {
 // Centralized per-event call limits to avoid API spam.
 const EVENT_LIMITS = {
   TAB_SWITCH: { maxCount: 10, description: "Tab switches" },
-  NO_FACE: { 
-    firstCallDelay: 5000,    // 5s delay for first call
-    secondCallDelay: 15000,  // 15s total for second check
+  NO_FACE: {
+    firstCallDelay: 5000, // 5s delay for first call
+    secondCallDelay: 15000, // 15s total for second check
     maxCalls: 2,
-    description: "No face periods"
+    description: "No face periods",
   },
-  PHONE_DETECTED: { 
-    minDetections: 2, 
-    maxCount: 2, 
-    description: "Phone detections (2 calls max)" 
+  PHONE_DETECTED: {
+    minDetections: 2,
+    maxCount: 2,
+    description: "Phone detections (2 calls max)",
   },
   MULTIPLE_FACES: {
     maxCount: 2,
     description: "Multiple face incidents (2 calls max)",
-  }
+  },
 } as const;
 
 export function useProctor({ examId }: UseProctorOpts) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [active, setActive] = useState(false);
   const [identityEnrolled, setIdentityEnrolled] = useState(false);
-  
+
   // In-memory trackers are reset per session.
-  const currentViolations = useRef<Partial<Record<ProctorEventType, boolean>>>({});
-  const eventTrackers = useRef<Partial<Record<ProctorEventType, EventLimitTracker>>>({});
+  const currentViolations = useRef<Partial<Record<ProctorEventType, boolean>>>(
+    {},
+  );
+  const eventTrackers = useRef<
+    Partial<Record<ProctorEventType, EventLimitTracker>>
+  >({});
   const noFaceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastIdentityVerifyAtRef = useRef<number | null>(null);
   const identityMismatchCountRef = useRef(0);
-  
+
   // Lazily create tracker state for each violation type.
-  const getOrCreateTracker = useCallback((type: ProctorEventType): EventLimitTracker => {
-    if (!eventTrackers.current[type]) {
-      eventTrackers.current[type] = {
-        count: 0,
-        flagged: false
-      };
-    }
-    return eventTrackers.current[type]!;
-  }, []);
-  
+  const getOrCreateTracker = useCallback(
+    (type: ProctorEventType): EventLimitTracker => {
+      if (!eventTrackers.current[type]) {
+        eventTrackers.current[type] = {
+          count: 0,
+          flagged: false,
+        };
+      }
+      return eventTrackers.current[type]!;
+    },
+    [],
+  );
+
   // Decide whether this transition should result in an API call.
-  const shouldTriggerApiCall = useCallback((type: ProctorEventType, tracker: EventLimitTracker): boolean => {
-    if (tracker.flagged) return false;
-    
-    switch (type) {
-      case "TAB_SWITCH":
-        return tracker.count < EVENT_LIMITS.TAB_SWITCH.maxCount;
-        
-      case "PHONE_DETECTED":
-        // Ignore the first hit to reduce false positives.
-        return tracker.count >= EVENT_LIMITS.PHONE_DETECTED.minDetections && 
-               tracker.count <= EVENT_LIMITS.PHONE_DETECTED.maxCount;
-        
-      case "MULTIPLE_FACES":
-        return tracker.count <= EVENT_LIMITS.MULTIPLE_FACES.maxCount;
-        
-      case "NO_FACE":
-        // Handled by delayed timers below.
-        return false;
-        
-      default:
-        return false;
-    }
-  }, []);
+  const shouldTriggerApiCall = useCallback(
+    (type: ProctorEventType, tracker: EventLimitTracker): boolean => {
+      if (tracker.flagged) return false;
+
+      switch (type) {
+        case "TAB_SWITCH":
+          return tracker.count < EVENT_LIMITS.TAB_SWITCH.maxCount;
+
+        case "PHONE_DETECTED":
+          // Ignore the first hit to reduce false positives.
+          return (
+            tracker.count >= EVENT_LIMITS.PHONE_DETECTED.minDetections &&
+            tracker.count <= EVENT_LIMITS.PHONE_DETECTED.maxCount
+          );
+
+        case "MULTIPLE_FACES":
+          return tracker.count <= EVENT_LIMITS.MULTIPLE_FACES.maxCount;
+
+        case "NO_FACE":
+          // Handled by delayed timers below.
+          return false;
+
+        default:
+          return false;
+      }
+    },
+    [],
+  );
 
   function startSession() {
+    // Resume in-memory session if it exists and wasn't completed.
+    if (sessionId) {
+      setActive(true);
+      return;
+    }
+
     const id = crypto.randomUUID();
     setSessionId(id);
     setActive(true);
-    
+
     // Reset all local trackers for a fresh attempt.
     eventTrackers.current = {};
     currentViolations.current = {};
@@ -110,23 +128,33 @@ export function useProctor({ examId }: UseProctorOpts) {
     setIdentityEnrolled(false);
   }
 
+  const suspendSession = useCallback(() => {
+    // Pause local proctoring without completing server session.
+    if (noFaceTimerRef.current) {
+      clearTimeout(noFaceTimerRef.current);
+    }
+
+    setActive(false);
+  }, []);
+
   const endSession = useCallback(async () => {
     if (!sessionId) return;
-    
+
     // Stop pending delayed NO_FACE calls.
     if (noFaceTimerRef.current) {
       clearTimeout(noFaceTimerRef.current);
     }
-    
+
     await completeProctorSession(sessionId);
     setActive(false);
-    
+
     // Clear local state after completion.
     currentViolations.current = {};
     eventTrackers.current = {};
     lastIdentityVerifyAtRef.current = null;
     identityMismatchCountRef.current = 0;
     setIdentityEnrolled(false);
+    setSessionId(null);
   }, [sessionId]);
 
   // Identity enrollment runs once; verify runs on interval.
@@ -154,16 +182,12 @@ export function useProctor({ examId }: UseProctorOpts) {
       lastIdentityVerifyAtRef.current = Date.now();
       return true;
     },
-    [active, examId, sessionId]
+    [active, examId, sessionId],
   );
 
   const verifyIdentityFromVideo = useCallback(
     async (video: HTMLVideoElement): Promise<IdentityVerifyResult | null> => {
-      if (
-        !active ||
-        !sessionId ||
-        !identityEnrolled
-      ) {
+      if (!active || !sessionId || !identityEnrolled) {
         return null;
       }
 
@@ -192,22 +216,19 @@ export function useProctor({ examId }: UseProctorOpts) {
         threshold: result.threshold,
       };
     },
-    [active, examId, sessionId, identityEnrolled]
+    [active, examId, sessionId, identityEnrolled],
   );
 
   const shouldRunIdentityVerification = useCallback(
     (intervalMs = 5 * 60 * 1000): boolean => {
-      if (
-        !identityEnrolled ||
-        !active
-      ) {
+      if (!identityEnrolled || !active) {
         return false;
       }
       const last = lastIdentityVerifyAtRef.current;
       if (!last) return true;
       return Date.now() - last >= intervalMs;
     },
-    [active, identityEnrolled]
+    [active, identityEnrolled],
   );
 
   // Process only state transitions (false->true or true->false).
@@ -217,26 +238,26 @@ export function useProctor({ examId }: UseProctorOpts) {
 
       const wasActive = currentViolations.current[type] || false;
       const tracker = getOrCreateTracker(type);
-      
+
       if (isActive === wasActive) return;
-      
+
       currentViolations.current[type] = isActive;
       const now = Date.now();
-      
+
       if (isActive) {
         tracker.count++;
         console.log(`${type} violation #${tracker.count} detected`);
-        
+
         if (type === "NO_FACE") {
           // NO_FACE is delayed to avoid one-frame misses.
           if (!tracker.firstDetectionTime) {
             tracker.firstDetectionTime = now;
           }
-          
+
           if (noFaceTimerRef.current) {
             clearTimeout(noFaceTimerRef.current);
           }
-          
+
           noFaceTimerRef.current = setTimeout(async () => {
             if (currentViolations.current["NO_FACE"] && !tracker.flagged) {
               await sendProctorEvent({
@@ -244,14 +265,14 @@ export function useProctor({ examId }: UseProctorOpts) {
                 sessionId,
                 eventType: "NO_FACE",
                 confidence,
-                metadata: { 
+                metadata: {
                   callNumber: 1,
                   duration: Date.now() - (tracker.firstDetectionTime || now),
-                  count: tracker.count 
+                  count: tracker.count,
                 },
               });
               tracker.lastApiCallTime = Date.now();
-              
+
               // Send a final follow-up if the condition persists.
               noFaceTimerRef.current = setTimeout(async () => {
                 if (currentViolations.current["NO_FACE"] && !tracker.flagged) {
@@ -260,11 +281,12 @@ export function useProctor({ examId }: UseProctorOpts) {
                     sessionId,
                     eventType: "NO_FACE",
                     confidence,
-                    metadata: { 
+                    metadata: {
                       callNumber: 2,
-                      duration: Date.now() - (tracker.firstDetectionTime || now),
+                      duration:
+                        Date.now() - (tracker.firstDetectionTime || now),
                       count: tracker.count,
-                      final: true
+                      final: true,
                     },
                   });
                   tracker.flagged = true;
@@ -273,7 +295,6 @@ export function useProctor({ examId }: UseProctorOpts) {
               }, EVENT_LIMITS.NO_FACE.secondCallDelay - EVENT_LIMITS.NO_FACE.firstCallDelay);
             }
           }, EVENT_LIMITS.NO_FACE.firstCallDelay);
-          
         } else {
           if (shouldTriggerApiCall(type, tracker)) {
             await sendProctorEvent({
@@ -283,11 +304,11 @@ export function useProctor({ examId }: UseProctorOpts) {
               confidence,
               metadata: {
                 occurrenceCount: tracker.count,
-                limitBased: true
+                limitBased: true,
               },
             });
             tracker.lastApiCallTime = now;
-            
+
             switch (type) {
               case "TAB_SWITCH":
                 if (tracker.count >= EVENT_LIMITS.TAB_SWITCH.maxCount) {
@@ -312,13 +333,12 @@ export function useProctor({ examId }: UseProctorOpts) {
             console.log(`${type}: Event logged but no API call (limit logic)`);
           }
         }
-        
       } else {
         if (type === "NO_FACE") {
           if (noFaceTimerRef.current) {
             clearTimeout(noFaceTimerRef.current);
           }
-          
+
           if (tracker.firstDetectionTime) {
             const wasDetected = Date.now() - tracker.firstDetectionTime;
             console.log(`NO_FACE ended after ${wasDetected}ms`);
@@ -327,9 +347,9 @@ export function useProctor({ examId }: UseProctorOpts) {
         }
       }
     },
-    [active, sessionId, examId, getOrCreateTracker, shouldTriggerApiCall]
+    [active, sessionId, examId, getOrCreateTracker, shouldTriggerApiCall],
   );
-  
+
   // Visibility + window focus are treated as TAB_SWITCH signals.
   useEffect(() => {
     if (!active) return;
@@ -358,6 +378,7 @@ export function useProctor({ examId }: UseProctorOpts) {
     active,
     identityEnrolled,
     startSession,
+    suspendSession,
     endSession,
     reportEvent,
     enrollIdentityFromVideo,
