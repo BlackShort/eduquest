@@ -9,62 +9,80 @@ export default function BulkImportPage() {
   const [activeTab, setActiveTab] = useState<UploadTab>('mcq');
 
   const handleMCQUpload = async (file: File) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const response = await uploadMCQCSV(formData);
-      return {
-        success: true,
-        message: `Successfully uploaded ${response.data.count} MCQ questions`,
-        data: {
-          details: [
-            `Total questions: ${response.data.count}`,
-            `Success: ${response.data.success}`,
-            response.data.failed > 0 ? `Failed: ${response.data.failed}` : ''
-          ].filter(d => d !== '')
-        }
-      };
-    } catch (error) {
-      const err = error as { response?: { data?: { message?: string; errors?: string[] } } };
-      return {
-        success: false,
-        message: err.response?.data?.message || 'Failed to upload MCQ CSV',
-        data: {
-          errors: err.response?.data?.errors || ['Unknown error occurred']
-        }
-      };
-    }
-  };
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await uploadMCQCSV(formData);
+
+    return {
+      success: true,
+      message:
+        response.message ||
+        `Successfully uploaded ${response.total_questions} MCQ questions`,
+      data: {
+        details: [
+          `Total questions: ${response.total_questions}`,
+          'Upload completed successfully'
+        ]
+      }
+    };
+  } catch (error) {
+    const err = error as {
+      response?: { data?: { message?: string; errors?: string[] } };
+      message?: string;
+    };
+
+    return {
+      success: false,
+      message:
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to upload MCQ CSV',
+      data: {
+        errors: err.response?.data?.errors || ['Unknown error occurred']
+      }
+    };
+  }
+};
 
   const handleCodingUpload = async (file: File) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const response = await uploadCodingCSV(formData);
-      return {
-        success: true,
-        message: `Successfully uploaded ${response.data.count} coding problems`,
-        data: {
-          details: [
-            `Total problems: ${response.data.count}`,
-            `Success: ${response.data.success}`,
-            response.data.failed > 0 ? `Failed: ${response.data.failed}` : ''
-          ].filter(d => d !== '')
-        }
-      };
-    } catch (error) {
-      const err = error as { response?: { data?: { message?: string; errors?: string[] } } };
-      return {
-        success: false,
-        message: err.response?.data?.message || 'Failed to upload Coding CSV',
-        data: {
-          errors: err.response?.data?.errors || ['Unknown error occurred']
-        }
-      };
-    }
-  };
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await uploadCodingCSV(formData);
+
+    return {
+      success: true,
+      message:
+        response.message ||
+        `Successfully uploaded ${response.total_questions} coding problems`,
+      data: {
+        details: [
+          `Total problems: ${response.total_questions}`,
+          'Upload completed successfully'
+        ]
+      }
+    };
+  } catch (error) {
+    const err = error as {
+      response?: { data?: { message?: string; errors?: string[] } };
+      message?: string;
+    };
+
+    return {
+      success: false,
+      message:
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to upload Coding CSV',
+      data: {
+        errors: err.response?.data?.errors || ['Unknown error occurred']
+      }
+    };
+  }
+};
 
   const handleAssignmentUpload = async (file: File) => {
   try {

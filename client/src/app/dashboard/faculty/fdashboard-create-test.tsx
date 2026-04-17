@@ -18,8 +18,13 @@ export default function CreateTestPage() {
   const [loading, setLoading] = useState(false);
   type QuestionItem = {
   _id: string;
-  title?: string;
-  question?: string;
+  test_id: string;
+  questions?: {
+    _id?: string;
+    question_id?: string;
+    question_text?: string;
+    title?: string;
+  }[];
 };
 
 const [activeQuestionTab, setActiveQuestionTab] = useState<
@@ -27,6 +32,7 @@ const [activeQuestionTab, setActiveQuestionTab] = useState<
 >('mcq');
 
 const [questionBank, setQuestionBank] = useState<QuestionItem[]>([]);
+const [selectedQuestions, setSelectedQuestions] = useState<Record<string, string[]>>({});
   const [formData, setFormData] = useState<Partial<Test>>({
     title: '',
     description: '',
@@ -72,58 +78,89 @@ const [questionBank, setQuestionBank] = useState<QuestionItem[]>([]);
     }));
   };
 
-  const handleAddQuestion = (questionId: string) => {
-  const key =
-    activeQuestionTab === 'mcq'
-      ? 'mcqIds'
-      : activeQuestionTab === 'coding'
-      ? 'codingIds'
-      : 'assignmentIds';
+//   const handleAddQuestion = (questionId: string) => {
+//   const key =
+//     activeQuestionTab === 'mcq'
+//       ? 'mcqIds'
+//       : activeQuestionTab === 'coding'
+//       ? 'codingIds'
+//       : 'assignmentIds';
 
-  setFormData((prev) => ({
-    ...prev,
-    questionRefs: {
-      ...prev.questionRefs!,
-      [key]: [...((prev.questionRefs?.[key] as string[]) || []), questionId]
-    }
-  }));
-};
+//   setFormData((prev) => ({
+//     ...prev,
+//     questionRefs: {
+//       ...prev.questionRefs!,
+//       [key]: [...((prev.questionRefs?.[key] as string[]) || []), questionId]
+//     }
+//   }));
+// };
 
-const isSelected = (questionId: string) => {
-  const key =
-    activeQuestionTab === 'mcq'
-      ? 'mcqIds'
-      : activeQuestionTab === 'coding'
-      ? 'codingIds'
-      : 'assignmentIds';
+// const isSelected = (questionId: string) => {
+//   const key =
+//     activeQuestionTab === 'mcq'
+//       ? 'mcqIds'
+//       : activeQuestionTab === 'coding'
+//       ? 'codingIds'
+//       : 'assignmentIds';
 
-  return ((formData.questionRefs?.[key] as string[]) || []).includes(questionId);
-}; 
+//   return ((formData.questionRefs?.[key] as string[]) || []).includes(questionId);
+// }; 
 
   const fetchQuestionBank = async (
   type: 'mcq' | 'coding' | 'assignment'
 ) => {
   try {
     const response = await getQuestions(type);
-    setQuestionBank(response.data || []);
+    const data = response.data || [];
+
+    setQuestionBank(data);
+
+    const defaultSelections: Record<string, string[]> = {};
+
+    data.forEach((set: QuestionItem) => {
+      defaultSelections[set._id] =
+        set.questions?.map(
+          (q) => q.question_id || q._id || ''
+        ).filter(Boolean) || [];
+    });
+
+    setSelectedQuestions((prev) => ({
+  ...defaultSelections,
+  ...prev
+}));
   } catch (error) {
     console.error('Error fetching questions:', error);
   }
 };
 
 useEffect(() => {
-  fetchQuestionBank(activeQuestionTab);
-}, [activeQuestionTab]);
+  void fetchQuestionBank(activeQuestionTab);
+}, [activeQuestionTab]); 
 
-  const handleSubmit = async (publishNow = false) => {
+const handleSubmit = async (publishNow = false) => {
   try {
     setLoading(true);
 
     const status: 'draft' | 'published' | 'archived' =
       publishNow ? 'published' : 'draft';
 
+    const selectedIds = Object.values(selectedQuestions).flat();
+
+    const refsKey =
+      activeQuestionTab === 'mcq'
+        ? 'mcqIds'
+        : activeQuestionTab === 'coding'
+        ? 'codingIds'
+        : 'assignmentIds';
+
     const dataToSubmit = {
       ...formData,
+      questionRefs: {
+  mcqIds: formData.questionRefs?.mcqIds || [],
+  codingIds: formData.questionRefs?.codingIds || [],
+  assignmentIds: formData.questionRefs?.assignmentIds || [],
+  [refsKey]: selectedIds
+},
       status,
       ...(formData.scheduledStart
         ? { scheduledStart: formData.scheduledStart }
@@ -141,6 +178,24 @@ useEffect(() => {
   } finally {
     setLoading(false);
   }
+};
+
+const toggleQuestionSelection = (
+  setId: string,
+  questionId: string
+) => {
+  setSelectedQuestions((prev) => {
+    const existing = prev[setId] || [];
+
+    const updated = existing.includes(questionId)
+      ? existing.filter((id) => id !== questionId)
+      : [...existing, questionId];
+
+    return {
+      ...prev,
+      [setId]: updated
+    };
+  });
 };
 
   return (
@@ -417,35 +472,50 @@ useEffect(() => {
     ))}
   </div>
 
-  <div className="space-y-3 max-h-80 overflow-y-auto">
-    {questionBank.length === 0 ? (
-      <p className="text-gray-400">No questions available</p>
-    ) : (
-      questionBank.map((question) => (
-        <div
-          key={question._id}
-          className="flex items-center justify-between bg-neutral-900 border border-neutral-700 rounded-lg p-3"
-        >
-          <p className="text-gray-100">
-            {question.title || question.question || 'Untitled Question'}
-          </p>
+ <div className="space-y-4 max-h-96 overflow-y-auto">
+  {questionBank.length === 0 ? (
+    <p className="text-gray-400">No question sets available</p>
+  ) : (
+    questionBank.map((set) => (
+      <div
+        key={set._id}
+        className="bg-neutral-900 border border-neutral-700 rounded-lg p-4"
+      >
+        <h3 className="text-white font-semibold mb-3">
+          Test ID: {set.test_id}
+        </h3>
 
-          <button
-            type="button"
-            onClick={() => handleAddQuestion(question._id)}
-            disabled={isSelected(question._id)}
-            className={`px-3 py-1 rounded-lg text-sm ${
-              isSelected(question._id)
-                ? 'bg-green-700 text-white'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-          >
-            {isSelected(question._id) ? 'Added' : 'Add'}
-          </button>
+        <div className="space-y-2">
+          {set.questions?.map((q, index) => {
+            const qid = q.question_id || q._id || '';
+            const checked =
+              selectedQuestions[set._id]?.includes(qid);
+
+            return (
+              <label
+                key={qid}
+                className="flex items-center gap-3 text-gray-300"
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() =>
+                    toggleQuestionSelection(set._id, qid)
+                  }
+                />
+
+                <span>
+                  Q{index + 1}.{' '}
+                  {q.question_text || q.title || 'Untitled'}
+                </span>
+              </label>
+            );
+          })}
         </div>
-      ))
-    )}
-  </div>
+      </div>
+    ))
+  )}
+</div>
 </div>
 
       {/* Action Buttons */}

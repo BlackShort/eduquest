@@ -40,11 +40,12 @@ export const uploadMCQ = async (req, res) => {
       await test.save();
     } else {
       test = await Mcq.create({
-        test_id,
-        subject_id,
-        num_questions: questions.length,
-        questions
-      });
+  test_id,
+  subject_id,
+  num_questions: questions.length,
+  questions,
+  createdBy: req.user?.userId || null
+});
     }
 
     res.status(201).json({
@@ -88,6 +89,24 @@ export const getMCQsByTestId = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error while fetching MCQs"
+    });
+  }
+};
+
+export const getAllMCQs = async (req, res) => {
+  try {
+    const mcqs = await Mcq.find().sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: mcqs
+    });
+  } catch (error) {
+    console.error("Fetch MCQs Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching MCQs",
+      error: error.message
     });
   }
 };

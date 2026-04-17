@@ -37,19 +37,31 @@ export const getQuestions = async (req, res) => {
         const Model = getModelByType(type);
 
         // Build filter
-        const filter = { createdBy: req.user.userId };
-        
-        if (isInProblemBank !== undefined) {
-            filter.isInProblemBank = isInProblemBank === 'true';
-        }
-        
-        if (subjectId) {
-            filter.subject_id = subjectId;
-        }
+const filter = {
+  $or: [
+    { createdBy: req.user?.userId },
+    { createdBy: null }
+  ]
+};
 
-        if (search) {
-            filter['questions.question_text'] = { $regex: search, $options: 'i' };
-        }
+if (isInProblemBank !== undefined) {
+  filter.isInProblemBank = isInProblemBank === "true";
+}
+
+if (subjectId) {
+  filter.subject_id = {
+    $regex: subjectId,
+    $options: "i"
+  };
+}
+
+if (search) {
+  filter["questions.question_text"] = {
+    $regex: search,
+    $options: "i"
+  };
+}
+
 
         // Calculate pagination
         const skip = (page - 1) * limit;
@@ -86,6 +98,9 @@ export const getQuestions = async (req, res) => {
  */
 export const getQuestionById = async (req, res) => {
     try {
+        console.log("QUERY PARAMS:", req.query);
+        console.log("TYPE:", req.params.type);
+
         const { type, id } = req.params;
         const Model = getModelByType(type);
 
@@ -205,9 +220,8 @@ export const deleteQuestion = async (req, res) => {
         const Model = getModelByType(type);
 
         const question = await Model.findOneAndDelete({
-            test_id: id,
-            createdBy: req.user.userId
-        });
+    test_id: id
+});
 
         if (!question) {
             return res.status(404).json({

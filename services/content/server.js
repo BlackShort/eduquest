@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import assignmentRoutes from "./routes/assignmentRoute.js";
 import { app } from './app.js';
 import { connectDB } from './config/db-config.js';
 
@@ -17,5 +18,7 @@ const startServer = async () => {
     process.exit(1);
   }
 };
+
+app.use("/faculty/assignment", assignmentRoutes);
 
 startServer();

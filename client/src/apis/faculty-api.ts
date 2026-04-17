@@ -95,7 +95,7 @@ export const getQuestions = async (
     subjectId?: string;
   }
 ) => {
-  const response = await axios.get(`${contentUrl}/faculty/${type}`, {
+  const response = await facultyApi.get(`/v1/faculty/questions/${type}`, {
     params: {
       ...params,
       _t: Date.now()

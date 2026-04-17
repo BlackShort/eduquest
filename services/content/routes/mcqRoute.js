@@ -7,6 +7,8 @@ import * as mcqController from "../controllers/mcqController.js";
 // Upload MCQ CSV
 router.post("/upload", uploadCSV.single("file"), mcqController.uploadMCQ);
 
+router.get("/", mcqController.getAllMCQs);
+
 // Get MCQ Test by test_id
 router.get("/:test_id", mcqController.getMCQsByTestId);
 

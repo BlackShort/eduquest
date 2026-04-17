@@ -11,7 +11,7 @@ import {
 
 import {
   Plus,
-  Edit,
+  // Edit,
   Trash2,
   FileUp,
   Search
@@ -40,7 +40,10 @@ export default function FDashboardAssignments() {
   const [questions, setQuestions] = useState<QuestionSet[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [subjectFilter, setSubjectFilter] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  // const [editingTestId, setEditingTestId] = useState<string | null>(null);
   const [newQuestion, setNewQuestion] = useState({
    question_text: '',
    difficulty: 'easy',
@@ -55,6 +58,7 @@ export default function FDashboardAssignments() {
 
 const [uploading, setUploading] = useState(false);
 const fileInputRef = useRef<HTMLInputElement | null>(null);
+const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
 
   const fetchQuestions = useCallback(async () => {
     try {
@@ -64,9 +68,14 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
         limit: pagination.limit
       };
 
-      if (searchQuery) {
-        params.search = searchQuery;
-      }
+      if (debouncedSearch) {
+  params.search = debouncedSearch;
+}
+
+    if (subjectFilter.trim()) {
+  params.subjectId = subjectFilter.trim();
+}
+
 
       const response = await getQuestions(activeType, params);
       console.log('QUESTIONS API RESPONSE:', response);
@@ -88,11 +97,25 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
     } finally {
       setLoading(false);
     }
-  }, [activeType, pagination.page, pagination.limit, searchQuery]);
+}, [
+  activeType,
+  pagination.page,
+  pagination.limit,
+  debouncedSearch,
+  subjectFilter
+]);
 
-  useEffect(() => {
+useEffect(() => {
     fetchQuestions();
   }, [fetchQuestions]);
+
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    setDebouncedSearch(searchQuery);
+  }, 400);
+
+  return () => clearTimeout(timer);
+}, [searchQuery]);
 
   const handleDelete = async (testId: string) => {
     if (!confirm('Are you sure you want to delete this question set?')) return;
@@ -105,6 +128,19 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
       alert('Failed to delete question set');
     }
   };
+
+//   const handleEdit = (questionSet: QuestionSet) => {
+//   const firstQuestion = questionSet.questions?.[0];
+
+//   setNewQuestion({
+//     question_text: firstQuestion?.question_text || '',
+//     difficulty: firstQuestion?.difficulty || 'easy',
+//     subject_id: questionSet.subject_id
+//   });
+
+//   setEditingTestId(questionSet.test_id);
+//   setShowAddForm(true);
+// };
 
   const handleCreateQuestion = async () => {
   try {
@@ -131,9 +167,18 @@ const fileInputRef = useRef<HTMLInputElement | null>(null);
       ]
     };
 
-    await createQuestion(activeType, payload);
+//     if (editingTestId) {
+//   await createQuestion(activeType, {
+//     ...payload,
+//     test_id: editingTestId
+//   });
+// } else {
+//   await createQuestion(activeType, payload);
+// }
+await createQuestion(activeType, payload);
 
     setShowAddForm(false);
+    // setEditingTestId(null);
 
     setNewQuestion({
       question_text: '',
@@ -160,16 +205,25 @@ const handleCSVUpload = async (
     const formData = new FormData();
     formData.append('file', file);
 
+    let response;
+
     if (activeType === 'mcq') {
-      await uploadMCQCSV(formData);
+      response = await uploadMCQCSV(formData);
     } else if (activeType === 'coding') {
-      await uploadCodingCSV(formData);
+      response = await uploadCodingCSV(formData);
     } else {
-      await uploadAssignmentCSV(formData);
+      response = await uploadAssignmentCSV(formData);
     }
 
-    await fetchQuestions();
-    alert(`${activeType.toUpperCase()} CSV uploaded successfully`);
+    if (response?.success) {
+      alert(`${activeType.toUpperCase()} CSV uploaded successfully`);
+
+      setTimeout(() => {
+        fetchQuestions();
+      }, 500);
+    } else {
+      alert('CSV upload may have completed, but response was invalid');
+    }
   } catch (error) {
     console.error('CSV upload failed:', error);
     alert('CSV upload failed');
@@ -180,6 +234,13 @@ const handleCSVUpload = async (
       fileInputRef.current.value = '';
     }
   }
+};
+
+const toggleExpand = (id: string) => {
+  setExpandedCards((prev) => ({
+    ...prev,
+    [id]: !prev[id]
+  }));
 };
 
   const getDifficultyBadge = (difficulty?: string) => {
@@ -321,16 +382,35 @@ const handleCSVUpload = async (
               </button>
             ))}
           </div>
-          <div className="relative">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search questions..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
-            />
-          </div>
+          <div className="flex gap-2">
+  <div className="relative">
+    <Search
+      size={18}
+      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+    />
+    <input
+      type="text"
+      placeholder="Search questions..."
+      value={searchQuery}
+      onChange={(e) => {
+        setSearchQuery(e.target.value);
+        setPagination((prev) => ({ ...prev, page: 1 }));
+      }}
+      className="pl-10 pr-4 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+    />
+  </div>
+
+  <input
+    type="text"
+    placeholder="Filter by Subject ID..."
+    value={subjectFilter}
+    onChange={(e) => {
+      setSubjectFilter(e.target.value);
+      setPagination((prev) => ({ ...prev, page: 1 }));
+    }}
+    className="px-4 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+  />
+</div>
         </div>
 
         {/* Questions List */}
@@ -364,34 +444,52 @@ const handleCSVUpload = async (
                       <div className="flex items-center gap-4 text-sm text-gray-400">
                         <span>Subject: {questionSet.subject_id}</span>
                         <span>Questions: {questionSet.num_questions}</span>
-                        <span>Created: {new Date(questionSet.createdAt).toLocaleDateString()}</span>
+                        <span>
+  Created: {questionSet.createdAt
+    ? new Date(questionSet.createdAt).toLocaleDateString()
+    : "N/A"}
+</span>
                       </div>
                       {questionSet.questions && questionSet.questions.length > 0 && (
-                        <div className="mt-3 space-y-2">
-                          {questionSet.questions.slice(0, 2).map((q, idx: number) => (
-                            <div key={idx} className="text-sm text-gray-300 pl-4 border-l-2 border-neutral-600">
-                              <div className="flex items-center gap-2">
-                                <span className="text-gray-400">Q{idx + 1}:</span>
-                                <span className="line-clamp-1">{q.question_text}</span>
-                                {q.difficulty && getDifficultyBadge(q.difficulty)}
-                              </div>
-                            </div>
-                          ))}
-                          {questionSet.questions.length > 2 && (
-                            <div className="text-sm text-gray-400 pl-4">
-                              +{questionSet.questions.length - 2} more questions
-                            </div>
-                          )}
-                        </div>
-                      )}
+  <div className="mt-3 space-y-2">
+    {(expandedCards[questionSet._id]
+      ? questionSet.questions
+      : questionSet.questions.slice(0, 2)
+    ).map((q, idx: number) => (
+      <div
+        key={q.question_id}
+        className="text-sm text-gray-300 pl-4 border-l-2 border-neutral-600"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400">Q{idx + 1}:</span>
+          <span className="line-clamp-1">{q.question_text}</span>
+          {q.difficulty && getDifficultyBadge(q.difficulty)}
+        </div>
+      </div>
+    ))}
+
+    {questionSet.questions.length > 2 && (
+      <button
+        type="button"
+        onClick={() => toggleExpand(questionSet._id)}
+        className="text-sm text-blue-400 hover:text-blue-300 pl-4"
+      >
+        {expandedCards[questionSet._id]
+          ? "Show less"
+          : `+${questionSet.questions.length - 2} more questions`}
+      </button>
+    )}
+  </div>
+)}
                     </div>
                     <div className="flex items-center gap-2">
-                      <button
-                        className="p-2 text-gray-400 hover:bg-neutral-600 rounded-lg transition-colors"
-                        title="Edit"
-                      >
+                      {/* <button
+  onClick={() => handleEdit(questionSet)}
+  className="p-2 text-gray-400 hover:bg-neutral-600 rounded-lg transition-colors"
+  title="Edit"
+>
                         <Edit size={18} />
-                      </button>
+                      </button> */}
                       <button
                         onClick={() => handleDelete(questionSet.test_id)}
                         className="p-2 text-red-400 hover:bg-red-600/20 rounded-lg transition-colors"

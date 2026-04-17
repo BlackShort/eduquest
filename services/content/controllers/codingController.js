@@ -49,11 +49,12 @@ export const uploadCoding = async (req, res) => {
       await test.save();
     } else {
       test = await Coding.create({
-        test_id,
-        subject_id,
-        num_questions: questions.length,
-        questions
-      });
+  test_id,
+  subject_id,
+  num_questions: questions.length,
+  questions,
+  createdBy: req.user?.userId || null
+});
     }
 
     res.status(201).json({
@@ -96,6 +97,25 @@ export const getCodingByTestId = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error while fetching coding questions"
+    });
+  }
+};
+
+
+export const getAllCoding = async (req, res) => {
+  try {
+    const coding = await Coding.find().sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: coding
+    });
+  } catch (error) {
+    console.error("Fetch Coding Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching coding questions",
+      error: error.message
     });
   }
 };

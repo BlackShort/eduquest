@@ -27,8 +27,13 @@ export default function EditTestPage() {
   const [activeQuestionTab, setActiveQuestionTab] = useState<'mcq' | 'coding' | 'assignment'>('mcq');
   type QuestionItem = {
   _id: string;
-  title?: string;
-  question?: string;
+  test_id: string;
+  subject_id: string;
+  questions: {
+    _id?: string;
+    question_id?: string;
+    question_text: string;
+  }[];
 };
 
 const [questionBank, setQuestionBank] = useState<QuestionItem[]>([]);
@@ -127,7 +132,7 @@ useEffect(() => {
 
     await addQuestionToSet(activeQuestionTab, testId!, {
       question_id: question._id,
-      title: question.title || question.question || 'Untitled Question'
+      title: 'Selected Question'
     });
 
     setFormData((prev) => ({
@@ -479,45 +484,54 @@ const isSelected = (questionId: string) => {
     ))}
   </div>
 
-  <div className="space-y-3 max-h-80 overflow-y-auto">
-    {questionBank.length === 0 ? (
-      <p className="text-gray-400">No questions available</p>
-    ) : (
-      questionBank.map((question) => (
-        <div
-          key={question._id}
-          className="flex items-center justify-between bg-neutral-900 border border-neutral-700 rounded-lg p-3"
-        >
-          <div>
-            <p className="text-gray-100 font-medium">
-              {question.title || question.question || 'Untitled Question'}
-            </p>
-          </div>
+ <div className="space-y-3 max-h-80 overflow-y-auto">
+  {questionBank.length === 0 ? (
+    <p className="text-gray-400">No questions available</p>
+  ) : (
+    questionBank.map((set) => (
+      <div
+        key={set._id}
+        className="bg-neutral-900 border border-neutral-700 rounded-lg p-4"
+      >
+        <p className="text-gray-300 font-semibold mb-3">
+          Test ID: {set.test_id}
+        </p>
 
-          <button
-            type="button"
-            onClick={() =>
-             isSelected(question._id)
-              ? handleRemoveQuestion(question._id)
-              : handleAddQuestion(question)
-            }
-            disabled={isSelected(question._id)}
-            className={`px-3 py-1 rounded-lg text-sm ${
-              isSelected(question._id)
-                ? 'bg-green-700 text-white cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-          >
-            className={`px-3 py-1 rounded-lg text-sm ${
-              isSelected(question._id)
-                ? 'bg-red-600 hover:bg-red-700 text-white'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-          }`}
-          </button>
+        <div className="space-y-2">
+          {set.questions.map((q, index) => {
+            const questionId = q.question_id || q._id || '';
+
+            return (
+              <label
+                key={questionId}
+                className="flex items-center gap-3 text-gray-200"
+              >
+                <input
+                  type="checkbox"
+                  checked={isSelected(questionId)}
+                  onChange={() =>
+                    isSelected(questionId)
+                      ? handleRemoveQuestion(questionId)
+                      : handleAddQuestion({
+                          _id: questionId,
+                          test_id: set.test_id,
+                          subject_id: set.subject_id,
+                          questions: []
+                        })
+                  }
+                  className="w-4 h-4"
+                />
+                <span>
+                  Q{index + 1}. {q.question_text}
+                </span>
+              </label>
+            );
+          })}
         </div>
-      ))
-    )}
-  </div>
+      </div>
+    ))
+  )}
+</div>
 </div>
 
       {/* Action Buttons */}

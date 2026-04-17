@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { upsertQuestionGroup } from "../utils/upsertQuestionGroup.js";
 import Assignment from "../models/Assignment.js";
 import parseCSV from "../utils/fileParser.js";
 
@@ -21,41 +22,25 @@ export const uploadAssignment = async (req, res) => {
       });
     }
 
-    const test_id = rows[0].test_id;
-    const subject_id = rows[0].subject_id;
+    for (const row of rows) {
+     await upsertQuestionGroup(Assignment, {
+      test_id: row.test_id,
+      subject_id: row.subject_id,
+      question_text: row.question_text,
+      difficulty: row.difficulty || "easy",
+      createdBy: req.user?.userId || null
+     });
+}
 
-    const questions = rows.map((row) => ({
-      question_id: uuidv4(),
-      question_text: row.question_text
-    }));
-
-    let test = await Assignment.findOne({ test_id });
-
-    if (test) {
-      // Append questions
-      test.questions.push(...questions);
-      test.num_questions = test.questions.length;
-      await test.save();
-    } else {
-      // Create new grouped assignment document
-      test = await Assignment.create({
-        test_id,
-        subject_id,
-        num_questions: questions.length,
-        questions
-      });
-    }
-
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: "Assignment questions uploaded successfully (grouped)",
-      total_questions: test.num_questions
+      message: "Assignment CSV uploaded successfully",
+      total_questions: rows.length
     });
-
   } catch (error) {
     console.error("Assignment Upload Error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error while uploading Assignment CSV",
       error: error.message
@@ -92,35 +77,31 @@ export const getAssignmentByTestId = async (req, res) => {
 
 export const getAllAssignments = async (req, res) => {
   try {
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+    const assignments = await Assignment.find().sort({ updatedAt: -1 });
 
-    const total = await Assignment.countDocuments();
-
-    const assignments = await Assignment.find()
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    const formattedAssignments = assignments.map((doc) => ({
+      _id: doc._id,
+      test_id: doc.test_id,
+      subject_id: doc.subject_id,
+      num_questions: doc.num_questions,
+      questions: doc.questions,
+      createdAt: doc.createdAt,
+      isInProblemBank: doc.isInProblemBank,
+    }));
 
     res.status(200).json({
       success: true,
-      data: assignments,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
+      questions: formattedAssignments,
+      total: formattedAssignments.length,
+      data: formattedAssignments, // backward compatibility
     });
-
   } catch (error) {
     console.error("Fetch Assignments Error:", error);
 
     res.status(500).json({
       success: false,
       message: "Server error while fetching assignments",
-      error: error.message
+      error: error.message,
     });
   }
 };

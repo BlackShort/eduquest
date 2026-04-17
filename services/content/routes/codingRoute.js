@@ -11,6 +11,8 @@ router.post(
   codingController.uploadCoding
 );
 
+router.get("/", codingController.getAllCoding);
+
 // Get Coding Questions by test_id
 router.get("/:test_id", codingController.getCodingByTestId);
 
