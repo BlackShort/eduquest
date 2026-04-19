@@ -41,7 +41,7 @@ export default function FDashboardAssignments() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [subjectFilter, setSubjectFilter] = useState('');
+  // const [subjectFilter, setSubjectFilter] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   // const [editingTestId, setEditingTestId] = useState<string | null>(null);
   const [newQuestion, setNewQuestion] = useState({
@@ -72,9 +72,9 @@ const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   params.search = debouncedSearch;
 }
 
-    if (subjectFilter.trim()) {
-  params.subjectId = subjectFilter.trim();
-}
+//     if (subjectFilter.trim()) {
+//   params.subjectId = subjectFilter.trim();
+// }
 
 
       const response = await getQuestions(activeType, params);
@@ -102,7 +102,7 @@ const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   pagination.page,
   pagination.limit,
   debouncedSearch,
-  subjectFilter
+  // subjectFilter
 ]);
 
 useEffect(() => {
@@ -259,7 +259,46 @@ const toggleExpand = (id: string) => {
     );
   };
 
+  const highlightText = (text: string, query: string) => {
+  if (!query) return text;
+
+  const parts = text.split(new RegExp(`(${query})`, 'gi'));
+
+  return parts.map((part, i) =>
+    part.toLowerCase() === query.toLowerCase() ? (
+      <span key={i} className="bg-pink-500/30 text-yellow-300 px-1 rounded">
+        {part}
+      </span>
+    ) : (
+      part
+    )
+  );
+};
+
+
   return (
+
+    
+
+     <>
+    {/* Internal CSS for marquee */}
+    <style>
+      {`
+      @keyframes marquee {
+        0% { transform: translateX(100%); }
+        100% { transform: translateX(-100%); }
+      }
+
+      .animate-marquee {
+        animation: marquee 10s linear infinite;
+      }
+      `}
+    </style>
+    
+  
+  
+
+
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -383,24 +422,42 @@ const toggleExpand = (id: string) => {
             ))}
           </div>
           <div className="flex gap-2">
-  <div className="relative">
-    <Search
-      size={18}
-      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-    />
-    <input
-      type="text"
-      placeholder="Search questions..."
-      value={searchQuery}
-      onChange={(e) => {
-        setSearchQuery(e.target.value);
-        setPagination((prev) => ({ ...prev, page: 1 }));
-      }}
-      className="pl-10 pr-4 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
-    />
-  </div>
+ <div className="relative w-64 overflow-hidden">
+  <Search
+    size={18}
+    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10"
+  />
+
+  {/* Fake marquee placeholder */}
+  {!searchQuery && (
+    <div className="absolute left-10 right-2 top-1/2 -translate-y-1/2 overflow-hidden pointer-events-none">
+      <div className="whitespace-nowrap animate-marquee text-gray-500 text-sm">
+        Search by question, subject, or test ID...
+      </div>
+    </div>
+  )}
 
   <input
+    type="text"
+    value={searchQuery}
+    onChange={(e) => {
+      setSearchQuery(e.target.value);
+      setPagination((prev) => ({ ...prev, page: 1 }));
+    }}
+    
+    className="w-full pl-10 pr-4 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-gray-200 focus:outline-none focus:border-blue-500"
+  />
+  {searchQuery && (
+  <button
+    onClick={() => setSearchQuery('')}
+    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+  >
+    ✕
+  </button>
+)}
+</div>
+
+  {/* <input
     type="text"
     placeholder="Filter by Subject ID..."
     value={subjectFilter}
@@ -409,7 +466,7 @@ const toggleExpand = (id: string) => {
       setPagination((prev) => ({ ...prev, page: 1 }));
     }}
     className="px-4 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
-  />
+  /> */}
 </div>
         </div>
 
@@ -418,7 +475,11 @@ const toggleExpand = (id: string) => {
           <div className="text-center text-gray-400 py-12">Loading questions...</div>
         ) : questions.length === 0 ? (
           <div className="text-center text-gray-400 py-12">
-            <p>No {activeType} questions found</p>
+            <p>
+  {searchQuery
+    ? `No results found for "${searchQuery}"`
+    : `No ${activeType} questions found`}
+</p>
             <button className="text-blue-400 hover:underline mt-2">
               Add your first {activeType} question
             </button>
@@ -462,7 +523,9 @@ const toggleExpand = (id: string) => {
       >
         <div className="flex items-center gap-2">
           <span className="text-gray-400">Q{idx + 1}:</span>
-          <span className="line-clamp-1">{q.question_text}</span>
+          <span className="line-clamp-1">
+  {highlightText(q.question_text, searchQuery)}
+</span>
           {q.difficulty && getDifficultyBadge(q.difficulty)}
         </div>
       </div>
@@ -539,7 +602,11 @@ const toggleExpand = (id: string) => {
         </p>
       </div>
     </div>
+ </>
+    
   );
+
+
 };
 
 

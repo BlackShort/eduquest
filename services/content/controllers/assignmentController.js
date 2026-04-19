@@ -77,7 +77,34 @@ export const getAssignmentByTestId = async (req, res) => {
 
 export const getAllAssignments = async (req, res) => {
   try {
-    const assignments = await Assignment.find().sort({ updatedAt: -1 });
+    const { search, problemBank, subjectId } = req.query;
+
+    const filter = {};
+
+    console.log("QUERY:", req.query);
+
+    // ✅ Problem Bank
+    if (problemBank === "true" || problemBank === true) {
+      filter.isInProblemBank = true;
+    }
+
+    // ✅ Subject filter (ADD)
+    if (subjectId && subjectId.trim() !== "") {
+      filter.subject_id = { $regex: subjectId.trim(), $options: "i" };
+    }
+
+    // ✅ Search
+    if (search && search.trim() !== "") {
+      filter.$or = [
+        { test_id: { $regex: search.trim(), $options: "i" } },
+        { subject_id: { $regex: search.trim(), $options: "i" } },
+        { "questions.question_text": { $regex: search.trim(), $options: "i" } }
+      ];
+    }
+
+    console.log("FILTER:", filter);
+
+    const assignments = await Assignment.find(filter).sort({ updatedAt: -1 });
 
     const formattedAssignments = assignments.map((doc) => ({
       _id: doc._id,
@@ -93,8 +120,9 @@ export const getAllAssignments = async (req, res) => {
       success: true,
       questions: formattedAssignments,
       total: formattedAssignments.length,
-      data: formattedAssignments, // backward compatibility
+      data: formattedAssignments,
     });
+
   } catch (error) {
     console.error("Fetch Assignments Error:", error);
 

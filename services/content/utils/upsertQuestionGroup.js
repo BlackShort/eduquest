@@ -28,6 +28,7 @@ export const upsertQuestionGroup = async (
     if (!group.createdBy && createdBy) {
       group.createdBy = createdBy;
     }
+    group.isInProblemBank = true;
 
     await group.save();
     return group;

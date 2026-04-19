@@ -95,14 +95,43 @@ export const getMCQsByTestId = async (req, res) => {
 
 export const getAllMCQs = async (req, res) => {
   try {
-    const mcqs = await Mcq.find().sort({ createdAt: -1 });
+    const { search, problemBank, subjectId } = req.query;
+
+    const filter = {};
+
+    console.log("QUERY:", req.query);
+
+    // ✅ Problem Bank
+    if (problemBank === "true" || problemBank === true) {
+      filter.isInProblemBank = true;
+    }
+
+    // ✅ Subject filter (🔥 ADD THIS)
+    if (subjectId && subjectId.trim() !== "") {
+      filter.subject_id = { $regex: subjectId, $options: "i" };
+    }
+
+    // ✅ Search
+    if (search && search.trim() !== "") {
+      filter.$or = [
+        { test_id: { $regex: search, $options: "i" } },
+        { subject_id: { $regex: search, $options: "i" } },
+        { "questions.question_text": { $regex: search, $options: "i" } }
+      ];
+    }
+
+    console.log("FILTER:", filter);
+
+    const mcqs = await Mcq.find(filter).sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
       data: mcqs
     });
+
   } catch (error) {
     console.error("Fetch MCQs Error:", error);
+
     res.status(500).json({
       success: false,
       message: "Server error while fetching MCQs",

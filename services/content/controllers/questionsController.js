@@ -56,10 +56,11 @@ if (subjectId) {
 }
 
 if (search) {
-  filter["questions.question_text"] = {
-    $regex: search,
-    $options: "i"
-  };
+  filter.$or = [
+    { subject_id: { $regex: search, $options: 'i' } },
+    { test_id: { $regex: search, $options: 'i' } },
+    { 'questions.question_text': { $regex: search, $options: 'i' } }
+  ];
 }
 
 

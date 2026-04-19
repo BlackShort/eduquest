@@ -53,7 +53,9 @@ export const uploadCoding = async (req, res) => {
   subject_id,
   num_questions: questions.length,
   questions,
-  createdBy: req.user?.userId || null
+  createdBy: req.user?.userId || null,
+  isInProblemBank: true
+  
 });
     }
 
@@ -104,14 +106,43 @@ export const getCodingByTestId = async (req, res) => {
 
 export const getAllCoding = async (req, res) => {
   try {
-    const coding = await Coding.find().sort({ createdAt: -1 });
+    const { search, problemBank, subjectId } = req.query;
+
+    const filter = {};
+
+    console.log("QUERY:", req.query);
+
+    // ✅ Problem Bank
+    if (problemBank === "true" || problemBank === true) {
+      filter.isInProblemBank = true;
+    }
+
+    // ✅ Subject filter (ADD THIS)
+    if (subjectId && subjectId.trim() !== "") {
+      filter.subject_id = { $regex: subjectId, $options: "i" };
+    }
+
+    // ✅ Search
+    if (search && search.trim() !== "") {
+      filter.$or = [
+        { test_id: { $regex: search, $options: "i" } },
+        { subject_id: { $regex: search, $options: "i" } },
+        { "questions.question_text": { $regex: search, $options: "i" } }
+      ];
+    }
+
+    console.log("FILTER:", filter);
+
+    const coding = await Coding.find(filter).sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
       data: coding
     });
+
   } catch (error) {
     console.error("Fetch Coding Error:", error);
+
     res.status(500).json({
       success: false,
       message: "Server error while fetching coding questions",
