@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { 
@@ -9,19 +10,28 @@ import {
   Settings as SettingsIcon,
   Plus
 } from 'lucide-react';
+
 import { createTest } from '@/apis/faculty-api';
 import { getQuestions } from '@/apis/faculty-api';
 import type { Test } from '@/types/types';
 
 export default function CreateTestPage() {
   const navigate = useNavigate();
+
+  const [subjects, setSubjects] = useState<string[]>([]);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [subjectFilter, setSubjectFilter] = useState('');
+
   const [loading, setLoading] = useState(false);
-  type QuestionItem = {
+type QuestionItem = {
   _id: string;
   test_id: string;
-  questions?: {
-    _id?: string;
+  subject_id: string;
+  type: 'mcq' | 'coding' | 'assignment'; // ✅ ADD THIS
+  questions: {
     question_id?: string;
+    _id?: string;
     question_text?: string;
     title?: string;
   }[];
@@ -31,8 +41,17 @@ const [activeQuestionTab, setActiveQuestionTab] = useState<
   'mcq' | 'coding' | 'assignment'
 >('mcq');
 
-const [questionBank, setQuestionBank] = useState<QuestionItem[]>([]);
+const [questionBankMap, setQuestionBankMap] = useState<{
+  mcq: QuestionItem[];
+  coding: QuestionItem[];
+  assignment: QuestionItem[];
+}>({
+  mcq: [],
+  coding: [],
+  assignment: []
+});
 const [selectedQuestions, setSelectedQuestions] = useState<Record<string, string[]>>({});
+const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [formData, setFormData] = useState<Partial<Test>>({
     title: '',
     description: '',
@@ -106,36 +125,60 @@ const [selectedQuestions, setSelectedQuestions] = useState<Record<string, string
 //   return ((formData.questionRefs?.[key] as string[]) || []).includes(questionId);
 // }; 
 
-  const fetchQuestionBank = async (
+const fetchQuestionBank = useCallback(async (
   type: 'mcq' | 'coding' | 'assignment'
 ) => {
   try {
-    const response = await getQuestions(type);
-    const data = response.data || [];
-
-    setQuestionBank(data);
-
-    const defaultSelections: Record<string, string[]> = {};
-
-    data.forEach((set: QuestionItem) => {
-      defaultSelections[set._id] =
-        set.questions?.map(
-          (q) => q.question_id || q._id || ''
-        ).filter(Boolean) || [];
+    const response = await getQuestions(type, {
+      search: debouncedSearch,
+      subjectId: subjectFilter,
+      problemBank: true
     });
 
-    setSelectedQuestions((prev) => ({
-  ...defaultSelections,
-  ...prev
+    const data = response.data || [];
+
+    setQuestionBankMap((prev) => ({
+  ...prev,
+  [type]: data.map((item: QuestionItem) => ({
+    ...item,
+    type
+  }))
 }));
+    const uniqueSubjects: string[] = Array.from(
+  new Set(
+    data
+      .map((item: QuestionItem) => item.subject_id)
+      .filter((s: string) => s && s.trim() !== "")
+  )
+);
+
+uniqueSubjects.sort();
+
+setSubjects(uniqueSubjects);
+
+// optional: sort for better UX
+uniqueSubjects.sort();
+
+setSubjects(uniqueSubjects);
+
+    // ⚠️ Keep your selection logic intact
+    
   } catch (error) {
     console.error('Error fetching questions:', error);
   }
-};
+}, [debouncedSearch, subjectFilter]); // ✅ dependencies
 
 useEffect(() => {
-  void fetchQuestionBank(activeQuestionTab);
-}, [activeQuestionTab]); 
+  fetchQuestionBank(activeQuestionTab);
+}, [activeQuestionTab, fetchQuestionBank]);
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    setDebouncedSearch(searchQuery);
+  }, 400);
+
+  return () => clearTimeout(timer);
+}, [searchQuery]);
 
 const handleSubmit = async (publishNow = false) => {
   try {
@@ -144,23 +187,46 @@ const handleSubmit = async (publishNow = false) => {
     const status: 'draft' | 'published' | 'archived' =
       publishNow ? 'published' : 'draft';
 
-    const selectedIds = Object.values(selectedQuestions).flat();
+//     const mcqIds: string[] = [];
+// const codingIds: string[] = [];
+// const assignmentIds: string[] = [];
 
-    const refsKey =
-      activeQuestionTab === 'mcq'
-        ? 'mcqIds'
-        : activeQuestionTab === 'coding'
-        ? 'codingIds'
-        : 'assignmentIds';
+// questionBank.forEach((set) => {
+//   const selected = selectedQuestions[set._id] || [];
+
+//   if (activeQuestionTab === 'mcq') {
+//     mcqIds.push(...selected);
+//   } else if (activeQuestionTab === 'coding') {
+//     codingIds.push(...selected);
+//   } else if (activeQuestionTab === 'assignment') {
+//     assignmentIds.push(...selected);
+//   }
+// });
+const mcqIds: string[] = [];
+const codingIds: string[] = [];
+const assignmentIds: string[] = [];
+
+(['mcq', 'coding', 'assignment'] as const).forEach((type) => {
+  questionBankMap[type].forEach((set) => {
+    const selected = selectedQuestions[set._id] || [];
+
+    if (type === 'mcq') {
+      mcqIds.push(...selected);
+    } else if (type === 'coding') {
+      codingIds.push(...selected);
+    } else {
+      assignmentIds.push(...selected);
+    }
+  });
+});
 
     const dataToSubmit = {
       ...formData,
-      questionRefs: {
-  mcqIds: formData.questionRefs?.mcqIds || [],
-  codingIds: formData.questionRefs?.codingIds || [],
-  assignmentIds: formData.questionRefs?.assignmentIds || [],
-  [refsKey]: selectedIds
-},
+     questionRefs: {
+      mcqIds,
+      codingIds,
+      assignmentIds
+    },
       status,
       ...(formData.scheduledStart
         ? { scheduledStart: formData.scheduledStart }
@@ -169,6 +235,12 @@ const handleSubmit = async (publishNow = false) => {
         ? { scheduledEnd: formData.scheduledEnd }
         : {})
     };
+
+    console.log("FINAL PAYLOAD:", {
+  mcqIds,
+  codingIds,
+  assignmentIds
+});
 
     await createTest(dataToSubmit);
     navigate('/faculty-dashboard/assessment');
@@ -472,11 +544,35 @@ const toggleQuestionSelection = (
     ))}
   </div>
 
+  <div className="flex gap-2 mb-4">
+  <input
+    type="text"
+    placeholder="Search questions..."
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    className="px-3 py-2 bg-neutral-700 text-white rounded-lg"
+  />
+
+ <select
+  value={subjectFilter}
+  onChange={(e) => setSubjectFilter(e.target.value)}
+  className="px-3 py-2 bg-neutral-700 text-white rounded-lg min-w-[180px]"
+>
+  <option value="">All Subjects</option>
+
+  {subjects.map((subj) => (
+    <option key={subj} value={subj}>
+      {subj}
+    </option>
+  ))}
+</select>
+</div>
+
  <div className="space-y-4 max-h-96 overflow-y-auto">
-  {questionBank.length === 0 ? (
+  {questionBankMap[activeQuestionTab].length === 0 ? (
     <p className="text-gray-400">No question sets available</p>
   ) : (
-    questionBank.map((set) => (
+    questionBankMap[activeQuestionTab].map((set) => (
       <div
         key={set._id}
         className="bg-neutral-900 border border-neutral-700 rounded-lg p-4"

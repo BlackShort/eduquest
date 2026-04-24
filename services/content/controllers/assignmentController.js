@@ -89,9 +89,17 @@ export const getAllAssignments = async (req, res) => {
     }
 
     // ✅ Subject filter (ADD)
-    if (subjectId && subjectId.trim() !== "") {
-      filter.subject_id = { $regex: subjectId.trim(), $options: "i" };
-    }
+    // if (subjectId && subjectId.trim() !== "") {
+    //   filter.subject_id = { $regex: subjectId.trim(), $options: "i" };
+    // }
+
+    // ✅ Subject filter
+if (subjectId && subjectId.trim() !== "") {
+  filter.subject_id = {
+    $regex: subjectId.trim(),
+    $options: "i"
+  };
+}
 
     // ✅ Search
     if (search && search.trim() !== "") {

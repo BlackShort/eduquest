@@ -85,14 +85,16 @@ export const getTestStats = async () => {
 
 export const getQuestions = async (
   type: 'mcq' | 'coding' | 'assignment',
-  params?: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    difficulty?: string;
-    tags?: string;
-    isInProblemBank?: boolean;
-    subjectId?: string;
+ params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  difficulty?: string;
+  tags?: string;
+  isInProblemBank?: boolean;
+  subjectId?: string;
+  problemBank?: boolean; // ✅ ADD THIS
+
   }
 ) => {
   const response = await facultyApi.get(`/v1/faculty/questions/${type}`, {

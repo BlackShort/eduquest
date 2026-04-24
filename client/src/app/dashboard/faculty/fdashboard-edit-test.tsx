@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { 
   Save, 
@@ -13,16 +13,38 @@ import {
   getTestById,
   updateTest,
   getQuestions,
-  addQuestionToSet,
-  removeQuestionFromSet
+  // addQuestionToSet,
+  // removeQuestionFromSet
 } from '@/apis/faculty-api';
 import type { Test } from '@/types/types';
+
+
 
 
 export default function EditTestPage() {
   const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+
+  const [searchQuery, setSearchQuery] = useState('');
+const [subjectFilter, setSubjectFilter] = useState('');
+const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+
+const [subjects, setSubjects] = useState<string[]>([]);
+
+const [questionBankMap, setQuestionBankMap] = useState<{
+  mcq: QuestionItem[];
+  coding: QuestionItem[];
+  assignment: QuestionItem[];
+}>({
+  mcq: [],
+  coding: [],
+  assignment: []
+});
+
+const [selectedQuestions, setSelectedQuestions] = useState<Record<string, string[]>>({});
+
+  
   const [saving, setSaving] = useState(false);
   const [activeQuestionTab, setActiveQuestionTab] = useState<'mcq' | 'coding' | 'assignment'>('mcq');
   type QuestionItem = {
@@ -34,9 +56,11 @@ export default function EditTestPage() {
     question_id?: string;
     question_text: string;
   }[];
+
+  
 };
 
-const [questionBank, setQuestionBank] = useState<QuestionItem[]>([]);
+// const [questionBank, setQuestionBank] = useState<QuestionItem[]>([]);
   const [formData, setFormData] = useState<Partial<Test>>({
     title: '',
     description: '',
@@ -70,6 +94,34 @@ const [questionBank, setQuestionBank] = useState<QuestionItem[]>([]);
       setLoading(true);
       const response = await getTestById(testId!);
       setFormData(response.data);
+      const refs = response.data.questionRefs || {};
+
+const initialSelected: Record<string, string[]> = {};
+
+// flatten all ids into selection map
+['mcqIds', 'codingIds', 'assignmentIds'].forEach((key) => {
+  (refs[key] || []).forEach((id: string) => {
+    initialSelected[id] = [id];
+  });
+});
+
+setSelectedQuestions((prev) => {
+  const updated = { ...prev };
+
+  Object.entries(initialSelected).forEach(([setId, ids]) => {
+    if (!updated[setId]) {
+      updated[setId] = ids;
+    } else {
+      // merge without duplicates
+      updated[setId] = Array.from(
+        new Set([...updated[setId], ...ids])
+      );
+    }
+  });
+
+  return updated;
+});
+
     } catch (error) {
       console.error('Error fetching test:', error);
       alert('Failed to load test data');
@@ -84,20 +136,99 @@ const [questionBank, setQuestionBank] = useState<QuestionItem[]>([]);
   }
 }, [testId, navigate]);
 
-const fetchQuestionBank = async (
+const fetchQuestionBank = useCallback(async (
   type: 'mcq' | 'coding' | 'assignment'
 ) => {
   try {
-    const response = await getQuestions(type);
-    setQuestionBank(response.data || []);
+    const response = await getQuestions(type, {
+      search: debouncedSearch,
+      subjectId: subjectFilter,
+      problemBank: true
+    });
+
+    const data: QuestionItem[] = response?.data || [];
+
+    // ✅ store question bank
+    setQuestionBankMap((prev) => ({
+      ...prev,
+      [type]: data
+    }));
+
+    // ✅ extract subjects safely
+    const uniqueSubjects: string[] = Array.from(
+      new Set(
+        data
+          .map((item) => item.subject_id)
+          .filter((s): s is string => !!s && s.trim() !== "")
+      )
+    );
+
+    uniqueSubjects.sort();
+    setSubjects(uniqueSubjects);
+
   } catch (error) {
     console.error('Error fetching questions:', error);
   }
-};
+}, [debouncedSearch, subjectFilter]);
 
 useEffect(() => {
   fetchQuestionBank(activeQuestionTab);
-}, [activeQuestionTab]);
+}, [activeQuestionTab, debouncedSearch, subjectFilter, fetchQuestionBank]);
+
+useEffect(() => {
+  if (!formData?.questionRefs) return;
+
+  const initialSelected: Record<string, string[]> = {};
+
+  const addToSelection = (ids: string[]) => {
+    ids.forEach((id) => {
+      // find which set this question belongs to
+      Object.values(questionBankMap).forEach((sets) => {
+        sets.forEach((set) => {
+          if (
+            set.questions?.some(
+              (q) => (q.question_id || q._id) === id
+            )
+          ) {
+            if (!initialSelected[set._id]) {
+              initialSelected[set._id] = [];
+            }
+            initialSelected[set._id].push(id);
+          }
+        });
+      });
+    });
+  };
+
+  addToSelection(formData.questionRefs.mcqIds || []);
+  addToSelection(formData.questionRefs.codingIds || []);
+  addToSelection(formData.questionRefs.assignmentIds || []);
+
+  // setSelectedQuestions(initialSelected);
+  setSelectedQuestions((prev) => {
+  const updated = { ...prev };
+
+  Object.entries(initialSelected).forEach(([setId, ids]) => {
+    if (!updated[setId]) {
+      updated[setId] = ids;
+    } else {
+      updated[setId] = Array.from(
+        new Set([...updated[setId], ...ids])
+      );
+    }
+  });
+
+  return updated;
+});
+}, [formData, questionBankMap]);
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    setDebouncedSearch(searchQuery);
+  }, 400);
+
+  return () => clearTimeout(timer);
+}, [searchQuery]);
 
 
 
@@ -119,81 +250,120 @@ useEffect(() => {
     }));
   };
 
-  const handleAddQuestion = async (question: QuestionItem) => {
-  try {
-    const key =
-      activeQuestionTab === 'mcq'
-        ? 'mcqIds'
-        : activeQuestionTab === 'coding'
-        ? 'codingIds'
-        : 'assignmentIds';
+//   const handleAddQuestion = async (question: QuestionItem) => {
+//   try {
+//     const key =
+//       activeQuestionTab === 'mcq'
+//         ? 'mcqIds'
+//         : activeQuestionTab === 'coding'
+//         ? 'codingIds'
+//         : 'assignmentIds';
 
-    if (isSelected(question._id)) return;
+//     if (isSelected(question._id)) return;
 
-    await addQuestionToSet(activeQuestionTab, testId!, {
-      question_id: question._id,
-      title: 'Selected Question'
-    });
+//     await addQuestionToSet(activeQuestionTab, testId!, {
+//       question_id: question._id,
+//       title: 'Selected Question'
+//     });
 
-    setFormData((prev) => ({
+//     setFormData((prev) => ({
+//       ...prev,
+//       questionRefs: {
+//         ...prev.questionRefs!,
+//         [key]: [
+//           ...((prev.questionRefs?.[key] as string[]) || []),
+//           question._id
+//         ]
+//       }
+//     }));
+//   } catch (error) {
+//     console.error('Error adding question:', error);
+//   }
+// };
+
+// const handleRemoveQuestion = async (questionId: string) => {
+//   try {
+//     const key =
+//       activeQuestionTab === 'mcq'
+//         ? 'mcqIds'
+//         : activeQuestionTab === 'coding'
+//         ? 'codingIds'
+//         : 'assignmentIds';
+
+//     await removeQuestionFromSet(
+//       activeQuestionTab,
+//       testId!,
+//       questionId
+//     );
+
+//     setFormData((prev) => ({
+//       ...prev,
+//       questionRefs: {
+//         ...prev.questionRefs!,
+//         [key]: ((prev.questionRefs?.[key] as string[]) || []).filter(
+//           (id) => id !== questionId
+//         )
+//       }
+//     }));
+//   } catch (error) {
+//     console.error('Error removing question:', error);
+//   }
+// };
+const toggleQuestionSelection = (setId: string, questionId: string) => {
+  setSelectedQuestions((prev) => {
+    const existing = prev[setId] || [];
+
+    const updated = existing.includes(questionId)
+      ? existing.filter((id) => id !== questionId)
+      : [...existing, questionId];
+
+    return {
       ...prev,
-      questionRefs: {
-        ...prev.questionRefs!,
-        [key]: [
-          ...((prev.questionRefs?.[key] as string[]) || []),
-          question._id
-        ]
-      }
-    }));
-  } catch (error) {
-    console.error('Error adding question:', error);
-  }
+      [setId]: updated
+    };
+  });
 };
 
-const handleRemoveQuestion = async (questionId: string) => {
-  try {
-    const key =
-      activeQuestionTab === 'mcq'
-        ? 'mcqIds'
-        : activeQuestionTab === 'coding'
-        ? 'codingIds'
-        : 'assignmentIds';
 
-    await removeQuestionFromSet(
-      activeQuestionTab,
-      testId!,
-      questionId
-    );
 
-    setFormData((prev) => ({
-      ...prev,
-      questionRefs: {
-        ...prev.questionRefs!,
-        [key]: ((prev.questionRefs?.[key] as string[]) || []).filter(
-          (id) => id !== questionId
-        )
-      }
-    }));
-  } catch (error) {
-    console.error('Error removing question:', error);
-  }
-};
+// const isSelected = (questionId: string) => {
+//   const key =
+//     activeQuestionTab === 'mcq'
+//       ? 'mcqIds'
+//       : activeQuestionTab === 'coding'
+//       ? 'codingIds'
+//       : 'assignmentIds';
 
-const isSelected = (questionId: string) => {
-  const key =
-    activeQuestionTab === 'mcq'
-      ? 'mcqIds'
-      : activeQuestionTab === 'coding'
-      ? 'codingIds'
-      : 'assignmentIds';
-
-  return ((formData.questionRefs?.[key] as string[]) || []).includes(questionId);
-};
+//   return ((formData.questionRefs?.[key] as string[]) || []).includes(questionId);
+// };
 
   const handleSubmit = async () => {
     try {
       setSaving(true);
-      await updateTest(testId!, formData);
+      const mcqIds: string[] = [];
+const codingIds: string[] = [];
+const assignmentIds: string[] = [];
+
+(['mcq', 'coding', 'assignment'] as const).forEach((type) => {
+  questionBankMap[type].forEach((set) => {
+    const selected = selectedQuestions[set._id] || [];
+
+    if (type === 'mcq') mcqIds.push(...selected);
+    else if (type === 'coding') codingIds.push(...selected);
+    else assignmentIds.push(...selected);
+  });
+});
+
+const updatedData = {
+  ...formData,
+  questionRefs: {
+    mcqIds,
+    codingIds,
+    assignmentIds
+  }
+};
+
+await updateTest(testId!, updatedData); 
       navigate('/faculty-dashboard/assessment');
     } catch (error) {
       console.error('Error updating test:', error);
@@ -468,66 +638,89 @@ const isSelected = (questionId: string) => {
       <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6 space-y-4">
   <h2 className="text-xl font-semibold text-gray-100">Question Builder</h2>
 
-  <div className="flex gap-2">
-    {(['mcq', 'coding', 'assignment'] as const).map((tab) => (
-      <button
-        key={tab}
-        onClick={() => setActiveQuestionTab(tab)}
-        className={`px-4 py-2 rounded-lg transition-colors ${
-          activeQuestionTab === tab
-            ? 'bg-blue-600 text-white'
-            : 'bg-neutral-700 text-gray-300'
-        }`}
-      >
-        {tab.toUpperCase()}
-      </button>
-    ))}
-  </div>
+{/* Tabs */}
+<div className="flex gap-2">
+  {(['mcq', 'coding', 'assignment'] as const).map((tab) => (
+    <button
+      key={tab}
+      onClick={() => setActiveQuestionTab(tab)}
+      className={`px-4 py-2 rounded-lg ${
+        activeQuestionTab === tab
+          ? 'bg-blue-600 text-white'
+          : 'bg-neutral-700 text-gray-300'
+      }`}
+    >
+      {tab.toUpperCase()}
+    </button>
+  ))}
+</div>
 
- <div className="space-y-3 max-h-80 overflow-y-auto">
-  {questionBank.length === 0 ? (
+{/* Search + Filter */}
+<div className="flex gap-2 mb-4">
+  <input
+    type="text"
+    placeholder="Search questions..."
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    className="px-3 py-2 bg-neutral-700 text-white rounded-lg"
+  />
+
+  <select
+    value={subjectFilter}
+    onChange={(e) => setSubjectFilter(e.target.value)}
+    className="px-3 py-2 bg-neutral-700 text-white rounded-lg min-w-[180px]"
+  >
+    <option value="">All Subjects</option>
+    {subjects.map((subj) => (
+      <option key={subj} value={subj}>
+        {subj}
+      </option>
+    ))}
+  </select>
+</div>
+
+<div className="space-y-4 max-h-96 overflow-y-auto">
+  
+  {questionBankMap[activeQuestionTab].length === 0 ? (
     <p className="text-gray-400">No questions available</p>
   ) : (
-    questionBank.map((set) => (
+    questionBankMap[activeQuestionTab].map((set) => (
       <div
         key={set._id}
         className="bg-neutral-900 border border-neutral-700 rounded-lg p-4"
       >
-        <p className="text-gray-300 font-semibold mb-3">
+        <h3 className="text-gray-300 font-semibold mb-3">
           Test ID: {set.test_id}
-        </p>
+        </h3>
 
         <div className="space-y-2">
-          {set.questions.map((q, index) => {
-            const questionId = q.question_id || q._id || '';
+  {set.questions?.map((q, index) => {
+    const qid = q.question_id || q._id || '';
 
-            return (
-              <label
-                key={questionId}
-                className="flex items-center gap-3 text-gray-200"
-              >
-                <input
-                  type="checkbox"
-                  checked={isSelected(questionId)}
-                  onChange={() =>
-                    isSelected(questionId)
-                      ? handleRemoveQuestion(questionId)
-                      : handleAddQuestion({
-                          _id: questionId,
-                          test_id: set.test_id,
-                          subject_id: set.subject_id,
-                          questions: []
-                        })
-                  }
-                  className="w-4 h-4"
-                />
-                <span>
-                  Q{index + 1}. {q.question_text}
-                </span>
-              </label>
-            );
-          })}
-        </div>
+    const checked =
+      selectedQuestions[set._id]?.includes(qid) || false;
+
+    return (
+      <label
+        key={qid}
+        className="flex items-center gap-3 text-gray-300"
+      >
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={() =>
+            toggleQuestionSelection(set._id, qid)
+          }
+          className="w-4 h-4 accent-blue-600"
+        />
+
+        <span>
+          Q{index + 1}. {q.question_text}
+        </span>
+      </label>
+    );
+  })}
+</div>
       </div>
     ))
   )}

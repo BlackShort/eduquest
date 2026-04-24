@@ -118,9 +118,17 @@ export const getAllCoding = async (req, res) => {
     }
 
     // ✅ Subject filter (ADD THIS)
-    if (subjectId && subjectId.trim() !== "") {
-      filter.subject_id = { $regex: subjectId, $options: "i" };
-    }
+    // if (subjectId && subjectId.trim() !== "") {
+    //   filter.subject_id = { $regex: subjectId, $options: "i" };
+    // }
+
+    // ✅ Subject filter
+if (subjectId && subjectId.trim() !== "") {
+  filter.subject_id = {
+    $regex: subjectId.trim(),
+    $options: "i"
+  };
+}
 
     // ✅ Search
     if (search && search.trim() !== "") {
