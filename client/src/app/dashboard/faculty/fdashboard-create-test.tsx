@@ -19,9 +19,11 @@ export default function CreateTestPage() {
   const navigate = useNavigate();
 
   const [subjects, setSubjects] = useState<string[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
+  const [selectedQuestions, setSelectedQuestions] = useState<Record<string, string[]>>({});
 
   const [loading, setLoading] = useState(false);
 type QuestionItem = {
@@ -50,7 +52,7 @@ const [questionBankMap, setQuestionBankMap] = useState<{
   coding: [],
   assignment: []
 });
-const [selectedQuestions, setSelectedQuestions] = useState<Record<string, string[]>>({});
+// const [selectedQuestions, setSelectedQuestions] = useState<Record<string, string[]>>({});
 const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [formData, setFormData] = useState<Partial<Test>>({
     title: '',
@@ -157,9 +159,8 @@ uniqueSubjects.sort();
 setSubjects(uniqueSubjects);
 
 // optional: sort for better UX
-uniqueSubjects.sort();
-
-setSubjects(uniqueSubjects);
+// uniqueSubjects.sort();
+// setSubjects(uniqueSubjects);
 
     // ⚠️ Keep your selection logic intact
     
@@ -179,6 +180,8 @@ useEffect(() => {
 
   return () => clearTimeout(timer);
 }, [searchQuery]);
+
+
 
 const handleSubmit = async (publishNow = false) => {
   try {
@@ -202,23 +205,27 @@ const handleSubmit = async (publishNow = false) => {
 //     assignmentIds.push(...selected);
 //   }
 // });
-const mcqIds: string[] = [];
-const codingIds: string[] = [];
-const assignmentIds: string[] = [];
+const rawMcqIds: string[] = [];
+const rawCodingIds: string[] = [];
+const rawAssignmentIds: string[] = [];
 
 (['mcq', 'coding', 'assignment'] as const).forEach((type) => {
   questionBankMap[type].forEach((set) => {
     const selected = selectedQuestions[set._id] || [];
 
     if (type === 'mcq') {
-      mcqIds.push(...selected);
+      rawMcqIds.push(...selected);
     } else if (type === 'coding') {
-      codingIds.push(...selected);
+      rawCodingIds.push(...selected);
     } else {
-      assignmentIds.push(...selected);
+      rawAssignmentIds.push(...selected);
     }
   });
 });
+
+const mcqIds = Array.from(new Set(rawMcqIds));
+const codingIds = Array.from(new Set(rawCodingIds));
+const assignmentIds = Array.from(new Set(rawAssignmentIds));
 
     const dataToSubmit = {
       ...formData,
@@ -242,6 +249,15 @@ const assignmentIds: string[] = [];
   assignmentIds
 });
 
+if (
+  mcqIds.length === 0 &&
+  codingIds.length === 0 &&
+  assignmentIds.length === 0
+) {
+  alert("Please select at least one question");
+  return;
+}
+
     await createTest(dataToSubmit);
     navigate('/faculty-dashboard/assessment');
   } catch (error) {
@@ -252,10 +268,36 @@ const assignmentIds: string[] = [];
   }
 };
 
-const toggleQuestionSelection = (
-  setId: string,
-  questionId: string
-) => {
+const buildPreviewData = () => {
+  type QuestionPreview = {
+  question_text?: string;
+  title?: string;
+};
+
+const result = {
+  mcq: [] as QuestionPreview[],
+  coding: [] as QuestionPreview[],
+  assignment: [] as QuestionPreview[]
+};
+
+  (['mcq', 'coding', 'assignment'] as const).forEach((type) => {
+    questionBankMap[type].forEach((set) => {
+      const selected = selectedQuestions[set._id] || [];
+
+      set.questions.forEach((q) => {
+        const qid = q.question_id || q._id || '';
+
+        if (selected.includes(qid)) {
+          result[type].push(q);
+        }
+      });
+    });
+  });
+
+  return result;
+};
+
+const toggleQuestionSelection = (setId: string, questionId: string) => {
   setSelectedQuestions((prev) => {
     const existing = prev[setId] || [];
 
@@ -269,6 +311,29 @@ const toggleQuestionSelection = (
     };
   });
 };
+
+const getSelectedCount = (type: 'mcq' | 'coding' | 'assignment') => {
+  const sets = questionBankMap[type] || [];
+
+  let count = 0;
+
+  sets.forEach((set) => {
+    const selected = selectedQuestions[set._id] || [];
+    count += selected.length;
+  });
+
+  return count;
+};
+
+const getTotalSelectedCount = () => {
+  return Object.values(selectedQuestions)
+    .flat()
+    .length;
+};
+
+const previewData = buildPreviewData();
+
+
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
@@ -526,22 +591,22 @@ const toggleQuestionSelection = (
 
       <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6 space-y-4">
   <h2 className="text-xl font-semibold text-gray-100">Question Builder</h2>
+  
 
   <div className="flex gap-2">
     {(['mcq', 'coding', 'assignment'] as const).map((tab) => (
-      <button
-        key={tab}
-        type="button"
-        onClick={() => setActiveQuestionTab(tab)}
-        className={`px-4 py-2 rounded-lg ${
-          activeQuestionTab === tab
-            ? 'bg-blue-600 text-white'
-            : 'bg-neutral-700 text-gray-300'
-        }`}
-      >
-        {tab.toUpperCase()}
-      </button>
-    ))}
+  <button
+    key={tab}
+    onClick={() => setActiveQuestionTab(tab)}
+    className={`px-4 py-2 rounded-lg ${
+      activeQuestionTab === tab
+        ? 'bg-blue-600 text-white'
+        : 'bg-neutral-700 text-gray-300'
+    }`}
+  >
+    {tab.toUpperCase()} ({getSelectedCount(tab)})
+  </button>
+))}
   </div>
 
   <div className="flex gap-2 mb-4">
@@ -568,6 +633,35 @@ const toggleQuestionSelection = (
 </select>
 </div>
 
+{/* ✅ ADD THIS BLOCK HERE */}
+<div className="flex justify-between items-center mb-2">
+  <span className="text-sm text-gray-400">
+    Selected: {getSelectedCount(activeQuestionTab)}
+  </span>
+
+  <span className="text-sm text-gray-400">
+  Total Selected: {getTotalSelectedCount()}
+</span>
+
+  <button
+    onClick={() => {
+      const updated = { ...selectedQuestions };
+
+      (questionBankMap[activeQuestionTab] || []).forEach((set) => {
+        updated[set._id] = [];
+      });
+
+      setSelectedQuestions(updated);
+    }}
+    className="text-sm text-red-400 hover:text-red-300"
+  >
+    Clear Selection
+  </button>
+</div>
+
+{/* 👇 YOUR EXISTING LIST STARTS */}
+{/* <div className="space-y-4 max-h-96 overflow-y-auto"></div> */}
+
  <div className="space-y-4 max-h-96 overflow-y-auto">
   {questionBankMap[activeQuestionTab].length === 0 ? (
     <p className="text-gray-400">No question sets available</p>
@@ -585,7 +679,7 @@ const toggleQuestionSelection = (
           {set.questions?.map((q, index) => {
             const qid = q.question_id || q._id || '';
             const checked =
-              selectedQuestions[set._id]?.includes(qid);
+  selectedQuestions[set._id]?.includes(qid) || false;
 
             return (
               <label
@@ -613,6 +707,62 @@ const toggleQuestionSelection = (
   )}
 </div>
 </div>
+{showPreview && (
+  <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+    <div className="bg-neutral-900 p-6 rounded-lg w-[800px] max-h-[90vh] overflow-y-auto">
+
+      <h2 className="text-xl font-semibold mb-4 text-white">
+        Test Preview
+      </h2>
+
+      {/* Instructions */}
+      <div className="mb-4">
+        <h3 className="text-gray-300 font-medium">Instructions</h3>
+        <p className="text-gray-400">{formData.instructions}</p>
+      </div>
+
+      {/* Questions */}
+      {(['mcq', 'coding', 'assignment'] as const).map((type) => {
+        const questions = previewData[type];
+
+        if (questions.length === 0) return null;
+
+        return (
+          <div key={type} className="mb-4">
+            <h3 className="text-blue-400 font-semibold mb-2">
+              {type.toUpperCase()} ({questions.length})
+            </h3>
+
+            {questions.map((q, i) => (
+              <p key={i} className="text-gray-300 text-sm mb-1">
+                Q{i + 1}. {q.question_text || q.title}
+              </p>
+            ))}
+          </div>
+        );
+      })}
+
+      {/* ACTIONS */}
+      <div className="flex justify-end gap-3 mt-6">
+        <button
+          onClick={() => setShowPreview(false)}
+          className="px-4 py-2 bg-gray-700 text-white rounded"
+        >
+          Back
+        </button>
+
+        <button
+          onClick={() => handleSubmit(true)}
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          Confirm & Publish
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
 
       {/* Action Buttons */}
       <div className="flex items-center justify-end gap-4 pb-6">
@@ -625,14 +775,15 @@ const toggleQuestionSelection = (
         </button>
         <button
           onClick={() => handleSubmit(false)}
-          disabled={loading || !formData.title || !formData.subjectId}
+          disabled={loading || !formData.title || !formData.subjectId || getTotalSelectedCount() === 0}
+
           className="flex items-center gap-2 px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:bg-gray-400 transition-colors"
         >
           <Save className="w-4 h-4" />
           Save as Draft
         </button>
         <button
-          onClick={() => handleSubmit(true)}
+          onClick={() => setShowPreview(true)}
           disabled={loading || !formData.title || !formData.subjectId}
           className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
         >
@@ -641,7 +792,12 @@ const toggleQuestionSelection = (
         </button>
       </div>
     </div>
+
+
+
   );
+
+  
 }
 
 

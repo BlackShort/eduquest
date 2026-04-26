@@ -21,14 +21,20 @@ import type { Test } from '@/types/types';
 
 
 
+
 export default function EditTestPage() {
   const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
 
-  const [searchQuery, setSearchQuery] = useState('');
+  
+
+const [searchQuery, setSearchQuery] = useState('');
 const [subjectFilter, setSubjectFilter] = useState('');
 const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+// const [isInitialized, setIsInitialized] = useState(false);
+
 
 const [subjects, setSubjects] = useState<string[]>([]);
 
@@ -105,22 +111,22 @@ const initialSelected: Record<string, string[]> = {};
   });
 });
 
-setSelectedQuestions((prev) => {
-  const updated = { ...prev };
+// setSelectedQuestions((prev) => {
+//   const updated = { ...prev };
 
-  Object.entries(initialSelected).forEach(([setId, ids]) => {
-    if (!updated[setId]) {
-      updated[setId] = ids;
-    } else {
-      // merge without duplicates
-      updated[setId] = Array.from(
-        new Set([...updated[setId], ...ids])
-      );
-    }
-  });
+//   Object.entries(initialSelected).forEach(([setId, ids]) => {
+//     if (!updated[setId]) {
+//       updated[setId] = ids;
+//     } else {
+//       // merge without duplicates
+//       updated[setId] = Array.from(
+//         new Set([...updated[setId], ...ids])
+//       );
+//     }
+//   });
 
-  return updated;
-});
+//   return updated;
+// });
 
     } catch (error) {
       console.error('Error fetching test:', error);
@@ -175,51 +181,55 @@ useEffect(() => {
   fetchQuestionBank(activeQuestionTab);
 }, [activeQuestionTab, debouncedSearch, subjectFilter, fetchQuestionBank]);
 
+
 useEffect(() => {
   if (!formData?.questionRefs) return;
 
   const initialSelected: Record<string, string[]> = {};
 
+  const allSets = [
+    ...questionBankMap.mcq,
+    ...questionBankMap.coding,
+    ...questionBankMap.assignment
+  ];
+
+  // wait until some data exists
+  if (allSets.length === 0) return;
+
   const addToSelection = (ids: string[]) => {
     ids.forEach((id) => {
-      // find which set this question belongs to
-      Object.values(questionBankMap).forEach((sets) => {
-        sets.forEach((set) => {
-          if (
-            set.questions?.some(
-              (q) => (q.question_id || q._id) === id
-            )
-          ) {
-            if (!initialSelected[set._id]) {
-              initialSelected[set._id] = [];
-            }
-            initialSelected[set._id].push(id);
+      allSets.forEach((set) => {
+        if (
+          set.questions?.some(
+            (q) => (q.question_id || q._id) === id
+          )
+        ) {
+          if (!initialSelected[set._id]) {
+            initialSelected[set._id] = [];
           }
-        });
+          initialSelected[set._id].push(id);
+        }
       });
     });
   };
 
-  addToSelection(formData.questionRefs.mcqIds || []);
-  addToSelection(formData.questionRefs.codingIds || []);
-  addToSelection(formData.questionRefs.assignmentIds || []);
+  addToSelection(formData.questionRefs?.mcqIds || []);
+  addToSelection(formData.questionRefs?.codingIds || []);
+  addToSelection(formData.questionRefs?.assignmentIds || []);
 
-  // setSelectedQuestions(initialSelected);
+  // ✅ MERGE instead of overwrite
   setSelectedQuestions((prev) => {
-  const updated = { ...prev };
+    const updated = { ...prev };
 
-  Object.entries(initialSelected).forEach(([setId, ids]) => {
-    if (!updated[setId]) {
-      updated[setId] = ids;
-    } else {
+    Object.entries(initialSelected).forEach(([setId, ids]) => {
       updated[setId] = Array.from(
-        new Set([...updated[setId], ...ids])
+        new Set([...(updated[setId] || []), ...ids])
       );
-    }
+    });
+
+    return updated;
   });
 
-  return updated;
-});
 }, [formData, questionBankMap]);
 
 useEffect(() => {
@@ -313,9 +323,15 @@ const toggleQuestionSelection = (setId: string, questionId: string) => {
   setSelectedQuestions((prev) => {
     const existing = prev[setId] || [];
 
-    const updated = existing.includes(questionId)
-      ? existing.filter((id) => id !== questionId)
-      : [...existing, questionId];
+    let updated;
+
+    if (existing.includes(questionId)) {
+      // remove
+      updated = existing.filter((id) => id !== questionId);
+    } else {
+      // add (NO DUPLICATE)
+      updated = [...existing, questionId];
+    }
 
     return {
       ...prev,
@@ -340,19 +356,35 @@ const toggleQuestionSelection = (setId: string, questionId: string) => {
   const handleSubmit = async () => {
     try {
       setSaving(true);
-      const mcqIds: string[] = [];
-const codingIds: string[] = [];
-const assignmentIds: string[] = [];
+      const rawMcqIds: string[] = [];
+const rawCodingIds: string[] = [];
+const rawAssignmentIds: string[] = [];
 
 (['mcq', 'coding', 'assignment'] as const).forEach((type) => {
   questionBankMap[type].forEach((set) => {
     const selected = selectedQuestions[set._id] || [];
 
-    if (type === 'mcq') mcqIds.push(...selected);
-    else if (type === 'coding') codingIds.push(...selected);
-    else assignmentIds.push(...selected);
+    if (type === 'mcq') {
+      rawMcqIds.push(...selected);
+    } else if (type === 'coding') {
+      rawCodingIds.push(...selected);
+    } else {
+      rawAssignmentIds.push(...selected);
+    }
   });
 });
+
+const mcqIds = Array.from(new Set(rawMcqIds));
+const codingIds = Array.from(new Set(rawCodingIds));
+const assignmentIds = Array.from(new Set(rawAssignmentIds));
+const totalSelected =
+  mcqIds.length + codingIds.length + assignmentIds.length;
+
+if (totalSelected === 0) {
+  alert("Please select at least one question.");
+  setSaving(false);
+  return;
+}
 
 const updatedData = {
   ...formData,
@@ -373,6 +405,15 @@ await updateTest(testId!, updatedData);
     }
   };
 
+//   const totalSelected =
+//   mcqIds.length + codingIds.length + assignmentIds.length;
+
+// if (totalSelected === 0) {
+//   alert("Please select at least one question.");
+//   setLoading(false);
+//   return;
+// }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -380,6 +421,54 @@ await updateTest(testId!, updatedData);
       </div>
     );
   }
+      const getSelectedCount = (type: 'mcq' | 'coding' | 'assignment') => {
+  const sets = questionBankMap[type] || [];
+
+  let count = 0;
+
+  sets.forEach((set) => {
+    const selected = selectedQuestions[set._id] || [];
+    count += selected.length;
+  });
+
+  return count;
+};
+
+const getTotalSelectedCount = () => {
+  const allIds = Object.values(selectedQuestions).flat();
+  return new Set(allIds).size;
+};
+
+const buildPreviewData = () => {
+ type QuestionPreview = {
+  question_text?: string;
+  title?: string;
+};
+
+const result = {
+  mcq: [] as QuestionPreview[],
+  coding: [] as QuestionPreview[],
+  assignment: [] as QuestionPreview[]
+};
+
+  (['mcq', 'coding', 'assignment'] as const).forEach((type) => {
+    questionBankMap[type].forEach((set) => {
+      const selected = selectedQuestions[set._id] || [];
+
+      set.questions.forEach((q) => {
+        const qid = q.question_id || q._id || '';
+
+        if (selected.includes(qid)) {
+          result[type].push(q);
+        }
+      });
+    });
+  });
+
+  return result;
+};
+
+const previewData = buildPreviewData();
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
@@ -650,7 +739,7 @@ await updateTest(testId!, updatedData);
           : 'bg-neutral-700 text-gray-300'
       }`}
     >
-      {tab.toUpperCase()}
+      {tab.toUpperCase()} ({getSelectedCount(tab)})
     </button>
   ))}
 </div>
@@ -679,6 +768,31 @@ await updateTest(testId!, updatedData);
   </select>
 </div>
 
+<div className="flex justify-between items-center mb-2">
+  <span className="text-sm text-gray-400">
+    Selected: {getSelectedCount(activeQuestionTab)}
+  </span>
+
+  <span className="text-sm text-gray-400">
+  Total Selected: {getTotalSelectedCount()}
+</span>
+
+  <button
+    onClick={() => {
+      const updated = { ...selectedQuestions };
+
+      (questionBankMap[activeQuestionTab] || []).forEach((set) => {
+        updated[set._id] = [];
+      });
+
+      setSelectedQuestions(updated);
+    }}
+    className="text-sm text-red-400 hover:text-red-300"
+  >
+    Clear Selection
+  </button>
+</div>
+
 <div className="space-y-4 max-h-96 overflow-y-auto">
   
   {questionBankMap[activeQuestionTab].length === 0 ? (
@@ -699,6 +813,8 @@ await updateTest(testId!, updatedData);
 
     const checked =
       selectedQuestions[set._id]?.includes(qid) || false;
+
+
 
     return (
       <label
@@ -727,6 +843,64 @@ await updateTest(testId!, updatedData);
 </div>
 </div>
 
+{showPreview && (
+  <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+    <div className="bg-neutral-900 p-6 rounded-lg w-[800px] max-h-[90vh] overflow-y-auto">
+
+      <h2 className="text-xl font-semibold mb-4 text-white">
+        Test Preview
+      </h2>
+
+      {/* Instructions */}
+      <div className="mb-4">
+        <h3 className="text-gray-300 font-medium">Instructions</h3>
+        <p className="text-gray-400">{formData.instructions}</p>
+      </div>
+
+      {/* Questions */}
+      {(['mcq', 'coding', 'assignment'] as const).map((type) => {
+        const questions = previewData[type];
+
+        if (questions.length === 0) return null;
+
+        return (
+          <div key={type} className="mb-4">
+            <h3 className="text-blue-400 font-semibold mb-2">
+              {type.toUpperCase()} ({questions.length})
+            </h3>
+
+            {questions.map((q, i) => (
+              <p key={i} className="text-gray-300 text-sm mb-1">
+                Q{i + 1}. {q.question_text || q.title}
+              </p>
+            ))}
+          </div>
+        );
+      })}
+
+      {/* ACTIONS */}
+      <div className="flex justify-end gap-3 mt-6">
+        <button
+          onClick={() => setShowPreview(false)}
+          className="px-4 py-2 bg-gray-700 text-white rounded"
+        >
+          Back
+        </button>
+
+        <button
+          onClick={() => {
+  setShowPreview(false);
+  handleSubmit();
+}}
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          Confirm & Publish
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
       {/* Action Buttons */}
       <div className="flex items-center justify-end gap-4 pb-6">
         <button
@@ -737,8 +911,8 @@ await updateTest(testId!, updatedData);
           Cancel
         </button>
         <button
-          onClick={handleSubmit}
-          disabled={saving || !formData.title || !formData.subjectId}
+          onClick={() => setShowPreview(true)}
+          disabled={saving || !formData.title || !formData.subjectId || getTotalSelectedCount() === 0}
           className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
         >
           {saving ? (
