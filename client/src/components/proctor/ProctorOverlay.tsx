@@ -189,7 +189,7 @@ export default function ProctorOverlay({
           readyForIdentity &&
           identityEnrolledRef.current &&
           verifyIdentityFromVideo &&
-          shouldRunIdentityVerification?.(5 * 60 * 1000)
+          shouldRunIdentityVerification?.(5 * 1000)
         ) {
           try {
             const verifyResult = await verifyIdentityFromVideo(video);

@@ -9,16 +9,15 @@ import { ContestLayout } from "@/layouts/contest-layout";
 import { AssessmentLayout } from "@/layouts/assessment-layout";
 import { AssessmentView } from "@/app/assessment/assessment-view";
 
-
 export {
-    RootLayout,
-    SiteLayout,
-    DashboardLayout,
-    FDashboardLayout,
-    EditorLayout,
-    ProblemListLayout,
-    AssignmentLayout,
-    ContestLayout,
-    AssessmentLayout,
-    AssessmentView
-}
+  RootLayout,
+  SiteLayout,
+  DashboardLayout,
+  FDashboardLayout,
+  EditorLayout,
+  ProblemListLayout,
+  AssignmentLayout,
+  ContestLayout,
+  AssessmentLayout,
+  AssessmentView,
+};

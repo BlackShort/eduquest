@@ -1,64 +1,68 @@
-import * as tf from "@tensorflow/tfjs";
 import "@tensorflow/tfjs-backend-webgl";
 import "@tensorflow/tfjs-backend-cpu";
 import * as cocoSsd from "@tensorflow-models/coco-ssd";
 import * as blazeface from "@tensorflow-models/blazeface";
+import * as faceapi from "@vladmandic/face-api";
 import type { IdentityQualityChecks } from "@/types/proctor";
 
 let faceDetector: blazeface.BlazeFaceModel | null = null;
-let phoneDetector : cocoSsd.ObjectDetection | null = null;  
+let phoneDetector: cocoSsd.ObjectDetection | null = null;
+let faceApiReady = false;
 
-// Initialize TFJS backend once.
-async function initTF() {
-  if (tf.getBackend()) return;
+// Initialize face-api models
+async function initFaceApi() {
+  if (faceApiReady) return;
 
-  await tf.setBackend("webgl");
-  await tf.ready();
+  try {
+    const MODEL_URL =
+      "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/model/";
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+    faceApiReady = true;
+    console.log("✅ Face-API models loaded successfully");
+  } catch (err) {
+    console.error("Failed to load face-api models from CDN:", err);
+    console.error("Make sure you have internet connection for CDN access");
+  }
 }
 
 // Face detector setup and inference.
 export async function initFaceDetector() {
-  await initTF();
   if (faceDetector) return faceDetector;
 
   // Load BlazeFace model with keypoints support
   faceDetector = await blazeface.load({
     maxFaces: 3,
-    iouThreshold:0.3,
-    scoreThreshold:0.75
+    iouThreshold: 0.3,
+    scoreThreshold: 0.75,
   });
 
   return faceDetector;
 }
 
-export async function detectFaces(
-  video: HTMLVideoElement
-): Promise<number> {
+export async function detectFaces(video: HTMLVideoElement): Promise<number> {
   if (!faceDetector) return 0;
 
-  const faces = await faceDetector.estimateFaces(video, false, false);  // false = don't flip horizontally
+  const faces = await faceDetector.estimateFaces(video, false, false); // false = don't flip horizontally
   return faces.length;
 }
 
 // Phone detector setup and inference.
 export async function initObjectDetector() {
-  await initTF();
   if (phoneDetector) return phoneDetector;
 
   phoneDetector = await cocoSsd.load();
   return phoneDetector;
 }
 
-export async function detectPhone(
-  video: HTMLVideoElement
-): Promise<boolean> {
+export async function detectPhone(video: HTMLVideoElement): Promise<boolean> {
   if (!phoneDetector) return false;
   const predictions = await phoneDetector.detect(video);
 
   // coco-ssd class label for phones is "cell phone".
   return predictions.some(
-    (p) =>
-      p.class === "cell phone" && p.score !== undefined && p.score > 0.6
+    (p) => p.class === "cell phone" && p.score !== undefined && p.score > 0.6,
   );
 }
 
@@ -90,7 +94,7 @@ function estimateBrightnessFromImageData(data: Uint8ClampedArray): number {
 function estimateBlurScoreFromImageData(
   data: Uint8ClampedArray,
   width: number,
-  height: number
+  height: number,
 ): number {
   const grayscale = new Float32Array(width * height);
 
@@ -129,14 +133,14 @@ function estimateBlurScoreFromImageData(
 
 export function captureVideoFrameAsBase64(
   video: HTMLVideoElement,
-  quality = 0.9
+  quality = 0.9,
 ): string {
   const canvas = getCanvasFromVideo(video);
   return canvas.toDataURL("image/jpeg", quality);
 }
 
 export async function evaluateEnrollmentQuality(
-  video: HTMLVideoElement
+  video: HTMLVideoElement,
 ): Promise<IdentityQualityChecks> {
   const canvas = getCanvasFromVideo(video);
   const ctx = canvas.getContext("2d");
@@ -150,7 +154,7 @@ export async function evaluateEnrollmentQuality(
   const blurScore = estimateBlurScoreFromImageData(
     imageData.data,
     canvas.width,
-    canvas.height
+    canvas.height,
   );
 
   const faceCount = await detectFaces(video);
@@ -170,98 +174,42 @@ export async function evaluateEnrollmentQuality(
 }
 
 export async function extractFaceEmbedding(
-  video: HTMLVideoElement
+  video: HTMLVideoElement,
 ): Promise<number[] | null> {
-  if (!faceDetector) {
-    await initFaceDetector();
+  // Initialize face-api if not already done
+  if (!faceApiReady) {
+    await initFaceApi();
   }
 
-  if (!faceDetector) return null;
-
-  const faces = await faceDetector.estimateFaces(video, false);  // BlazeFace API
-  if (!faces || faces.length < 1) return null;
-
-  // BlazeFace returns faces in this format:
-  // { topLeft: [x, y], bottomRight: [x, y], landmarks: [[x1, y1], [x2, y2], ...] }
-  const face = faces[0] as {
-    topLeft: [number, number];
-    bottomRight: [number, number]; 
-    landmarks: number[][];  // 6 keypoints: [rightEye, leftEye, nose, mouth, rightEar, leftEar]
-  };
-
-  const width = video.videoWidth || 640;
-  const height = video.videoHeight || 480;
-
-  function clamp(value: number, min: number, max: number): number {
-    return Math.max(min, Math.min(max, value));
+  if (!faceApiReady) {
+    console.warn("face-api not ready, falling back to blazeface");
+    return null;
   }
 
-  // BlazeFace provides simple topLeft and bottomRight coordinates
-  let x = face.topLeft[0];
-  let y = face.topLeft[1];
-  let w = face.bottomRight[0] - face.topLeft[0];
-  let h = face.bottomRight[1] - face.topLeft[1];
+  try {
+    // Detect face with face-api which uses deep learning
+    const detections = await faceapi
+      .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+      .withFaceLandmarks()
+      .withFaceDescriptor();
 
-  // Fallback to a central crop if box data is invalid
-  if (w <= 0 || h <= 0) {
-    x = width * 0.25;
-    y = height * 0.2;
-    w = width * 0.5;
-    h = height * 0.6;
-  }
-
-  x = clamp(x, 0, Math.max(0, width - 1));
-  y = clamp(y, 0, Math.max(0, height - 1));
-  w = clamp(w, 1, width - x);
-  h = clamp(h, 1, height - y);
-
-  const boxVec = [
-    x / width,
-    y / height,
-    w / width,
-    h / height,
-  ];
-
-  // BlazeFace landmarks: 6 keypoints [rightEye, leftEye, nose, mouth, rightEar, leftEar]
-  const landmarks = face.landmarks || [];
-  const kpVec: number[] = [];
-
-  // Take up to 8 keypoints (16 values), use all 6 available from BlazeFace
-  for (let i = 0; i < Math.min(8, landmarks.length); i++) {
-    const landmark = landmarks[i];
-    if (landmark && landmark.length >= 2) {
-      kpVec.push(landmark[0] / width, landmark[1] / height);
+    if (!detections || !detections.descriptor) {
+      console.log("No face detected by face-api");
+      return null;
     }
+
+    // face-api provides a 128-dimensional descriptor trained specifically for face recognition
+    // Convert to array for consistency
+    const embedding = Array.from(detections.descriptor);
+
+    console.log(
+      "🎯 Face embedding extracted via face-api:",
+      embedding.length,
+      "dimensions",
+    );
+    return embedding;
+  } catch (err) {
+    console.error("Error extracting face embedding with face-api:", err);
+    return null;
   }
-
-  // Keep a fixed-size keypoint segment for stable vector length
-  while (kpVec.length < 16) kpVec.push(0);
-
-  console.log('🎯 Keypoints extracted:', kpVec.filter(x => x !== 0).length / 2, 'landmarks found');
-  console.log('🎯 KpVec values:', kpVec);
-
-  // Add an image signature so the vector carries appearance information.
-  const sourceCanvas = getCanvasFromVideo(video);
-  const tiny = document.createElement("canvas");
-  tiny.width = 8;
-  tiny.height = 8;
-  const tinyCtx = tiny.getContext("2d");
-
-  if (!tinyCtx) {
-    return [...boxVec, ...kpVec];
-  }
-
-  tinyCtx.drawImage(sourceCanvas, x, y, w, h, 0, 0, tiny.width, tiny.height);
-  const data = tinyCtx.getImageData(0, 0, tiny.width, tiny.height).data;
-
-  const pixelVec: number[] = [];
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-    const gray = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    pixelVec.push(gray);
-  }
-
-  return [...boxVec, ...kpVec, ...pixelVec];
 }

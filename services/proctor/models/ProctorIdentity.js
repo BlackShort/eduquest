@@ -14,7 +14,7 @@ const proctorIdentitySchema = new mongoose.Schema(
       },
     },
     baselineImageS3Key: { type: String, required: true },
-    thresholdUsed: { type: Number, default: 0.7 },
+    thresholdUsed: { type: Number, default: 0.9 },
   },
   { timestamps: true },
 );

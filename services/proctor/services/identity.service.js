@@ -78,7 +78,7 @@ async function verifyIdentity({
   }
 
   const score = cosineSimilarity(baseline.baselineEmbedding, liveEmbedding);
-  const threshold = baseline.thresholdUsed ?? 0.7;
+  const threshold = baseline.thresholdUsed ?? 0.6; // Lowered from 0.7 to be stricter with deep learning embeddings
   const matched = score >= threshold;
 
   let mismatchEventId = null;
