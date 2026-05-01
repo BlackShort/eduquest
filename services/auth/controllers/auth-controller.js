@@ -3,30 +3,62 @@ import userModel from '../models/user-model.js';
 import sessionModel from '../models/session-model.js';
 import { generateAccessToken, generateRefreshToken, getTokenExpiry, verifyAccessToken } from '../utils/token-utils.js';
 
+const GEHU_EMAIL_REGEX = /^([a-z0-9._%+-]+)\.(\d+)@gehu\.ac\.in$/;
+
+const parseGehuEmail = (email) => {
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const match = normalizedEmail.match(GEHU_EMAIL_REGEX);
+
+    if (!match) {
+        return null;
+    }
+
+    const [, username, studentId] = match;
+    return { normalizedEmail, username, studentId };
+};
+
 /*
  * Register a new user
 */
 export const register = async (req, res) => {
     try {
-        const { username, email, password, role = 'user' } = req.body;
+        const { email, password, role = 'user' } = req.body;
 
         // Validation
-        if (!username || !email || !password) {
+        if (!email || !password) {
             return res.status(400).json({ 
                 success: false, 
-                message: 'Username, email, and password are required' 
+                message: 'Email and password are required' 
             });
         }
 
+        if (password.length < 8) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password must be at least 8 characters long'
+            });
+        }
+
+        const parsedEmail = parseGehuEmail(email);
+
+        if (!parsedEmail) {
+            return res.status(400).json({
+                success: false,
+                message: 'Use GEHU email format: username.studentId@gehu.ac.in'
+            });
+        }
+
+        const { normalizedEmail, username, studentId } = parsedEmail;
+
         // Check if user already exists
         const existingUser = await userModel.findOne({ 
-            $or: [{ email }, { username }] 
+            $or: [{ email: normalizedEmail }, { username }, { studentId }]
         });
 
         if (existingUser) {
             return res.status(409).json({ 
                 success: false, 
-                message: 'User already exists with this email or username' 
+                message: 'User already exists with this email, username, or student ID' 
             });
         }
 
@@ -36,7 +68,8 @@ export const register = async (req, res) => {
         // Create new user
         const newUser = new userModel({
             username,
-            email,
+            studentId,
+            email: normalizedEmail,
             password: hashedPassword,
             role,
             isVerified: false,
@@ -51,6 +84,7 @@ export const register = async (req, res) => {
             user: {
                 id: newUser._id,
                 username: newUser.username,
+                studentId: newUser.studentId,
                 email: newUser.email,
                 role: newUser.role
             }
@@ -82,7 +116,8 @@ export const login = async (req, res) => {
         }
 
         // Find user
-        const user = await userModel.findOne({ email });
+        const normalizedEmail = String(email).trim().toLowerCase();
+        const user = await userModel.findOne({ email: normalizedEmail });
 
         if (!user) {
             return res.status(404).json({ 
@@ -161,6 +196,7 @@ export const login = async (req, res) => {
             user: {
                 id: user._id,
                 username: user.username,
+                studentId: user.studentId,
                 email: user.email,
                 role: user.role,
                 isVerified: user.isVerified,

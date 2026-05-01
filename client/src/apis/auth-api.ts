@@ -8,8 +8,8 @@ export const login = async (email: string, password: string) => {
     return data;
 };
 
-export const register = async (username: string, email: string, password: string) => {
-    const { data } = await authApi.post("/v1/register", { username, email, password });
+export const register = async (email: string, password: string) => {
+    const { data } = await authApi.post("/v1/register", { email, password });
     return data;
 };
 
