@@ -1,13 +1,7 @@
 import { NavLink, Link, useNavigate } from 'react-router';
-import { ChevronRight, LogOut, User, Settings, Bell } from "lucide-react";
+import { ChevronRight, LogOut, User, Settings } from "lucide-react";
 import { useState, useRef, useEffect } from 'react';
 import toast from 'react-hot-toast';
-
-const USER_MENU_ITEMS = [
-    { label: 'Profile', icon: User, path: '/profile' },
-    { label: 'Settings', icon: Settings, path: '/settings' },
-    { label: 'Notifications', icon: Bell, path: '/notifications', hasBadge: true },
-];
 
 import type { Navigation, NavigationItem } from '@/data/sidebar';
 import { useContextAPI } from '@/hooks/useContext';
@@ -23,6 +17,12 @@ export const Sidebar = ({ navigation }: SidebarProps) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+
+    const settingsPath = user?.role === 'faculty' ? '/faculty-dashboard/settings' : '/dashboard/settings';
+
+    const userMenuItems = [
+        { label: 'Settings', icon: Settings, path: settingsPath },
+    ];
 
     const handleLogout = async () => {
         setIsLoggingOut(true);
@@ -136,7 +136,7 @@ export const Sidebar = ({ navigation }: SidebarProps) => {
                         : 'opacity-0 invisible translate-y-2 md:group-hover:opacity-100 md:group-hover:visible md:group-hover:translate-y-0'
                     }`}>
                     <div className="flex flex-col p-1.5 gap-0.5">
-                        {USER_MENU_ITEMS.map((item, index) => (
+                        {userMenuItems.map((item, index) => (
                             <Link
                                 key={index}
                                 to={item.path}
@@ -145,9 +145,6 @@ export const Sidebar = ({ navigation }: SidebarProps) => {
                             >
                                 <div className="relative flex">
                                     <item.icon size={16} className="text-neutral-400" />
-                                    {item.hasBadge && (
-                                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-orange-500 border border-neutral-900"></span>
-                                    )}
                                 </div>
                                 {item.label}
                             </Link>

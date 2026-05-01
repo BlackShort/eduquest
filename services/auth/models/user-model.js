@@ -30,6 +30,14 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    verificationCode: {
+        type: String,
+        default: null
+    },
+    verificationCodeExpiresAt: {
+        type: Date,
+        default: null
+    },
     isActive: {
         type: Boolean,
         default: true

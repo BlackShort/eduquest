@@ -23,6 +23,39 @@ export const verifyToken = async () => {
     return data;
 };
 
+export const getCurrentUser = async () => {
+    const { data } = await authApi.get("/v1/me");
+    return data;
+};
+
+export const updateUsername = async (username: string) => {
+    const { data } = await authApi.patch("/v1/me/username", { username });
+    return data;
+};
+
+export const changePassword = async (
+    currentPassword: string,
+    newPassword: string,
+    confirmPassword: string
+) => {
+    const { data } = await authApi.post("/v1/me/change-password", {
+        currentPassword,
+        newPassword,
+        confirmPassword,
+    });
+    return data;
+};
+
+export const requestEmailVerification = async () => {
+    const { data } = await authApi.post("/v1/me/request-email-verification");
+    return data;
+};
+
+export const verifyEmailCode = async (code: string) => {
+    const { data } = await authApi.post("/v1/me/verify-email", { code });
+    return data;
+};
+
 export const refreshAccessToken = async () => {
     const { data } = await authApi.post("/v1/refresh-token");
     return data;

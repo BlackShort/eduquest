@@ -17,6 +17,8 @@ const parseGehuEmail = (email) => {
     return { normalizedEmail, username, studentId };
 };
 
+const USERNAME_REGEX = /^[a-zA-Z0-9._]{3,30}$/;
+
 /*
  * Register a new user
 */
@@ -336,7 +338,9 @@ export const logout = async (req, res) => {
 */
 export const getCurrentUser = async (req, res) => {
     try {
-        const user = await userModel.findById(req.user.userId).select('-password');
+        const user = await userModel
+            .findById(req.user.userId)
+            .select('-password -verificationCode -verificationCodeExpiresAt');
 
         return res.status(200).json({ 
             success: true, 
@@ -458,6 +462,258 @@ export const verifyUserToken = async (req, res) => {
         return res.status(401).json({ 
             success: false, 
             message: 'Token verification failed' 
+        });
+    }
+};
+
+/*
+ * Update username for current user
+*/
+export const updateUsername = async (req, res) => {
+    try {
+        const username = String(req.body.username || '').trim();
+
+        if (!USERNAME_REGEX.test(username)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Username must be 3-30 characters and can contain letters, numbers, dot, and underscore'
+            });
+        }
+
+        const existingUser = await userModel.findOne({
+            username,
+            _id: { $ne: req.user.userId }
+        });
+
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: 'Username is already taken'
+            });
+        }
+
+        const updatedUser = await userModel
+            .findByIdAndUpdate(
+                req.user.userId,
+                { username },
+                { new: true }
+            )
+            .select('-password -verificationCode -verificationCodeExpiresAt');
+
+        return res.status(200).json({
+            success: true,
+            message: 'Username updated successfully',
+            user: updatedUser
+        });
+    } catch (error) {
+        console.error('Update username error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to update username',
+            error: error.message
+        });
+    }
+};
+
+/*
+ * Change password for current user
+*/
+export const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword, confirmPassword } = req.body;
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Current password, new password, and confirm password are required'
+            });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({
+                success: false,
+                message: 'New password must be at least 8 characters long'
+            });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'New password and confirm password do not match'
+            });
+        }
+
+        const user = await userModel.findById(req.user.userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+
+        if (!isCurrentPasswordValid) {
+            return res.status(401).json({
+                success: false,
+                message: 'Current password is incorrect'
+            });
+        }
+
+        const isSameAsCurrent = await bcrypt.compare(newPassword, user.password);
+        if (isSameAsCurrent) {
+            return res.status(400).json({
+                success: false,
+                message: 'New password must be different from current password'
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await userModel.updateOne(
+            { _id: req.user.userId },
+            { password: hashedPassword }
+        );
+
+        await sessionModel.updateMany(
+            { userId: req.user.userId, _id: { $ne: req.user.sessionId } },
+            { isActive: false }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: 'Password updated successfully'
+        });
+    } catch (error) {
+        console.error('Change password error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to change password',
+            error: error.message
+        });
+    }
+};
+
+/*
+ * Request email verification code for current user
+*/
+export const requestEmailVerification = async (req, res) => {
+    try {
+        const user = await userModel.findById(req.user.userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        if (user.isVerified) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email is already verified'
+            });
+        }
+
+        const verificationCode = String(Math.floor(100000 + Math.random() * 900000));
+        const verificationCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+        await userModel.updateOne(
+            { _id: req.user.userId },
+            { verificationCode, verificationCodeExpiresAt }
+        );
+
+        const responsePayload = {
+            success: true,
+            message: 'Verification code generated. Use it to verify your email within 10 minutes.'
+        };
+
+        if (process.env.NODE_ENV !== 'production') {
+            responsePayload.code = verificationCode;
+        }
+
+        return res.status(200).json(responsePayload);
+    } catch (error) {
+        console.error('Request email verification error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to request email verification',
+            error: error.message
+        });
+    }
+};
+
+/*
+ * Verify email with code for current user
+*/
+export const verifyEmailCode = async (req, res) => {
+    try {
+        const code = String(req.body.code || '').trim();
+
+        if (!/^\d{6}$/.test(code)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Verification code must be a 6-digit number'
+            });
+        }
+
+        const user = await userModel.findById(req.user.userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        if (user.isVerified) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email is already verified'
+            });
+        }
+
+        if (!user.verificationCode || !user.verificationCodeExpiresAt) {
+            return res.status(400).json({
+                success: false,
+                message: 'No active verification code. Request a new one.'
+            });
+        }
+
+        if (new Date(user.verificationCodeExpiresAt).getTime() < Date.now()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Verification code has expired. Request a new one.'
+            });
+        }
+
+        if (user.verificationCode !== code) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid verification code'
+            });
+        }
+
+        await userModel.updateOne(
+            { _id: req.user.userId },
+            {
+                isVerified: true,
+                verificationCode: null,
+                verificationCodeExpiresAt: null
+            }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: 'Email verified successfully'
+        });
+    } catch (error) {
+        console.error('Verify email code error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to verify email',
+            error: error.message
         });
     }
 };
