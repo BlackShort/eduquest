@@ -757,7 +757,7 @@ const previewData = buildPreviewData();
   <select
     value={subjectFilter}
     onChange={(e) => setSubjectFilter(e.target.value)}
-    className="px-3 py-2 bg-neutral-700 text-white rounded-lg min-w-[180px]"
+    className="px-3 py-2 bg-neutral-700 text-white rounded-lg min-w-45"
   >
     <option value="">All Subjects</option>
     {subjects.map((subj) => (
@@ -845,7 +845,7 @@ const previewData = buildPreviewData();
 
 {showPreview && (
   <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-    <div className="bg-neutral-900 p-6 rounded-lg w-[800px] max-h-[90vh] overflow-y-auto">
+    <div className="bg-neutral-900 p-6 rounded-lg w-200 max-h-[90vh] overflow-y-auto">
 
       <h2 className="text-xl font-semibold mb-4 text-white">
         Test Preview
