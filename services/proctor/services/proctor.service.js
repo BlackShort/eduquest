@@ -73,10 +73,27 @@ async function recordEvent({
 }
 
 // Session lifecycle update when an attempt is finished.
-async function completeSession(sessionId, studentId) {
+async function completeSession(sessionId, studentId, examId) {
   const filter = studentId ? { sessionId, studentId } : { sessionId };
-  const session = await ProctorSession.findOne(filter);
-  if (!session) return null;
+  let session = await ProctorSession.findOne(filter);
+
+  // Some attempts can finish without any recorded violation event, so no
+  // session row exists yet. In that case, create a completed record directly.
+  if (!session) {
+    if (!studentId || !examId) {
+      return null;
+    }
+
+    session = await ProctorSession.create({
+      studentId,
+      examId,
+      sessionId,
+      status: "COMPLETED",
+      endedAt: new Date(),
+    });
+
+    return session;
+  }
 
   // Keep completion idempotent for repeated client retries.
   if (session.status === "COMPLETED") {

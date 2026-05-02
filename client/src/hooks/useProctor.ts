@@ -145,7 +145,7 @@ export function useProctor({ examId }: UseProctorOpts) {
       clearTimeout(noFaceTimerRef.current);
     }
 
-    await completeProctorSession(sessionId);
+    await completeProctorSession(sessionId, examId);
     setActive(false);
 
     // Clear local state after completion.
@@ -155,7 +155,7 @@ export function useProctor({ examId }: UseProctorOpts) {
     identityMismatchCountRef.current = 0;
     setIdentityEnrolled(false);
     setSessionId(null);
-  }, [sessionId]);
+  }, [sessionId, examId]);
 
   // Identity enrollment runs once; verify runs on interval.
   const enrollIdentityFromVideo = useCallback(

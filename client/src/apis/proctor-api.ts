@@ -1,5 +1,5 @@
 import { createApi } from "@/apis/api-client";
-import { proctorUrl } from "@/apis/server-api"; 
+import { proctorUrl } from "@/apis/server-api";
 import type {
   EnrollIdentityPayload,
   ProctorEventPayload,
@@ -14,25 +14,30 @@ export const sendProctorEvent = async (payload: ProctorEventPayload) => {
   return data;
 };
 
-export const completeProctorSession = async (sessionId: string) => {
-  const { data } = await proctorApi.post(`/sessions/${sessionId}/complete`);
+export const completeProctorSession = async (
+  sessionId: string,
+  examId: string,
+) => {
+  const { data } = await proctorApi.post(`/sessions/${sessionId}/complete`, {
+    examId,
+  });
   return data;
 };
 
 export const enrollIdentity = async (payload: EnrollIdentityPayload) => {
   const { data } = await proctorApi.post(
     `/sessions/${payload.sessionId}/identity/enroll`,
-    payload
+    payload,
   );
   return data;
 };
 
 export const verifyIdentity = async (
-  payload: VerifyIdentityPayload
+  payload: VerifyIdentityPayload,
 ): Promise<VerifyIdentityResponse> => {
   const { data } = await proctorApi.post(
     `/sessions/${payload.sessionId}/identity/verify`,
-    payload
+    payload,
   );
   return data;
 };

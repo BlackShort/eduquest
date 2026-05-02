@@ -70,7 +70,12 @@ async function completeSession(req, res, next) {
     }
 
     const { sessionId } = req.params;
-    const updated = await proctorService.completeSession(sessionId, studentId);
+    const { examId } = req.body || {};
+    const updated = await proctorService.completeSession(
+      sessionId,
+      studentId,
+      examId,
+    );
     if (!updated) return res.status(404).json({ error: "Session not found" });
     res.json({ message: "Session completed", session: updated });
   } catch (err) {

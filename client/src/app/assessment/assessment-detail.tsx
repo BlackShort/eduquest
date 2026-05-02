@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Circle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ProblemDetail } from '@/components/code/problem/problem';
+import { useState, useEffect } from "react";
+import { Circle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ProblemDetail } from "@/components/code/problem/problem";
 import { codeSubmission } from "@/apis/code-api";
 import type { Testcase } from "@/types/types";
 
@@ -15,8 +15,8 @@ interface TestResult {
 }
 
 interface AssessmentDetailProps {
-  testId: string,
-  questionType: 'coding' | 'mcq';
+  testId: string;
+  questionType: "coding" | "mcq";
   questionId: string;
   onNext?: () => void;
   onPrevious?: () => void;
@@ -39,38 +39,38 @@ interface MCQQuestionData {
 // Dummy data for MCQ questions
 const mcqQuestions: Record<string, MCQQuestionData> = {
   q_mcq_001: {
-    title: 'Binary Search Complexity',
-    difficulty: 'Medium',
-    question: 'What is the time complexity of binary search?',
+    title: "Binary Search Complexity",
+    difficulty: "Medium",
+    question: "What is the time complexity of binary search?",
     options: [
-      { id: 'a', text: 'O(n)' },
-      { id: 'b', text: 'O(log n)' },
-      { id: 'c', text: 'O(n^2)' },
-      { id: 'd', text: 'O(1)' }
-    ]
+      { id: "a", text: "O(n)" },
+      { id: "b", text: "O(log n)" },
+      { id: "c", text: "O(n^2)" },
+      { id: "d", text: "O(1)" },
+    ],
   },
   q_mcq_002: {
-    title: 'Stack Data Structure',
-    difficulty: 'Easy',
-    question: 'Which data structure uses LIFO (Last In First Out)?',
+    title: "Stack Data Structure",
+    difficulty: "Easy",
+    question: "Which data structure uses LIFO (Last In First Out)?",
     options: [
-      { id: 'a', text: 'Queue' },
-      { id: 'b', text: 'Stack' },
-      { id: 'c', text: 'Array' },
-      { id: 'd', text: 'Tree' }
-    ]
+      { id: "a", text: "Queue" },
+      { id: "b", text: "Stack" },
+      { id: "c", text: "Array" },
+      { id: "d", text: "Tree" },
+    ],
   },
   q_mcq_003: {
-    title: 'OOP Fundamentals',
-    difficulty: 'Easy',
-    question: 'What does OOP stand for?',
+    title: "OOP Fundamentals",
+    difficulty: "Easy",
+    question: "What does OOP stand for?",
     options: [
-      { id: 'a', text: 'Object-Oriented Programming' },
-      { id: 'b', text: 'Only One Protocol' },
-      { id: 'c', text: 'Open Operating Platform' },
-      { id: 'd', text: 'Object Operation Process' }
-    ]
-  }
+      { id: "a", text: "Object-Oriented Programming" },
+      { id: "b", text: "Only One Protocol" },
+      { id: "c", text: "Open Operating Platform" },
+      { id: "d", text: "Object Operation Process" },
+    ],
+  },
 };
 
 const MCQQuestion = ({
@@ -79,7 +79,7 @@ const MCQQuestion = ({
   onNext,
   onPrevious,
   onAnswerChange,
-  savedAnswer
+  savedAnswer,
 }: {
   data: MCQQuestionData;
   questionId: string;
@@ -88,7 +88,9 @@ const MCQQuestion = ({
   onAnswerChange?: (questionId: string, answer: string) => void;
   savedAnswer?: string | null;
 }) => {
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(savedAnswer || null);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(
+    savedAnswer || null,
+  );
 
   // Sync with saved answer when question ID changes (user navigates to different question)
   useEffect(() => {
@@ -111,14 +113,21 @@ const MCQQuestion = ({
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-white">{data.title}</h2>
-            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${data.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' :
-              data.difficulty === 'Medium' ? 'bg-orange-500/20 text-orange-400' :
-                'bg-red-500/20 text-red-400'
-              }`}>
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                data.difficulty === "Easy"
+                  ? "bg-green-500/20 text-green-400"
+                  : data.difficulty === "Medium"
+                    ? "bg-orange-500/20 text-orange-400"
+                    : "bg-red-500/20 text-red-400"
+              }`}
+            >
               {data.difficulty}
             </span>
           </div>
-          <p className="text-xl text-neutral-200 leading-relaxed">{data.question}</p>
+          <p className="text-xl text-neutral-200 leading-relaxed">
+            {data.question}
+          </p>
         </div>
 
         {/* Options */}
@@ -130,18 +139,24 @@ const MCQQuestion = ({
               <button
                 key={option.id}
                 onClick={() => handleOptionSelect(option.id)}
-                className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer ${isSelected
-                  ? 'bg-blue-600 border-blue-500 text-white'
-                  : 'bg-neutral-800 border-neutral-700 text-neutral-300 hover:bg-neutral-700 hover:border-neutral-600'
-                  }`}
+                className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
+                  isSelected
+                    ? "bg-blue-600 border-blue-500 text-white"
+                    : "bg-neutral-800 border-neutral-700 text-neutral-300 hover:bg-neutral-700 hover:border-neutral-600"
+                }`}
               >
                 <div className="flex items-center gap-4">
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-white' : 'border-neutral-500'
-                    }`}>
+                  <div
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                      isSelected ? "border-white" : "border-neutral-500"
+                    }`}
+                  >
                     {isSelected && <Circle className="w-3 h-3 fill-current" />}
                   </div>
                   <div className="flex-1">
-                    <span className="font-semibold mr-2">{option.id.toUpperCase()}.</span>
+                    <span className="font-semibold mr-2">
+                      {option.id.toUpperCase()}.
+                    </span>
                     <span>{option.text}</span>
                   </div>
                 </div>
@@ -180,9 +195,8 @@ export const AssessmentDetail = ({
   onNext,
   onPrevious,
   onAnswerChange,
-  savedAnswer
+  savedAnswer,
 }: AssessmentDetailProps) => {
-
   // --- Isolated State for Coding Questions ---
   const [currentCode, setCurrentCode] = useState(savedAnswer || "");
   const [currentLanguage, setCurrentLanguage] = useState("javascript");
@@ -200,17 +214,34 @@ export const AssessmentDetail = ({
     try {
       setIsRunning(true);
       // Run public test cases just like regular practice mode
-      const result = await codeSubmission("assessment", testId, currentCode, currentLanguage, testCases.slice(0, 3), "run", questionId);
+      const result = await codeSubmission(
+        "assessment",
+        testId,
+        currentCode,
+        currentLanguage,
+        testCases.slice(0, 3),
+        "run",
+        questionId,
+      );
 
       const mapped = (result.executionResult?.testcaseResults ?? []).map(
-        (tc: { input: string; expectedOutput: string; actualOutput: string; status: string; timeTakenMs: number }, i: number) => ({
+        (
+          tc: {
+            input: string;
+            expectedOutput: string;
+            actualOutput: string;
+            status: string;
+            timeTakenMs: number;
+          },
+          i: number,
+        ) => ({
           index: i + 1,
           input: tc.input,
           expectedOutput: tc.expectedOutput,
           actualOutput: tc.actualOutput,
           passed: tc.status === "PASSED",
           runtime: `${tc.timeTakenMs}ms`,
-        })
+        }),
       );
       setTestResults(mapped);
     } catch (err) {
@@ -220,10 +251,51 @@ export const AssessmentDetail = ({
     }
   };
 
-  if (questionType === 'coding') {
+  const submitCode = async () => {
+    try {
+      setIsRunning(true);
+      // Submit against all available test cases (public + hidden) and persist in DB
+      const result = await codeSubmission(
+        "assessment",
+        testId,
+        currentCode,
+        currentLanguage,
+        testCases,
+        "submit",
+        questionId,
+      );
+
+      const mapped = (result.executionResult?.testcaseResults ?? []).map(
+        (
+          tc: {
+            input: string;
+            expectedOutput: string;
+            actualOutput: string;
+            status: string;
+            timeTakenMs: number;
+          },
+          i: number,
+        ) => ({
+          index: i + 1,
+          input: tc.input,
+          expectedOutput: tc.expectedOutput,
+          actualOutput: tc.actualOutput,
+          passed: tc.status === "PASSED",
+          runtime: `${tc.timeTakenMs}ms`,
+        }),
+      );
+      setTestResults(mapped);
+    } catch (err) {
+      console.error("Error submitting code:", err);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  if (questionType === "coding") {
     // Use ProblemDetail for coding questions with isolated assessment runner
     return (
-      <div className='flex flex-col h-full w-full overflow-hidden'>
+      <div className="flex flex-col h-full w-full overflow-hidden">
         <ProblemDetail
           problemId={questionId}
           onCodeChange={(code) => {
@@ -235,6 +307,7 @@ export const AssessmentDetail = ({
           }}
           onLanguageChange={(lang) => setCurrentLanguage(lang)}
           onRun={() => runCode()}
+          onSubmit={() => submitCode()}
           isRunning={isRunning}
           testResults={testResults}
           sendTestCase={(tc) => setTestCases(tc)}
@@ -249,14 +322,14 @@ export const AssessmentDetail = ({
 
   if (!data) {
     return (
-      <div className='rounded-md border border-neutral-800 bg-neutral-900 h-full w-full p-8 flex items-center justify-center'>
+      <div className="rounded-md border border-neutral-800 bg-neutral-900 h-full w-full p-8 flex items-center justify-center">
         <p className="text-neutral-400">Question not found</p>
       </div>
     );
   }
 
   return (
-    <div className='rounded-md border border-neutral-800 bg-neutral-900 h-full w-full p-6 overflow-hidden'>
+    <div className="rounded-md border border-neutral-800 bg-neutral-900 h-full w-full p-6 overflow-hidden">
       <MCQQuestion
         data={data}
         questionId={questionId}
