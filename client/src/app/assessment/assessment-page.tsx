@@ -1,6 +1,7 @@
-
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getAllTests } from "../../apis/test-api";
 import {
     Clock,
     Calendar,
@@ -16,173 +17,266 @@ import {
     Pause,
     Play,
 } from "lucide-react";
-import { dummyAssignments, dummyCoding, dummyMcqs } from "@/data/dummy-data";
+// import { dummyAssignments, dummyCoding, dummyMcqs } from "@/data/dummy-data";
+
 
 // Mock assessment data with status and dates
-const mockAssessments = [
-    // Current/Live Assessments
-    {
-        _id: "assess_001",
-        test_id: dummyAssignments[0].test_id,
-        title: "Data Structures Theory Assessment",
-        type: "assignment",
-        subject: dummyAssignments[0].subject_id,
-        num_questions: dummyAssignments[0].num_questions,
-        duration: 60,
-        status: "live",
-        startTime: "2026-02-16T14:00:00",
-        endTime: "2026-02-16T18:00:00",
-        totalMarks: 50,
-        attempted: false,
-    },
-    {
-        _id: "assess_002",
-        test_id: dummyCoding[0].test_id,
-        title: "Programming Fundamentals - Coding Test",
-        type: "coding",
-        subject: dummyCoding[0].subject_id,
-        num_questions: dummyCoding[0].num_questions,
-        duration: 90,
-        status: "live",
-        startTime: "2026-02-16T10:00:00",
-        endTime: "2026-02-16T20:00:00",
-        totalMarks: 100,
-        attempted: true,
-        progress: 67,
-    },
-    {
-        _id: "assess_003",
-        test_id: dummyMcqs[0].test_id,
-        title: "Object-Oriented Programming MCQ",
-        type: "mcq",
-        subject: dummyMcqs[0].subject_id,
-        num_questions: dummyMcqs[0].num_questions,
-        duration: 30,
-        status: "live",
-        startTime: "2026-02-16T09:00:00",
-        endTime: "2026-02-16T23:59:00",
-        totalMarks: 30,
-        attempted: false,
-    },
+// const mockAssessments = [
+//     // Current/Live Assessments
+//     {
+//         _id: "assess_001",
+//         test_id: dummyAssignments[0].test_id,
+//         title: "Data Structures Theory Assessment",
+//         type: "assignment",
+//         subject: dummyAssignments[0].subject_id,
+//         num_questions: dummyAssignments[0].num_questions,
+//         duration: 60,
+//         status: "live",
+//         startTime: "2026-02-16T14:00:00",
+//         endTime: "2026-02-16T18:00:00",
+//         totalMarks: 50,
+//         attempted: false,
+//     },
+//     {
+//         _id: "assess_002",
+//         test_id: dummyCoding[0].test_id,
+//         title: "Programming Fundamentals - Coding Test",
+//         type: "coding",
+//         subject: dummyCoding[0].subject_id,
+//         num_questions: dummyCoding[0].num_questions,
+//         duration: 90,
+//         status: "live",
+//         startTime: "2026-02-16T10:00:00",
+//         endTime: "2026-02-16T20:00:00",
+//         totalMarks: 100,
+//         attempted: true,
+//         progress: 67,
+//     },
+//     {
+//         _id: "assess_003",
+//         test_id: dummyMcqs[0].test_id,
+//         title: "Object-Oriented Programming MCQ",
+//         type: "mcq",
+//         subject: dummyMcqs[0].subject_id,
+//         num_questions: dummyMcqs[0].num_questions,
+//         duration: 30,
+//         status: "live",
+//         startTime: "2026-02-16T09:00:00",
+//         endTime: "2026-02-16T23:59:00",
+//         totalMarks: 30,
+//         attempted: false,
+//     },
 
-    // // Upcoming Assessments
-    {
-        _id: "assess_004",
-        test_id: dummyAssignments[1].test_id,
-        title: "Algorithms Analysis Assignment",
-        type: "assignment",
-        subject: dummyAssignments[1].subject_id,
-        num_questions: dummyAssignments[1].num_questions,
-        duration: 120,
-        status: "upcoming",
-        startTime: "2026-02-18T10:00:00",
-        endTime: "2026-02-18T16:00:00",
-        totalMarks: 75,
-        attempted: false,
-    },
-    {
-        _id: "assess_005",
-        test_id: dummyCoding[1].test_id,
-        title: "Advanced Data Structures Coding",
-        type: "coding",
-        subject: dummyCoding[1].subject_id,
-        num_questions: dummyCoding[1].num_questions,
-        duration: 120,
-        status: "upcoming",
-        startTime: "2026-02-20T14:00:00",
-        endTime: "2026-02-20T18:00:00",
-        totalMarks: 100,
-        attempted: false,
-    },
-    {
-        _id: "assess_006",
-        test_id: dummyMcqs[1].test_id,
-        title: "Database Management Systems MCQ",
-        type: "mcq",
-        subject: dummyMcqs[1].subject_id,
-        num_questions: dummyMcqs[1].num_questions,
-        duration: 45,
-        status: "upcoming",
-        startTime: "2026-02-19T15:00:00",
-        endTime: "2026-02-19T17:00:00",
-        totalMarks: 50,
-        attempted: false,
-    },
+//     // // Upcoming Assessments
+//     {
+//         _id: "assess_004",
+//         test_id: dummyAssignments[1].test_id,
+//         title: "Algorithms Analysis Assignment",
+//         type: "assignment",
+//         subject: dummyAssignments[1].subject_id,
+//         num_questions: dummyAssignments[1].num_questions,
+//         duration: 120,
+//         status: "upcoming",
+//         startTime: "2026-02-18T10:00:00",
+//         endTime: "2026-02-18T16:00:00",
+//         totalMarks: 75,
+//         attempted: false,
+//     },
+//     {
+//         _id: "assess_005",
+//         test_id: dummyCoding[1].test_id,
+//         title: "Advanced Data Structures Coding",
+//         type: "coding",
+//         subject: dummyCoding[1].subject_id,
+//         num_questions: dummyCoding[1].num_questions,
+//         duration: 120,
+//         status: "upcoming",
+//         startTime: "2026-02-20T14:00:00",
+//         endTime: "2026-02-20T18:00:00",
+//         totalMarks: 100,
+//         attempted: false,
+//     },
+//     {
+//         _id: "assess_006",
+//         test_id: dummyMcqs[1].test_id,
+//         title: "Database Management Systems MCQ",
+//         type: "mcq",
+//         subject: dummyMcqs[1].subject_id,
+//         num_questions: dummyMcqs[1].num_questions,
+//         duration: 45,
+//         status: "upcoming",
+//         startTime: "2026-02-19T15:00:00",
+//         endTime: "2026-02-19T17:00:00",
+//         totalMarks: 50,
+//         attempted: false,
+//     },
 
-    // // History (Completed)
-    {
-        _id: "assess_007",
-        test_id: dummyAssignments[2].test_id,
-        title: "Software Engineering Principles",
-        type: "assignment",
-        subject: dummyAssignments[2].subject_id,
-        num_questions: dummyAssignments[2].num_questions,
-        duration: 90,
-        status: "completed",
-        startTime: "2026-02-10T10:00:00",
-        endTime: "2026-02-10T14:00:00",
-        totalMarks: 60,
-        attempted: true,
-        score: 52,
-        percentage: 86.67,
-        submittedAt: "2026-02-10T12:45:00",
-    },
-    {
-        _id: "assess_008",
-        test_id: dummyCoding[1].test_id,
-        title: "Array and String Manipulation",
-        type: "coding",
-        subject: dummyCoding[1].subject_id,
-        num_questions: dummyCoding[1].num_questions,
-        duration: 60,
-        status: "completed",
-        startTime: "2026-02-12T14:00:00",
-        endTime: "2026-02-12T16:00:00",
-        totalMarks: 80,
-        attempted: true,
-        score: 68,
-        percentage: 85,
-        submittedAt: "2026-02-12T15:42:00",
-    },
-    {
-        _id: "assess_009",
-        test_id: dummyMcqs[2].test_id,
-        title: "Computer Networks Fundamentals",
-        type: "mcq",
-        subject: dummyMcqs[2].subject_id,
-        num_questions: dummyMcqs[2].num_questions,
-        duration: 30,
-        status: "completed",
-        startTime: "2026-02-14T11:00:00",
-        endTime: "2026-02-14T12:00:00",
-        totalMarks: 30,
-        attempted: true,
-        score: 27,
-        percentage: 90,
-        submittedAt: "2026-02-14T11:28:00",
-    },
-    {
-        _id: "assess_010",
-        test_id: "test_code_old_001",
-        title: "Recursion and Backtracking",
-        type: "coding",
-        subject: "sub_cs101",
-        num_questions: 4,
-        duration: 90,
-        status: "completed",
-        startTime: "2026-02-08T10:00:00",
-        endTime: "2026-02-08T13:00:00",
-        totalMarks: 100,
-        attempted: true,
-        score: 75,
-        percentage: 75,
-        submittedAt: "2026-02-08T12:15:00",
-    },
-];
+//     // // History (Completed)
+//     {
+//         _id: "assess_007",
+//         test_id: dummyAssignments[2].test_id,
+//         title: "Software Engineering Principles",
+//         type: "assignment",
+//         subject: dummyAssignments[2].subject_id,
+//         num_questions: dummyAssignments[2].num_questions,
+//         duration: 90,
+//         status: "completed",
+//         startTime: "2026-02-10T10:00:00",
+//         endTime: "2026-02-10T14:00:00",
+//         totalMarks: 60,
+//         attempted: true,
+//         score: 52,
+//         percentage: 86.67,
+//         submittedAt: "2026-02-10T12:45:00",
+//     },
+//     {
+//         _id: "assess_008",
+//         test_id: dummyCoding[1].test_id,
+//         title: "Array and String Manipulation",
+//         type: "coding",
+//         subject: dummyCoding[1].subject_id,
+//         num_questions: dummyCoding[1].num_questions,
+//         duration: 60,
+//         status: "completed",
+//         startTime: "2026-02-12T14:00:00",
+//         endTime: "2026-02-12T16:00:00",
+//         totalMarks: 80,
+//         attempted: true,
+//         score: 68,
+//         percentage: 85,
+//         submittedAt: "2026-02-12T15:42:00",
+//     },
+//     {
+//         _id: "assess_009",
+//         test_id: dummyMcqs[2].test_id,
+//         title: "Computer Networks Fundamentals",
+//         type: "mcq",
+//         subject: dummyMcqs[2].subject_id,
+//         num_questions: dummyMcqs[2].num_questions,
+//         duration: 30,
+//         status: "completed",
+//         startTime: "2026-02-14T11:00:00",
+//         endTime: "2026-02-14T12:00:00",
+//         totalMarks: 30,
+//         attempted: true,
+//         score: 27,
+//         percentage: 90,
+//         submittedAt: "2026-02-14T11:28:00",
+//     },
+//     {
+//         _id: "assess_010",
+//         test_id: "test_code_old_001",
+//         title: "Recursion and Backtracking",
+//         type: "coding",
+//         subject: "sub_cs101",
+//         num_questions: 4,
+//         duration: 90,
+//         status: "completed",
+//         startTime: "2026-02-08T10:00:00",
+//         endTime: "2026-02-08T13:00:00",
+//         totalMarks: 100,
+//         attempted: true,
+//         score: 75,
+//         percentage: 75,
+//         submittedAt: "2026-02-08T12:15:00",
+//     },
+// ];
+
+type TestType = {
+  _id: string;
+  title: string;
+  subjectId: string;
+  durationMinutes: number;
+  totalMarks?: number;
+  status: string;
+  scheduledStart?: string;
+  scheduledEnd?: string;
+  questionRefs?: {
+    mcqIds?: string[];
+    codingIds?: string[];
+    assignmentIds?: string[];
+  };
+};
+
+const formatDate = (dateStr?: string) => {
+  if (!dateStr) return "N/A";
+
+  return new Date(dateStr).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 interface AssessmentCardProps {
-    assessment: typeof mockAssessments[0];
+  assessment: AssessmentType;
 }
+
+
+
+
+const mapTestToAssessment = (test: TestType) => {
+
+    const codingCount = test.questionRefs?.codingIds?.length ?? 0;
+    const assignmentCount = test.questionRefs?.assignmentIds?.length ?? 0;
+
+  const totalQuestions =
+    (test.questionRefs?.mcqIds?.length || 0) +
+    (test.questionRefs?.codingIds?.length || 0) +
+    (test.questionRefs?.assignmentIds?.length || 0);
+
+  const now = new Date();
+
+  let status = "upcoming";
+
+if (test.scheduledStart && test.scheduledEnd) {
+  const start = new Date(test.scheduledStart);
+  const end = new Date(test.scheduledEnd);
+
+  if (now >= start && now <= end) {
+    status = "live";
+  } else if (now > end) {
+    status = "completed";
+  }
+}
+
+
+  if (test.scheduledStart && test.scheduledEnd) {
+    if (now >= new Date(test.scheduledStart) && now <= new Date(test.scheduledEnd)) {
+      status = "live";
+    } else if (now > new Date(test.scheduledEnd)) {
+      status = "completed";
+    }
+  }
+
+  
+
+  return {
+    _id: test._id,
+    title: test.title,
+    type:
+  codingCount > 0
+    ? "coding"
+    : assignmentCount > 0
+    ? "assignment"
+    : "mcq",
+    subject: test.subjectId,
+    num_questions: totalQuestions,
+    duration: test.durationMinutes,
+    status,
+    startTime: test.scheduledStart,
+    endTime: test.scheduledEnd,
+    totalMarks: test.totalMarks || 0,
+    attempted: false,
+
+    progress: 0,
+    score: 0,
+    percentage: 0,
+  };
+};
+
+type AssessmentType = ReturnType<typeof mapTestToAssessment>;
 
 const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
     const getTypeStyles = () => {
@@ -228,18 +322,18 @@ const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
 
     const styles = getTypeStyles();
 
-    const formatDate = (dateStr: string) => {
-        return new Date(dateStr).toLocaleString("en-US", {
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-        });
-    };
+    // const formatDate = (dateStr: string) => {
+    //     return new Date(dateStr).toLocaleString("en-US", {
+    //         month: "short",
+    //         day: "numeric",
+    //         hour: "2-digit",
+    //         minute: "2-digit",
+    //     });
+    // };
 
     const getTimeRemaining = () => {
         const now = new Date();
-        const end = new Date(assessment.endTime);
+        const end = new Date(assessment.endTime || "");
         const diff = end.getTime() - now.getTime();
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -285,11 +379,11 @@ const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
                     </div>
                     <div className="flex items-center gap-3 text-sm text-neutral-300">
                         <Calendar className="w-4 h-4 text-neutral-500" />
-                        <span className="font-medium truncate">{formatDate(assessment.startTime)}</span>
+                        <span className="font-medium truncate">{formatDate(assessment.startTime || "")}</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm text-neutral-300">
                         <Clock className="w-4 h-4 text-neutral-500" />
-                        <span className="font-medium truncate">{formatDate(assessment.endTime)}</span>
+                        <span className="font-medium truncate">{formatDate(assessment.startTime || "")}</span>
                     </div>
                 </div>
 
@@ -387,10 +481,39 @@ const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
 };
 
 export const AssessmentHome = () => {
-    const currentAssessments = mockAssessments.filter((a) => a.status === "live");
-    const upcomingAssessments = mockAssessments.filter((a) => a.status === "upcoming");
-    const completedAssessments = mockAssessments.filter((a) => a.status === "completed");
 
+    
+
+  const [tests, setTests] = useState<TestType[]>([]);
+
+  console.log("TESTS RAW:", tests);
+
+const fetchTests = useCallback(async () => {
+  try {
+    const res = await getAllTests();
+
+    console.log("API RESPONSE:", res);
+
+    const list = res.data?.data || [];
+
+    setTests(list);
+  } catch (err) {
+    console.error("FETCH ERROR:", err);
+  }
+}, []);
+
+  useEffect(() => {
+  fetchTests();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+
+
+  // show everything
+const assessments = tests.map(mapTestToAssessment);
+
+  const currentAssessments = assessments.filter((a) => a.status === "live");
+  const upcomingAssessments = assessments.filter((a) => a.status === "upcoming");
+  const completedAssessments = assessments.filter((a) => a.status === "completed");
     return (
         <div className="space-y-8 p-2 lg:p-4 max-w-7xl mx-auto">
             {/* Header */}

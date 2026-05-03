@@ -5,10 +5,15 @@ import { verifyToken, verifyFaculty } from '../middlewares/auth.js';
 
 // Apply auth middleware to all routes
 router.use(verifyToken);
-router.use(verifyFaculty);
+// router.use(verifyFaculty);
 
 // Test CRUD operations
 router.post('/', testController.createTest);
+
+
+// Student route (no faculty restriction)
+router.get('/public', verifyToken, testController.getPublicTests);
+
 router.get('/', testController.getTests);
 router.get('/stats', testController.getTestStats);
 router.get('/:id', testController.getTestById);
