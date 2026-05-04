@@ -1,5 +1,7 @@
 import express from "express";
 const router = express.Router();
+import { getCodingByIds } from "../controllers/codingController.js";
+
 
 import uploadCSV from "../middlewares/uploadCSV.js";
 import * as codingController from "../controllers/codingController.js";
@@ -10,7 +12,7 @@ router.post(
   uploadCSV.single("file"),
   codingController.uploadCoding
 );
-
+router.post("/bulk", getCodingByIds);
 router.get("/", codingController.getAllCoding);
 
 // Get Coding Questions by test_id

@@ -1,32 +1,7 @@
-import mongoose from 'mongoose';
 import Test from '../models/Test.js';
 import Mcq from '../models/Mcq.js';
 import Coding from '../models/Coding.js';
 import Assignment from '../models/Assignment.js';
-
-const allowedTestFields = [
-    'title',
-    'description',
-    'status',
-    'type',
-    'subjectId',
-    'scheduledStart',
-    'scheduledEnd',
-    'duration',
-    'questionRefs'
-];
-
-const sanitizeTestPayload = (payload) => {
-    const sanitized = {};
-    allowedTestFields.forEach((field) => {
-        if (Object.prototype.hasOwnProperty.call(payload, field)) {
-            sanitized[field] = payload[field];
-        }
-    });
-    return sanitized;
-};
-
-const validateObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 /**
  * Create a new test
@@ -37,7 +12,7 @@ export const createTest = async (req, res) => {
         console.log("BODY:", req.body);
 
         const testData = {
-            ...sanitizeTestPayload(req.body),
+            ...req.body,
             creatorId: req.user.userId
         };
 
@@ -73,9 +48,6 @@ export const getTests = async (req, res) => {
             search 
         } = req.query;
 
-        const pageNum = Math.max(parseInt(page, 10) || 1, 1);
-        const limitNum = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
-
         // Build filter query
         const filter = { creatorId: req.user.userId };
         
@@ -83,21 +55,20 @@ export const getTests = async (req, res) => {
         if (type) filter.type = type;
         if (subjectId) filter.subjectId = subjectId;
         if (search) {
-            const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             filter.$or = [
-                { title: { $regex: escapedSearch, $options: 'i' } },
-                { description: { $regex: escapedSearch, $options: 'i' } }
+                { title: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
             ];
         }
 
         // Calculate pagination
-        const skip = (pageNum - 1) * limitNum;
+        const skip = (page - 1) * limit;
 
         // Execute query with pagination
         const tests = await Test.find(filter)
             .sort({ createdAt: -1 })
             .skip(skip)
-            .limit(limitNum);
+            .limit(parseInt(limit));
 
         const total = await Test.countDocuments(filter);
 
@@ -106,9 +77,9 @@ export const getTests = async (req, res) => {
             data: tests,
             pagination: {
                 total,
-                page: pageNum,
-                limit: limitNum,
-                totalPages: Math.ceil(total / limitNum)
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(total / limit)
             }
         });
     } catch (error) {
@@ -181,6 +152,7 @@ export const getTestById = async (req, res) => {
     }
 };
 
+
 export const getPublicTests = async (req, res) => {
     try {
         const now = new Date();
@@ -224,7 +196,7 @@ export const updateTest = async (req, res) => {
         }
 
         // Update fields
-        Object.assign(test, sanitizeTestPayload(req.body));
+        Object.assign(test, req.body);
         await test.save();
 
         res.status(200).json({
@@ -248,13 +220,6 @@ export const updateTest = async (req, res) => {
 export const deleteTest = async (req, res) => {
     try {
         const { id } = req.params;
-
-        if (!validateObjectId(id)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid test id'
-            });
-        }
 
         const test = await Test.findOneAndDelete({
             _id: id,
@@ -362,13 +327,6 @@ export const archiveTest = async (req, res) => {
 export const duplicateTest = async (req, res) => {
     try {
         const { id } = req.params;
-
-        if (!validateObjectId(id)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid test id'
-            });
-        }
 
         const originalTest = await Test.findOne({
             _id: id,

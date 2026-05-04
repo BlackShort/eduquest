@@ -5,3 +5,6 @@ const api = createApi("http://localhost:5002"); // 👈 your backend URL
 export const getAllTests = async () => {
   return api.get("/v1/tests/public");
 };
+export const getTestById = async (id: string) => {
+  return api.get(`/v1/tests/${id}`);
+};

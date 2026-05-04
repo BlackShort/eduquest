@@ -147,3 +147,17 @@ if (subjectId && subjectId.trim() !== "") {
     });
   }
 };
+
+export const getMcqByIds = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    const questions = await Mcq.find({
+      _id: { $in: ids },
+    });
+
+    res.json({ data: questions });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

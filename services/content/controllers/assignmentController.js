@@ -4,6 +4,7 @@ import Assignment from "../models/Assignment.js";
 import parseCSV from "../utils/fileParser.js";
 
 
+
 export const uploadAssignment = async (req, res) => {
   try {
     if (!req.file) {
@@ -139,5 +140,19 @@ if (subjectId && subjectId.trim() !== "") {
       message: "Server error while fetching assignments",
       error: error.message,
     });
+  }
+};
+
+export const getAssignmentByIds = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    const questions = await Assignment.find({
+      _id: { $in: ids },
+    });
+
+    res.json({ data: questions });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

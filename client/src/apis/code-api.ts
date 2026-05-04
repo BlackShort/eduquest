@@ -1,8 +1,9 @@
 import { createApi } from "@/apis/api-client";
-import { codeUrl } from "@/apis/server-api";
+// import { codeUrl } from "@/apis/server-api";
 import type { Testcase } from "@/types/types";
+import { contentUrl } from "@/apis/server-api";
 
-const codeApi = createApi(codeUrl);
+const api = createApi(contentUrl);
 
 export const codeSubmission = async (
     env_type: string,
@@ -13,7 +14,7 @@ export const codeSubmission = async (
     mode: string,
     questionId: string
 ) => {
-    const { data } = await codeApi.post("/v1/submissions/execute", {
+    const { data } = await api.post("/v1/submissions/execute", {
         env_type,
         testId,
         code,
@@ -24,4 +25,9 @@ export const codeSubmission = async (
     });
 
     return data;
+};
+
+export const getCodingByIds = async (ids: string[]) => {
+  const { data } = await api.post("/coding/bulk", { ids });
+  return data;
 };

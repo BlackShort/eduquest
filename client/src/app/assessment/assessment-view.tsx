@@ -1,9 +1,12 @@
+import { useParams } from "react-router-dom";
 import { AssessmentLayout } from "@/layouts";
 import { AssessmentProvider } from "@/providers/assessment-provider";
 
 export const AssessmentView = () => {
+  const { id } = useParams();
+
   return (
-    <AssessmentProvider examId="assessment_2024" initialTime={3600}>
+    <AssessmentProvider examId={id || ""} initialTime={3600}>
       <AssessmentLayout />
     </AssessmentProvider>
   );

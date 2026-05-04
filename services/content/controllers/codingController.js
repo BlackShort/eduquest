@@ -158,3 +158,17 @@ if (subjectId && subjectId.trim() !== "") {
     });
   }
 };
+
+export const getCodingByIds = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    const questions = await Coding.find({
+      _id: { $in: ids },
+    });
+
+    res.json({ data: questions });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

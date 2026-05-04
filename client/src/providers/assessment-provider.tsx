@@ -8,43 +8,68 @@ import {
 import { AssessmentContext } from "@/contexts/AssessmentContext";
 import { useProctor } from "@/hooks/useProctor";
 import type { Question, Stage } from "@/types/assessment.types";
+import { getTestById } from "@/apis/test-api"; // or correct path
+import { getMcqByIds } from "@/apis/mcq-api";
+import { getAssignmentByIds } from "@/apis/assignment-api";
+import { getCodingByIds } from "@/apis/code-api";
+
+
+export interface CodingQuestionAPI {
+  _id: string;
+  title: string;
+  description: string;
+  difficulty?: string;
+  testCases?: unknown[];
+}
+
+export interface McqQuestionAPI {
+  _id: string;
+  question: string;
+  options: string[];
+  difficulty?: string;
+}
+
+
 
 // ── Static question data ───────────────────────────────────────────────────────
 // Replace with an API fetch / prop when questions come from the backend.
 
-const INITIAL_QUESTIONS: Question[] = [
-  {
-    id: "q_code_001",
-    type: "coding",
-    title: "Factorial using Recursion",
-    section: "Coding",
-  },
-  {
-    id: "q_code_002",
-    type: "coding",
-    title: "Palindrome Checker",
-    section: "Coding",
-  },
-  {
-    id: "q_mcq_001",
-    type: "mcq",
-    title: "Binary Search Complexity",
-    section: "MCQ",
-  },
-  {
-    id: "q_mcq_002",
-    type: "mcq",
-    title: "Stack Data Structure",
-    section: "MCQ",
-  },
-  {
-    id: "q_code_003",
-    type: "coding",
-    title: "Reverse Linked List",
-    section: "Coding",
-  },
-  { id: "q_mcq_003", type: "mcq", title: "OOP Fundamentals", section: "MCQ" },
-];
+
+
+
+// const questions: Question[] = [
+//   {
+//     id: "q_code_001",
+//     type: "coding",
+//     title: "Factorial using Recursion",
+//     section: "Coding",
+//   },
+//   {
+//     id: "q_code_002",
+//     type: "coding",
+//     title: "Palindrome Checker",
+//     section: "Coding",
+//   },
+//   {
+//     id: "q_mcq_001",
+//     type: "mcq",
+//     title: "Binary Search Complexity",
+//     section: "MCQ",
+//   },
+//   {
+//     id: "q_mcq_002",
+//     type: "mcq",
+//     title: "Stack Data Structure",
+//     section: "MCQ",
+//   },
+//   {
+//     id: "q_code_003",
+//     type: "coding",
+//     title: "Reverse Linked List",
+//     section: "Coding",
+//   },
+//   { id: "q_mcq_003", type: "mcq", title: "OOP Fundamentals", section: "MCQ" },
+// ];
 
 // ── Provider ───────────────────────────────────────────────────────────────────
 
@@ -60,14 +85,155 @@ export const AssessmentProvider = ({
   initialTime = 3600,
 }: AssessmentProviderProps) => {
   // ── Core state ────────────────────────────────────────────────────────────
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [stage, setStage] = useState<Stage>("fullscreen");
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currentQuestionId, setCurrentQuestionId] = useState(
-    INITIAL_QUESTIONS[0].id,
-  );
+  const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(initialTime);
+
+  useEffect(() => {
+  const fetchTest = async () => {
+    try {
+      const res = await getTestById(examId);
+
+      console.log("TEST DATA:", res);
+
+      const test = res.data?.data || res.data;
+
+      const codingIds = test.questionRefs?.codingIds || [];
+const mcqIds = test.questionRefs?.mcqIds || [];
+const assignmentIds = test.questionRefs?.assignmentIds || [];
+
+const [codingRes, mcqRes, assignmentRes] = await Promise.all([
+  codingIds.length ? getCodingByIds(codingIds) : Promise.resolve({ data: [] }),
+  mcqIds.length ? getMcqByIds(mcqIds) : Promise.resolve({ data: [] }),
+  assignmentIds.length ? getAssignmentByIds(assignmentIds) : Promise.resolve({ data: [] }),
+]);
+
+const allQuestions = [
+  ...(codingRes.data || []),
+  ...(mcqRes.data || []),
+  ...(assignmentRes.data || []),
+];
+
+
+console.log("CODING RES:", codingRes);
+console.log("MCQ RES:", mcqRes);
+// console.log("ASSIGNMENT RES:", assignmentRes);
+console.log("ALL QUESTIONS:", allQuestions);
+
+console.log("ALL QUESTIONS:", allQuestions);
+
+const mappedQuestions: Question[] = allQuestions.map((q, index) => {
+  let type: "mcq" | "coding" = "mcq";
+  let section = "MCQ";
+
+  if (q.testCases) {
+    type = "coding";
+    section = "Coding";
+  } else if (q.options) {
+    type = "mcq";
+    section = "MCQ";
+  } else if (q.submissionType) {
+    // assignment fallback
+    type = "mcq";
+    section = "Assignment";
+  }
+
+  return {
+    id: q._id,
+    title: q.title || q.question || `Question ${index + 1}`,
+    description: q.description || "",
+    type, // ✅ NOW CORRECT TYPE
+    section,
+    difficulty: q.difficulty || "easy",
+    options: q.options || [],
+  };
+});
+
+console.log("FINAL QUESTIONS:", mappedQuestions);
+setQuestions(mappedQuestions);
+
+setQuestions(mappedQuestions);
+
+if (mappedQuestions.length > 0) {
+  setCurrentQuestionId(mappedQuestions[0].id);
+}
+
+    } catch (err) {
+      console.error("FETCH TEST ERROR:", err);
+    }
+  };
+
+  
+
+  if (examId) fetchTest();
+
+  
+}, [examId]);
+
+useEffect(() => {
+  if (!examId) return;
+
+  const fetchQuestions = async () => {
+    try {
+      const testRes = await getTestById(examId);
+      const test = testRes.data?.data?.[0];
+
+      console.log("TEST DATA:", test);
+
+      const codingIds = test.questionRefs?.codingIds || [];
+      const mcqIds = test.questionRefs?.mcqIds || [];
+
+      console.log("CODING IDS:", codingIds);
+      console.log("MCQ IDS:", mcqIds);
+
+      console.log("EXTRACTED TEST:", test);
+    console.log("QUESTION REFS:", test?.questionRefs);
+
+      const codingRes: CodingQuestionAPI[] = await getCodingByIds(codingIds);
+      const mcqRes: McqQuestionAPI[] = await getMcqByIds(mcqIds);
+
+      console.log("CODING RES:", codingRes);
+      console.log("MCQ RES:", mcqRes);
+
+      const coding = codingRes || [];
+const mcqs = mcqRes || [];
+
+const mappedQuestions = [
+  ...coding.map((q) => ({
+    id: q._id,
+    title: q.title,
+    description: q.description,
+    type: "coding" as const,
+    section: "Coding Problems",
+    difficulty: q.difficulty,
+  })),
+
+  ...mcqs.map((q) => ({
+    id: q._id,
+    title: q.question,
+    description: q.question,
+    type: "mcq" as const,
+    section: "Multiple Choice",
+    difficulty: q.difficulty,
+    options: q.options,
+  })),
+];
+
+      console.log("FINAL QUESTIONS:", mappedQuestions);
+
+      setQuestions(mappedQuestions);
+      setCurrentQuestionId(mappedQuestions[0]?.id || null);
+    } catch (err) {
+      console.error("FETCH ERROR:", err);
+    }
+  };
+
+  fetchQuestions();
+}, [examId]);
 
   // ── Proctor — single instance for the entire assessment lifecycle ─────────
   // All callbacks (reportEvent, enrollIdentityFromVideo, verifyIdentityFromVideo,
@@ -88,23 +254,24 @@ export const AssessmentProvider = ({
 
   // ── Submission ────────────────────────────────────────────────────────────
   const handleSubmitAssessment = useCallback(() => {
-    if (isSubmitted) return;
-    // End the proctor session before marking submitted so the final
-    // completeProctorSession API call fires with a valid sessionId.
-    void proctor.endSession();
-    console.log("Submitting assessment:", {
-      answers,
-      timestamp: new Date().toISOString(),
-      totalQuestions: INITIAL_QUESTIONS.length,
-      answeredQuestions: Object.keys(answers).length,
-    });
-    setIsSubmitted(true);
-    // TODO: replace with a proper submission modal/redirect
-    alert(
-      `Assessment submitted!\n\nTotal: ${INITIAL_QUESTIONS.length}\n` +
-        `Answered: ${Object.keys(answers).length}\n\nResults will be announced soon.`,
-    );
-  }, [isSubmitted, answers, proctor]);
+  if (isSubmitted) return;
+
+  void proctor.endSession();
+
+  console.log("Submitting assessment:", {
+    answers,
+    timestamp: new Date().toISOString(),
+    totalQuestions: questions.length,
+    answeredQuestions: Object.keys(answers).length,
+  });
+
+  setIsSubmitted(true);
+
+  alert(
+    `Assessment submitted!\n\nTotal: ${questions.length}\n` +
+    `Answered: ${Object.keys(answers).length}\n\nResults will be announced soon.`
+  );
+}, [isSubmitted, answers, proctor, questions]);
 
   // ── Refs — latest values readable inside the timer tick without deps ──────
   // Keeping these as refs means decrementTimeRemaining stays stable (empty
@@ -161,14 +328,14 @@ export const AssessmentProvider = ({
 
   // ── Navigation helpers ────────────────────────────────────────────────────
   const getCurrentQuestion = useCallback(
-    () => INITIAL_QUESTIONS.find((q) => q.id === currentQuestionId),
-    [currentQuestionId],
-  );
+  () => questions.find((q) => q.id === currentQuestionId),
+  [currentQuestionId, questions],
+);
 
   const getMcqQuestions = useCallback(
-    () => INITIAL_QUESTIONS.filter((q) => q.type === "mcq"),
-    [],
-  );
+  () => questions.filter((q) => q.type === "mcq"),
+  [questions]
+);
 
   const showNext = useCallback(() => {
     const mcq = getMcqQuestions();
@@ -198,6 +365,8 @@ export const AssessmentProvider = ({
     }
   }, [currentQuestionId, getCurrentQuestion, getMcqQuestions]);
 
+
+  
   // ── Context value ─────────────────────────────────────────────────────────
   return (
     <AssessmentContext.Provider
@@ -213,8 +382,8 @@ export const AssessmentProvider = ({
         toggleSidebar,
 
         // Questions
-        questions: INITIAL_QUESTIONS,
-        currentQuestionId,
+        questions: questions,
+        currentQuestionId: currentQuestionId || "",
         setCurrentQuestionId,
 
         // Answers
