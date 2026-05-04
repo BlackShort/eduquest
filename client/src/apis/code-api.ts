@@ -28,6 +28,6 @@ export const codeSubmission = async (
 };
 
 export const getCodingByIds = async (ids: string[]) => {
-  const { data } = await api.post("/coding/bulk", { ids });
+  const { data } = await api.post("/v1/coding/bulk", { ids });
   return data;
 };

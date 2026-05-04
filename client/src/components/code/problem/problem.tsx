@@ -41,6 +41,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { Testcase } from "@/types/types";
 import { EditorSettingsModal } from "../editor-settings-modal";
+import type { Question as AssessmentQuestion } from "@/types/assessment.types";
 
 
 interface TestResult {
@@ -52,6 +53,13 @@ interface TestResult {
   runtime: string;
 }
 
+interface DisplayProblem {
+  question_id: string;
+  question_text: string;
+  difficulty?: string;
+  test_cases: Testcase[];
+}
+
 const languageTemplates = {
   javascript: `function solution(input) {\n    // Write your code here\n    return 0;\n}\n`,
   python: `def solution(input):\n    # Write your code here\n    return 0\n`,
@@ -61,6 +69,7 @@ const languageTemplates = {
 
 interface ProblemDetailProps {
   problemId?: string;
+  problem?: AssessmentQuestion;
   onSubmit?: (code: string, language: string, testCase: Testcase[], mode: string) => void;
   onRun?: (code: string, language: string, testCase: Testcase[], mode: string) => void;
   onCodeChange?: (code: string) => void;
@@ -73,6 +82,7 @@ interface ProblemDetailProps {
 
 export const ProblemDetail = ({
   problemId,
+  problem: externalProblem,
   onSubmit,
   onRun,
   onCodeChange,
@@ -105,8 +115,14 @@ export const ProblemDetail = ({
     { label: 'Python', value: 'python' },
   ];
 
-  // Find the problem from dummy data
-  const problem = dummyCoding[0]?.questions.find(q => q.question_id === problemId) || dummyCoding[0]?.questions[0];
+  const problem: DisplayProblem | undefined = externalProblem
+    ? {
+        question_id: externalProblem.question_id || externalProblem.id,
+        question_text: externalProblem.question_text || externalProblem.title,
+        difficulty: externalProblem.difficulty || "medium",
+        test_cases: externalProblem.test_cases || [],
+      }
+    : dummyCoding[0]?.questions.find(q => q.question_id === problemId) || dummyCoding[0]?.questions[0];
 
   // Auto-switch to result tab when running starts
   useEffect(() => {
@@ -255,11 +271,11 @@ export const ProblemDetail = ({
               {/* Problem Title */}
               <div>
                 <h1 className="text-xl font-medium text-white mb-4">
-                  {problem.question_id.slice(7)}. {problem.question_text}
+                  {problem.question_text}
                 </h1>
                 <div className="flex items-center gap-2 mb-4">
                   <span className="px-2.5 py-1 text-xs font-medium bg-[#ffc01e]/10 text-[#ffc01e] rounded-full">
-                    Easy
+                    {problem.difficulty || "medium"}
                   </span>
                 </div>
               </div>

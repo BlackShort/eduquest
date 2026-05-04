@@ -176,6 +176,93 @@ export const getPublicTests = async (req, res) => {
     }
 };
 
+const pickSelectedQuestions = (docs, selectedIds) => {
+    const selected = new Set(selectedIds);
+    const byQuestionId = [];
+
+    docs.forEach((doc) => {
+        doc.questions?.forEach((question) => {
+            if (selected.has(question.question_id)) {
+                byQuestionId.push(question.toObject ? question.toObject() : question);
+            }
+        });
+    });
+
+    if (byQuestionId.length > 0) {
+        return byQuestionId;
+    }
+
+    // Backward compatibility for older tests that stored parent set ids/test_ids.
+    return docs.flatMap((doc) =>
+        doc.questions?.map((question) => question.toObject ? question.toObject() : question) || []
+    );
+};
+
+export const getPublicTestById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const test = await Test.findOne({
+            _id: id,
+            status: 'published'
+        });
+
+        if (!test) {
+            return res.status(404).json({
+                success: false,
+                message: 'Published test not found'
+            });
+        }
+
+        const testWithQuestions = test.toObject();
+        const mcqIds = test.questionRefs?.mcqIds || [];
+        const codingIds = test.questionRefs?.codingIds || [];
+        const assignmentIds = test.questionRefs?.assignmentIds || [];
+
+        if (mcqIds.length > 0) {
+            const mcqDocs = await Mcq.find({
+                $or: [
+                    { 'questions.question_id': { $in: mcqIds } },
+                    { test_id: { $in: mcqIds } },
+                    { _id: { $in: mcqIds.filter((value) => value.match(/^[0-9a-fA-F]{24}$/)) } }
+                ]
+            });
+
+            testWithQuestions.mcqQuestions = pickSelectedQuestions(mcqDocs, mcqIds);
+        } else {
+            testWithQuestions.mcqQuestions = [];
+        }
+
+        if (codingIds.length > 0) {
+            const codingDocs = await Coding.find({
+                $or: [
+                    { 'questions.question_id': { $in: codingIds } },
+                    { test_id: { $in: codingIds } },
+                    { _id: { $in: codingIds.filter((value) => value.match(/^[0-9a-fA-F]{24}$/)) } }
+                ]
+            });
+
+            testWithQuestions.codingQuestions = pickSelectedQuestions(codingDocs, codingIds);
+        } else {
+            testWithQuestions.codingQuestions = [];
+        }
+
+        testWithQuestions.assignmentQuestions = assignmentIds;
+
+        res.status(200).json({
+            success: true,
+            data: testWithQuestions
+        });
+    } catch (error) {
+        console.error('Error fetching public test:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch public test',
+            error: error.message
+        });
+    }
+};
+
 /**
  * Update test
  */

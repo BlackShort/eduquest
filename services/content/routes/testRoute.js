@@ -13,6 +13,7 @@ router.post('/', testController.createTest);
 
 // Student route (no faculty restriction)
 router.get('/public', verifyToken, testController.getPublicTests);
+router.get('/public/:id', verifyToken, testController.getPublicTestById);
 
 router.get('/', testController.getTests);
 router.get('/stats', testController.getTestStats);

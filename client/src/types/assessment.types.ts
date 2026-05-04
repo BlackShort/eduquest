@@ -4,7 +4,17 @@ export interface Question {
     id: string;
     type: "coding" | "mcq";
     title: string;
+    description?: string;
     section: string;
+    difficulty?: string;
+    options?: string[];
+    test_cases?: {
+        input: string;
+        output: string;
+        isHidden?: boolean;
+    }[];
+    question_id?: string;
+    question_text?: string;
 }
 
 export type Stage = "fullscreen" | "setup" | "instructions" | "exam";

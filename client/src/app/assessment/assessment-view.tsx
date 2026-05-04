@@ -3,10 +3,10 @@ import { AssessmentLayout } from "@/layouts";
 import { AssessmentProvider } from "@/providers/assessment-provider";
 
 export const AssessmentView = () => {
-  const { id } = useParams();
+  const { assessmentId, id } = useParams();
 
   return (
-    <AssessmentProvider examId={id || ""} initialTime={3600}>
+    <AssessmentProvider examId={assessmentId || id || ""} initialTime={3600}>
       <AssessmentLayout />
     </AssessmentProvider>
   );

@@ -1,10 +1,12 @@
 import { createApi } from "./api-client";
+import { contentUrl } from "@/apis/server-api";
 
-const api = createApi("http://localhost:5002"); // 👈 your backend URL
+const api = createApi(contentUrl);
 
 export const getAllTests = async () => {
-  return api.get("/v1/tests/public");
+  return api.get("/v1/faculty/tests/public");
 };
+
 export const getTestById = async (id: string) => {
-  return api.get(`/v1/tests/${id}`);
+  return api.get(`/v1/faculty/tests/public/${id}`);
 };

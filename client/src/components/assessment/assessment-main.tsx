@@ -179,6 +179,7 @@ export const AssessmentMain = () => {
                 testId={examId}
                 questionType={currentQuestion?.type ?? "coding"}
                 questionId={currentQuestionId}
+                question={currentQuestion}
                 onNext={showNext() ? handleNext : undefined}
                 onPrevious={showPrevious() ? handlePrevious : undefined}
                 onAnswerChange={handleAnswerChange}

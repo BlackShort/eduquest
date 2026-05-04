@@ -8,23 +8,25 @@ import {
 import { AssessmentContext } from "@/contexts/AssessmentContext";
 import { useProctor } from "@/hooks/useProctor";
 import type { Question, Stage } from "@/types/assessment.types";
-import { getTestById } from "@/apis/test-api"; // or correct path
-import { getMcqByIds } from "@/apis/mcq-api";
-import { getAssignmentByIds } from "@/apis/assignment-api";
-import { getCodingByIds } from "@/apis/code-api";
+import { getTestById } from "@/apis/test-api";
 
 
 export interface CodingQuestionAPI {
-  _id: string;
-  title: string;
-  description: string;
+  _id?: string;
+  question_id: string;
+  question_text: string;
   difficulty?: string;
-  testCases?: unknown[];
+  test_cases?: {
+    input: string;
+    output: string;
+    isHidden?: boolean;
+  }[];
 }
 
 export interface McqQuestionAPI {
-  _id: string;
-  question: string;
+  _id?: string;
+  question_id: string;
+  question_text: string;
   options: string[];
   difficulty?: string;
 }
@@ -93,140 +95,58 @@ export const AssessmentProvider = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(initialTime);
 
-  useEffect(() => {
-  const fetchTest = async () => {
-    try {
-      const res = await getTestById(examId);
 
-      console.log("TEST DATA:", res);
-
-      const test = res.data?.data || res.data;
-
-      const codingIds = test.questionRefs?.codingIds || [];
-const mcqIds = test.questionRefs?.mcqIds || [];
-const assignmentIds = test.questionRefs?.assignmentIds || [];
-
-const [codingRes, mcqRes, assignmentRes] = await Promise.all([
-  codingIds.length ? getCodingByIds(codingIds) : Promise.resolve({ data: [] }),
-  mcqIds.length ? getMcqByIds(mcqIds) : Promise.resolve({ data: [] }),
-  assignmentIds.length ? getAssignmentByIds(assignmentIds) : Promise.resolve({ data: [] }),
-]);
-
-const allQuestions = [
-  ...(codingRes.data || []),
-  ...(mcqRes.data || []),
-  ...(assignmentRes.data || []),
-];
-
-
-console.log("CODING RES:", codingRes);
-console.log("MCQ RES:", mcqRes);
-// console.log("ASSIGNMENT RES:", assignmentRes);
-console.log("ALL QUESTIONS:", allQuestions);
-
-console.log("ALL QUESTIONS:", allQuestions);
-
-const mappedQuestions: Question[] = allQuestions.map((q, index) => {
-  let type: "mcq" | "coding" = "mcq";
-  let section = "MCQ";
-
-  if (q.testCases) {
-    type = "coding";
-    section = "Coding";
-  } else if (q.options) {
-    type = "mcq";
-    section = "MCQ";
-  } else if (q.submissionType) {
-    // assignment fallback
-    type = "mcq";
-    section = "Assignment";
-  }
-
-  return {
-    id: q._id,
-    title: q.title || q.question || `Question ${index + 1}`,
-    description: q.description || "",
-    type, // ✅ NOW CORRECT TYPE
-    section,
-    difficulty: q.difficulty || "easy",
-    options: q.options || [],
-  };
-});
-
-console.log("FINAL QUESTIONS:", mappedQuestions);
-setQuestions(mappedQuestions);
-
-setQuestions(mappedQuestions);
-
-if (mappedQuestions.length > 0) {
-  setCurrentQuestionId(mappedQuestions[0].id);
-}
-
-    } catch (err) {
-      console.error("FETCH TEST ERROR:", err);
-    }
-  };
-
-  
-
-  if (examId) fetchTest();
-
-  
-}, [examId]);
 
 useEffect(() => {
   if (!examId) return;
 
   const fetchQuestions = async () => {
     try {
-      const testRes = await getTestById(examId);
-      const test = testRes.data?.data?.[0];
+      // 1. GET TEST
+      const res = await getTestById(examId);
 
-      console.log("TEST DATA:", test);
+      const test = res.data?.data;
 
-      const codingIds = test.questionRefs?.codingIds || [];
-      const mcqIds = test.questionRefs?.mcqIds || [];
+      console.log("TEST:", test);
 
-      console.log("CODING IDS:", codingIds);
-      console.log("MCQ IDS:", mcqIds);
+      const coding = test?.codingQuestions || [];
+      const mcqs = test?.mcqQuestions || [];
 
-      console.log("EXTRACTED TEST:", test);
-    console.log("QUESTION REFS:", test?.questionRefs);
-
-      const codingRes: CodingQuestionAPI[] = await getCodingByIds(codingIds);
-      const mcqRes: McqQuestionAPI[] = await getMcqByIds(mcqIds);
-
-      console.log("CODING RES:", codingRes);
-      console.log("MCQ RES:", mcqRes);
-
-      const coding = codingRes || [];
-const mcqs = mcqRes || [];
-
-const mappedQuestions = [
-  ...coding.map((q) => ({
-    id: q._id,
-    title: q.title,
-    description: q.description,
-    type: "coding" as const,
+      // 3. MAP
+      const mappedQuestions: Question[] = [
+  ...coding.map((q: CodingQuestionAPI) => ({
+    id: q.question_id || q._id || crypto.randomUUID(),
+    question_id: q.question_id,
+    question_text: q.question_text,
+    title: q.question_text,
+    description: q.question_text,
+    type: "coding",
     section: "Coding Problems",
-    difficulty: q.difficulty,
+    difficulty: q.difficulty || "easy",
+    test_cases: q.test_cases || [],
   })),
 
-  ...mcqs.map((q) => ({
-    id: q._id,
-    title: q.question,
-    description: q.question,
-    type: "mcq" as const,
+  ...mcqs.map((q: McqQuestionAPI) => ({
+    id: q.question_id || q._id || crypto.randomUUID(),
+    question_id: q.question_id,
+    question_text: q.question_text,
+    title: q.question_text,
+    description: q.question_text,
+    type: "mcq",
     section: "Multiple Choice",
-    difficulty: q.difficulty,
-    options: q.options,
+    difficulty: q.difficulty || "easy",
+    options: q.options || [],
   })),
 ];
 
       console.log("FINAL QUESTIONS:", mappedQuestions);
 
       setQuestions(mappedQuestions);
-      setCurrentQuestionId(mappedQuestions[0]?.id || null);
+
+      if (mappedQuestions.length > 0) {
+        setCurrentQuestionId(mappedQuestions[0].id);
+      }
+
     } catch (err) {
       console.error("FETCH ERROR:", err);
     }

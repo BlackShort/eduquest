@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ProblemDetail } from "@/components/code/problem/problem";
 import { codeSubmission } from "@/apis/code-api";
 import type { Testcase } from "@/types/types";
+import type { Question } from "@/types/assessment.types";
 
 interface TestResult {
   index: number;
@@ -18,11 +19,14 @@ interface AssessmentDetailProps {
   testId: string;
   questionType: "coding" | "mcq";
   questionId: string;
+  question?: Question;
   onNext?: () => void;
   onPrevious?: () => void;
   onAnswerChange?: (questionId: string, answer: string) => void;
   savedAnswer?: string | null;
 }
+
+
 
 interface MCQOption {
   id: string;
@@ -35,43 +39,6 @@ interface MCQQuestionData {
   question: string;
   options: MCQOption[];
 }
-
-// Dummy data for MCQ questions
-const mcqQuestions: Record<string, MCQQuestionData> = {
-  q_mcq_001: {
-    title: "Binary Search Complexity",
-    difficulty: "Medium",
-    question: "What is the time complexity of binary search?",
-    options: [
-      { id: "a", text: "O(n)" },
-      { id: "b", text: "O(log n)" },
-      { id: "c", text: "O(n^2)" },
-      { id: "d", text: "O(1)" },
-    ],
-  },
-  q_mcq_002: {
-    title: "Stack Data Structure",
-    difficulty: "Easy",
-    question: "Which data structure uses LIFO (Last In First Out)?",
-    options: [
-      { id: "a", text: "Queue" },
-      { id: "b", text: "Stack" },
-      { id: "c", text: "Array" },
-      { id: "d", text: "Tree" },
-    ],
-  },
-  q_mcq_003: {
-    title: "OOP Fundamentals",
-    difficulty: "Easy",
-    question: "What does OOP stand for?",
-    options: [
-      { id: "a", text: "Object-Oriented Programming" },
-      { id: "b", text: "Only One Protocol" },
-      { id: "c", text: "Open Operating Platform" },
-      { id: "d", text: "Object Operation Process" },
-    ],
-  },
-};
 
 const MCQQuestion = ({
   data,
@@ -192,6 +159,7 @@ export const AssessmentDetail = ({
   testId,
   questionType,
   questionId,
+  question,
   onNext,
   onPrevious,
   onAnswerChange,
@@ -223,6 +191,8 @@ export const AssessmentDetail = ({
         "run",
         questionId,
       );
+
+      
 
       const mapped = (result.executionResult?.testcaseResults ?? []).map(
         (
@@ -292,12 +262,22 @@ export const AssessmentDetail = ({
     }
   };
 
+  
   if (questionType === "coding") {
+    if (!question) {
+      return (
+        <div className="rounded-md border border-neutral-800 bg-neutral-900 h-full w-full p-8 flex items-center justify-center">
+          <p className="text-neutral-400">Loading coding question...</p>
+        </div>
+      );
+    }
+
     // Use ProblemDetail for coding questions with isolated assessment runner
     return (
       <div className="flex flex-col h-full w-full overflow-hidden">
         <ProblemDetail
-          problemId={questionId}
+          key={questionId}
+          problem={question}
           onCodeChange={(code) => {
             setCurrentCode(code);
             // Autosave to the master answers dictionary via parent callback
@@ -318,7 +298,19 @@ export const AssessmentDetail = ({
   }
 
   // For MCQ questions
-  const data = mcqQuestions[questionId];
+  const data = question
+    ? {
+        title: question.title,
+        difficulty: question.difficulty
+          ? question.difficulty.charAt(0).toUpperCase() + question.difficulty.slice(1)
+          : "Medium",
+        question: question.description || question.title,
+        options: (question.options || []).map((option, index) => ({
+          id: String.fromCharCode(97 + index),
+          text: option,
+        })),
+      }
+    : undefined;
 
   if (!data) {
     return (
