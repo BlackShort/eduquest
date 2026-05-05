@@ -33,12 +33,27 @@ export default function AttemptDetailPage() {
       try {
         setLoading(true);
         const response = await getAttemptById(attemptId!);
-        setAttempt(response.data);
-        setFeedback(response.data.feedback || '');
+        const attemptData = response.data;
+        const normalizedAttempt = {
+          ...attemptData,
+          responses: {
+            mcqResponses: attemptData.responses?.mcqResponses || [],
+            codingSubmissionIds: attemptData.responses?.codingSubmissionIds || [],
+            assignmentFileUrl: attemptData.responses?.assignmentFileUrl || null
+          },
+          score: {
+            obtained: attemptData.score?.obtained || 0,
+            total: attemptData.score?.total || 0,
+            percentage: attemptData.score?.percentage || 0
+          }
+        };
+
+        setAttempt(normalizedAttempt);
+        setFeedback(attemptData.feedback || '');
         
         // Initialize MCQ grading from responses
-        if (response.data.responses?.mcqResponses) {
-          setMcqGrading(response.data.responses.mcqResponses.map((mcq: MCQResponse) => ({
+        if (normalizedAttempt.responses.mcqResponses.length > 0) {
+          setMcqGrading(normalizedAttempt.responses.mcqResponses.map((mcq: MCQResponse) => ({
             questionId: mcq.questionId,
             isCorrect: mcq.isCorrect || false,
             marksObtained: mcq.marksObtained || 0

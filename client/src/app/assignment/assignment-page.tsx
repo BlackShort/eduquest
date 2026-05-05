@@ -1,20 +1,19 @@
 import { Link } from "react-router";
 import { useEffect, useState } from "react";
-import { getAssignments } from "@/apis/faculty-api";
-import { Calendar, Clock, FileText, ChevronRight } from "lucide-react";
-
-type Question = {
-  question_id: string;
-  question_text: string;
-};
+import { getAllTests } from "@/apis/test-api";
+import { Calendar, Clock, FileText, ChevronRight, Timer, Award } from "lucide-react";
 
 type Assignment = {
-  test_id: string;
-  subject_id: string;
-  num_questions: number;
-  questions: Question[];
-  createdAt: string;
-  updatedAt: string;
+  _id: string;
+  title: string;
+  subjectId: string;
+  durationMinutes: number;
+  totalMarks?: number;
+  scheduledStart?: string;
+  scheduledEnd?: string;
+  questionRefs?: {
+    assignmentIds?: string[];
+  };
 };
 
 export const Assignment = () => {
@@ -22,7 +21,9 @@ export const Assignment = () => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "N/A";
+
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -35,11 +36,10 @@ export const Assignment = () => {
     const fetchAssignments = async () => {
       try {
 
-        const res = await getAssignments();
+        const res = await getAllTests();
 
-        if (res.success) {
-          setAssignments(res.data);
-        }
+        const list = res.data?.data || [];
+        setAssignments(list.filter((test: Assignment & { type?: string }) => test.type === "assignment"));
 
       } catch (error) {
         console.error("Failed to load assignments", error);
@@ -83,8 +83,8 @@ export const Assignment = () => {
         {assignments.map((assignment) => (
 
           <Link
-            key={assignment.test_id}
-            to={`/assignments/${assignment.test_id}`}
+            key={assignment._id}
+            to={`/assignments/${assignment._id}`}
             className="group bg-neutral-800 rounded-xl border border-neutral-700 p-6 hover:shadow-lg hover:border-orange-500 transition-all duration-200"
           >
 
@@ -101,11 +101,11 @@ export const Assignment = () => {
 
                   <div>
                     <h3 className="text-lg font-semibold text-neutral-100">
-                      {assignment.test_id}
+                      {assignment.title}
                     </h3>
 
                     <p className="text-sm text-neutral-400">
-                      Subject: {assignment.subject_id}
+                      Subject: {assignment.subjectId}
                     </p>
                   </div>
 
@@ -115,29 +115,20 @@ export const Assignment = () => {
                 <div className="space-y-2 mb-4">
 
                   <p className="text-sm font-medium text-neutral-300">
-                    {assignment.num_questions} Question
-                    {assignment.num_questions > 1 ? "s" : ""}
+                    {assignment.questionRefs?.assignmentIds?.length || 0} Question
+                    {(assignment.questionRefs?.assignmentIds?.length || 0) !== 1 ? "s" : ""}
                   </p>
 
-                  {assignment.questions.slice(0, 2).map((question, idx) => (
-
-                    <div
-                      key={question.question_id}
-                      className="text-sm text-neutral-400 pl-3 border-l-2 border-neutral-600"
-                    >
-
-                      {idx + 1}. {question.question_text.substring(0, 100)}
-                      {question.question_text.length > 100 ? "..." : ""}
-
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-neutral-400">
+                    <div className="flex items-center gap-2">
+                      <Timer size={14} />
+                      <span>{assignment.durationMinutes} mins</span>
                     </div>
-
-                  ))}
-
-                  {assignment.questions.length > 2 && (
-                    <p className="text-xs text-neutral-500 pl-3">
-                      +{assignment.questions.length - 2} more questions
-                    </p>
-                  )}
+                    <div className="flex items-center gap-2">
+                      <Award size={14} />
+                      <span>{assignment.totalMarks || 0} marks</span>
+                    </div>
+                  </div>
 
                 </div>
 
@@ -147,14 +138,14 @@ export const Assignment = () => {
                   <div className="flex items-center gap-1">
                     <Calendar size={14} />
                     <span>
-                      Created: {formatDate(assignment.createdAt)}
+                      Starts: {formatDate(assignment.scheduledStart || "")}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-1">
                     <Clock size={14} />
                     <span>
-                      Updated: {formatDate(assignment.updatedAt)}
+                      Ends: {formatDate(assignment.scheduledEnd || "")}
                     </span>
                   </div>
 

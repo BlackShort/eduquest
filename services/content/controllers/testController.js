@@ -247,7 +247,19 @@ export const getPublicTestById = async (req, res) => {
             testWithQuestions.codingQuestions = [];
         }
 
-        testWithQuestions.assignmentQuestions = assignmentIds;
+        if (assignmentIds.length > 0) {
+            const assignmentDocs = await Assignment.find({
+                $or: [
+                    { 'questions.question_id': { $in: assignmentIds } },
+                    { test_id: { $in: assignmentIds } },
+                    { _id: { $in: assignmentIds.filter((value) => value.match(/^[0-9a-fA-F]{24}$/)) } }
+                ]
+            });
+
+            testWithQuestions.assignmentQuestions = pickSelectedQuestions(assignmentDocs, assignmentIds);
+        } else {
+            testWithQuestions.assignmentQuestions = [];
+        }
 
         res.status(200).json({
             success: true,

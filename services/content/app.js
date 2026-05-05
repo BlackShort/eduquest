@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
+import path from 'path';
 import mcqRoutes from "./routes/mcqRoute.js";
 import codingRoutes from "./routes/codingRoute.js";
 import assignmentRoutes from "./routes/assignmentRoute.js";
@@ -33,6 +34,7 @@ if (process.env.NODE_ENV !== 'production') {
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan("dev"));
+app.use("/uploads", express.static(path.resolve("uploads")));
 
 // Mount Routes
 app.use("/v1/mcq", mcqRoutes);

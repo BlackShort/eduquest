@@ -4,8 +4,8 @@ type Question = {
 };
 
 type Assignment = {
-    test_id: string;
-    subject_id: string;
+    title: string;
+    subjectId: string;
     num_questions: number;
     questions: Question[];
 };
@@ -13,8 +13,8 @@ type Assignment = {
 import { useParams, useNavigate } from "react-router";
 import { ArrowLeft, Send, AlertCircle, Upload, File, X, Download } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import axios from "axios";
 import jsPDF from "jspdf";
+import { getTestById, submitAssignment } from "@/apis/test-api";
 
 
 export const AssignmentDetail = () => {
@@ -23,6 +23,7 @@ export const AssignmentDetail = () => {
 
     const [assignment, setAssignment] = useState<Assignment | null>(null);
     const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
 
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -31,11 +32,18 @@ export const AssignmentDetail = () => {
     useEffect(() => {
         const fetchAssignment = async () => {
             try {
-                const res = await axios.get(
-                    `http://localhost:5002/v1/assignment/${assignmentId}`
-                );
+                if (!assignmentId) return;
 
-                setAssignment(res.data.data);
+                const res = await getTestById(assignmentId);
+                const test = res.data.data;
+                const questions = test.assignmentQuestions || [];
+
+                setAssignment({
+                    title: test.title,
+                    subjectId: test.subjectId,
+                    num_questions: questions.length,
+                    questions,
+                });
             } catch (error) {
                 console.error("Failed to load assignment", error);
             } finally {
@@ -82,15 +90,31 @@ export const AssignmentDetail = () => {
         }
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!uploadedFile) {
             alert('Please upload your assignment PDF before submitting');
             return;
         }
 
-        console.log('Submitted file:', uploadedFile);
-        alert('Assignment submitted successfully!');
-        navigate('/dashboard/assignments');
+        if (!assignmentId) {
+            alert('Assignment id is missing');
+            return;
+        }
+
+        try {
+            setSubmitting(true);
+            const formData = new FormData();
+            formData.append('file', uploadedFile);
+
+            await submitAssignment(assignmentId, formData);
+            alert('Assignment submitted successfully!');
+            navigate('/dashboard/assignments');
+        } catch (error) {
+            console.error('Failed to submit assignment', error);
+            alert('Failed to submit assignment. Please try again.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const formatFileSize = (bytes: number) => {
@@ -111,13 +135,13 @@ export const AssignmentDetail = () => {
         // Add title
         doc.setFontSize(20);
         doc.setFont("helvetica", "bold");
-        doc.text(assignment.test_id, margin, yPosition);
+        doc.text(assignment.title, margin, yPosition);
         yPosition += 10;
 
         // Add subject
         doc.setFontSize(12);
         doc.setFont("helvetica", "normal");
-        doc.text(`Subject: ${assignment.subject_id}`, margin, yPosition);
+        doc.text(`Subject: ${assignment.subjectId}`, margin, yPosition);
         yPosition += 15;
 
         // Add questions header
@@ -147,7 +171,7 @@ export const AssignmentDetail = () => {
         });
 
         // Download the PDF
-        doc.save(`${assignment.test_id}-Assignment.pdf`);
+        doc.save(`${assignment.title}-Assignment.pdf`);
     };
 
     return (
@@ -163,8 +187,8 @@ export const AssignmentDetail = () => {
                         <ArrowLeft size={20} />
                     </button>
                     <div>
-                        <h1 className="text-2xl font-bold text-neutral-100">{assignment.test_id}</h1>
-                        <p className="text-sm text-neutral-400">Subject: {assignment.subject_id}</p>
+                        <h1 className="text-2xl font-bold text-neutral-100">{assignment.title}</h1>
+                        <p className="text-sm text-neutral-400">Subject: {assignment.subjectId}</p>
                     </div>
                 </div>
                 <button 
@@ -246,11 +270,11 @@ export const AssignmentDetail = () => {
             <div className="flex justify-end pt-4 pb-8">
                 <button
                     onClick={handleSubmit}
-                    disabled={!uploadedFile}
+                    disabled={!uploadedFile || submitting}
                     className="flex items-center gap-2 px-8 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                     <Send size={18} />
-                    Submit Assignment
+                    {submitting ? 'Submitting...' : 'Submit Assignment'}
                 </button>
             </div>
         </div>

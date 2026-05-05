@@ -11,6 +11,14 @@ const studentAttemptSchema = new mongoose.Schema({
         ref: 'User',
         required: [true, 'Student ID is required']
     },
+    studentName: {
+        type: String,
+        default: ''
+    },
+    studentEmail: {
+        type: String,
+        default: ''
+    },
     startedAt: {
         type: Date,
         default: Date.now
@@ -109,11 +117,10 @@ const studentAttemptSchema = new mongoose.Schema({
 });
 
 // Calculate percentage before saving
-studentAttemptSchema.pre('save', function(next) {
+studentAttemptSchema.pre('save', function() {
     if (this.score.total > 0) {
         this.score.percentage = (this.score.obtained / this.score.total) * 100;
     }
-    next();
 });
 
 // Indexes for better query performance

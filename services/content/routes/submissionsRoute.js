@@ -2,9 +2,18 @@ import express from 'express';
 const router = express.Router();
 import * as submissionsController from '../controllers/submissionsController.js';
 import { verifyToken, verifyFaculty } from '../middlewares/auth.js';
+import uploadAssignmentPDF from '../middlewares/uploadAssignmentPDF.js';
 
 // Apply auth middleware to all routes
 router.use(verifyToken);
+
+// Student assignment submission
+router.post(
+    '/assignment/:testId',
+    uploadAssignmentPDF.single('file'),
+    submissionsController.submitAssignment
+);
+
 router.use(verifyFaculty);
 
 // Faculty analytics

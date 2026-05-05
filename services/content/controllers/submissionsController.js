@@ -1,6 +1,112 @@
 import StudentAttempt from '../models/StudentAttempt.js';
 import Test from '../models/Test.js';
 
+const withStudentSnapshot = (attempt) => {
+    const doc = attempt.toObject ? attempt.toObject() : attempt;
+
+    return {
+        ...doc,
+        studentId: {
+            _id: doc.studentId,
+            username: doc.studentName || 'Unknown',
+            email: doc.studentEmail || ''
+        },
+        responses: {
+            mcqResponses: doc.responses?.mcqResponses || [],
+            codingSubmissionIds: doc.responses?.codingSubmissionIds || [],
+            assignmentFileUrl: doc.responses?.assignmentFileUrl || null
+        },
+        score: {
+            obtained: doc.score?.obtained || 0,
+            total: doc.score?.total || 0,
+            percentage: doc.score?.percentage || 0
+        }
+    };
+};
+
+/**
+ * Submit an assignment PDF (Student view)
+ */
+export const submitAssignment = async (req, res) => {
+    try {
+        const { testId } = req.params;
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'Assignment PDF is required'
+            });
+        }
+
+        const test = await Test.findOne({
+            _id: testId,
+            status: 'published',
+            type: 'assignment'
+        });
+
+        if (!test) {
+            return res.status(404).json({
+                success: false,
+                message: 'Published assignment not found'
+            });
+        }
+
+        const submittedAt = new Date();
+        const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+
+        let attempt = await StudentAttempt.findOne({
+            testId,
+            studentId: req.user.userId
+        });
+
+        if (!attempt) {
+            attempt = new StudentAttempt({
+                testId,
+                studentId: req.user.userId,
+                score: {
+                    obtained: 0,
+                    total: test.totalMarks || 0
+                }
+            });
+        }
+
+        const startedAt = attempt.startedAt || submittedAt;
+
+        attempt.submittedAt = submittedAt;
+        attempt.status = 'submitted';
+        attempt.studentName = req.user.username || '';
+        attempt.studentEmail = req.user.email || '';
+        attempt.responses = attempt.responses || {
+            mcqResponses: [],
+            codingSubmissionIds: [],
+            assignmentFileUrl: null
+        };
+        attempt.responses.assignmentFileUrl = fileUrl;
+        attempt.score.total = test.totalMarks || 0;
+        attempt.timeSpentMinutes = Math.max(
+            0,
+            Math.round((submittedAt.getTime() - startedAt.getTime()) / 60000)
+        );
+        attempt.ipAddress = req.ip;
+        attempt.userAgent = req.get('user-agent') || null;
+
+        await attempt.save();
+
+        res.status(201).json({
+            success: true,
+            message: 'Assignment submitted successfully',
+            data: attempt
+        });
+    } catch (error) {
+        console.error('Error submitting assignment:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to submit assignment',
+            error: error.message
+        });
+    }
+};
+
 /**
  * Get all attempts for a specific test (Faculty view)
  */
@@ -36,7 +142,6 @@ export const getTestAttempts = async (req, res) => {
 
         // Fetch attempts with student details
         const attempts = await StudentAttempt.find(filter)
-            .populate('studentId', 'username email')
             .sort({ submittedAt: -1 })
             .skip(skip)
             .limit(parseInt(limit));
@@ -45,7 +150,7 @@ export const getTestAttempts = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            data: attempts,
+            data: attempts.map(withStudentSnapshot),
             pagination: {
                 total,
                 page: parseInt(page),
@@ -71,7 +176,6 @@ export const getAttemptById = async (req, res) => {
         const { attemptId } = req.params;
 
         const attempt = await StudentAttempt.findById(attemptId)
-            .populate('studentId', 'username email')
             .populate('testId')
             .populate('gradedBy', 'username');
 
@@ -82,9 +186,13 @@ export const getAttemptById = async (req, res) => {
             });
         }
 
+        const testId = attempt.testId && typeof attempt.testId === 'object'
+            ? attempt.testId._id || attempt.testId
+            : attempt.testId;
+
         // Verify faculty owns the test
         const test = await Test.findOne({
-            _id: attempt.testId._id,
+            _id: testId,
             creatorId: req.user.userId
         });
 
@@ -97,7 +205,7 @@ export const getAttemptById = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            data: attempt
+            data: withStudentSnapshot(attempt)
         });
     } catch (error) {
         console.error('Error fetching attempt:', error);
@@ -131,9 +239,13 @@ export const gradeAttempt = async (req, res) => {
             });
         }
 
+        const testId = attempt.testId && typeof attempt.testId === 'object'
+            ? attempt.testId._id || attempt.testId
+            : attempt.testId;
+
         // Verify faculty owns the test
         const test = await Test.findOne({
-            _id: attempt.testId._id,
+            _id: testId,
             creatorId: req.user.userId
         });
 
@@ -145,6 +257,12 @@ export const gradeAttempt = async (req, res) => {
         }
 
         // Update MCQ responses if provided
+        attempt.responses = attempt.responses || {
+            mcqResponses: [],
+            codingSubmissionIds: [],
+            assignmentFileUrl: null
+        };
+
         if (mcqGrading && Array.isArray(mcqGrading)) {
             mcqGrading.forEach(graded => {
                 const response = attempt.responses.mcqResponses.find(
@@ -307,13 +425,12 @@ export const getFacultyAnalytics = async (req, res) => {
         const recentAttempts = await StudentAttempt.find({ 
             testId: { $in: testIds } 
         })
-            .populate('studentId', 'username')
             .populate('testId', 'title')
             .sort({ submittedAt: -1 })
             .limit(10);
 
         stats.recentActivity = recentAttempts.map(a => ({
-            studentName: a.studentId?.username,
+            studentName: a.studentName || 'Unknown',
             testTitle: a.testId?.title,
             score: a.score.percentage,
             submittedAt: a.submittedAt,
@@ -356,14 +473,13 @@ export const exportTestResults = async (req, res) => {
 
         // Get all attempts
         const attempts = await StudentAttempt.find({ testId })
-            .populate('studentId', 'username email')
             .sort({ 'score.percentage': -1 });
 
         // Format for export
         const exportData = attempts.map((attempt, index) => ({
             rank: index + 1,
-            studentName: attempt.studentId?.username || 'N/A',
-            studentEmail: attempt.studentId?.email || 'N/A',
+            studentName: attempt.studentName || 'N/A',
+            studentEmail: attempt.studentEmail || 'N/A',
             scoreObtained: attempt.score.obtained,
             totalMarks: attempt.score.total,
             percentage: attempt.score.percentage.toFixed(2),

@@ -185,6 +185,7 @@ import {
 type TestType = {
   _id: string;
   title: string;
+  type: "assessment" | "assignment" | "contest";
   subjectId: string;
   durationMinutes: number;
   totalMarks?: number;
@@ -219,12 +220,11 @@ interface AssessmentCardProps {
 const mapTestToAssessment = (test: TestType) => {
 
     const codingCount = test.questionRefs?.codingIds?.length ?? 0;
-    const assignmentCount = test.questionRefs?.assignmentIds?.length ?? 0;
+    const mcqCount = test.questionRefs?.mcqIds?.length ?? 0;
 
   const totalQuestions =
-    (test.questionRefs?.mcqIds?.length || 0) +
-    (test.questionRefs?.codingIds?.length || 0) +
-    (test.questionRefs?.assignmentIds?.length || 0);
+    mcqCount +
+    codingCount;
 
   const now = new Date();
 
@@ -258,8 +258,6 @@ if (test.scheduledStart && test.scheduledEnd) {
     type:
   codingCount > 0
     ? "coding"
-    : assignmentCount > 0
-    ? "assignment"
     : "mcq",
     subject: test.subjectId,
     num_questions: totalQuestions,
@@ -508,8 +506,14 @@ const fetchTests = useCallback(async () => {
 }, []);
 
 
-  // show everything
-const assessments = tests.map(mapTestToAssessment);
+const assessments = tests
+  .filter((test) => {
+    const mcqCount = test.questionRefs?.mcqIds?.length ?? 0;
+    const codingCount = test.questionRefs?.codingIds?.length ?? 0;
+
+    return test.type === "assessment" && (mcqCount > 0 || codingCount > 0);
+  })
+  .map(mapTestToAssessment);
 
   const currentAssessments = assessments.filter((a) => a.status === "live");
   const upcomingAssessments = assessments.filter((a) => a.status === "upcoming");
