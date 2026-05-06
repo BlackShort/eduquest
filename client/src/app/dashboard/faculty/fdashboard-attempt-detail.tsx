@@ -22,6 +22,7 @@ export default function AttemptDetailPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [assignmentMarks, setAssignmentMarks] = useState(0);
   const [mcqGrading, setMcqGrading] = useState<Array<{
     questionId: string;
     isCorrect: boolean;
@@ -50,6 +51,11 @@ export default function AttemptDetailPage() {
 
         setAttempt(normalizedAttempt);
         setFeedback(attemptData.feedback || '');
+        const initialMcqMarks = normalizedAttempt.responses.mcqResponses.reduce(
+          (sum: number, mcq: MCQResponse) => sum + (mcq.marksObtained || 0),
+          0
+        );
+        setAssignmentMarks(Math.max((attemptData.score?.obtained || 0) - initialMcqMarks, 0));
         
         // Initialize MCQ grading from responses
         if (normalizedAttempt.responses.mcqResponses.length > 0) {
@@ -76,7 +82,9 @@ export default function AttemptDetailPage() {
   const handleSaveGrade = async (submitToStudent = false) => {
     try {
       setSaving(true);
-      const totalObtained = mcqGrading.reduce((sum, item) => sum + item.marksObtained, 0);
+      const mcqMarks = mcqGrading.reduce((sum, item) => sum + item.marksObtained, 0);
+      const hasAssignmentFile = Boolean(attempt?.responses?.assignmentFileUrl);
+      const totalObtained = hasAssignmentFile ? assignmentMarks + mcqMarks : mcqMarks;
       
       await gradeAttempt(attemptId!, {
         score: {
@@ -126,6 +134,11 @@ export default function AttemptDetailPage() {
   const studentName = typeof attempt.studentId === 'object' ? attempt.studentId.username : 'Unknown';
   const studentEmail = typeof attempt.studentId === 'object' ? attempt.studentId.email : '';
   const testTitle = typeof attempt.testId === 'object' ? attempt.testId.title : 'Unknown Test';
+  const maxMarks = attempt.score.total || 0;
+  const mcqMarksObtained = mcqGrading.reduce((sum, item) => sum + item.marksObtained, 0);
+  const hasAssignmentFile = Boolean(attempt.responses?.assignmentFileUrl);
+  const totalMarksObtained = hasAssignmentFile ? assignmentMarks + mcqMarksObtained : mcqMarksObtained;
+  const scorePercentage = maxMarks > 0 ? (totalMarksObtained / maxMarks) * 100 : 0;
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -308,22 +321,41 @@ export default function AttemptDetailPage() {
       {attempt.responses?.assignmentFileUrl && (
         <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6">
           <h2 className="text-xl font-semibold text-gray-100 mb-4">Assignment Submission</h2>
-          <div className="flex items-center justify-between p-4 border border-neutral-700 rounded-lg">
+          <div className="flex flex-col gap-4 p-4 border border-neutral-700 rounded-lg lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-3">
               <FileText className="w-5 h-5 text-gray-400" />
               <div>
                 <p className="font-medium text-gray-100">Submitted File</p>
-                <p className="text-sm text-gray-400">{attempt.responses.assignmentFileUrl}</p>
+                <p className="text-sm text-gray-400 break-all">{attempt.responses.assignmentFileUrl}</p>
               </div>
             </div>
-            <a
-              href={attempt.responses.assignmentFileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-            >
-              Download
-            </a>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <label className="block">
+                <span className="block text-sm font-medium text-gray-300 mb-2">Assignment Marks</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    max={maxMarks}
+                    value={assignmentMarks}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      setAssignmentMarks(Math.min(Math.max(value || 0, 0), maxMarks));
+                    }}
+                    className="w-28 px-3 py-2 bg-neutral-900 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-400">/ {maxMarks}</span>
+                </div>
+              </label>
+              <a
+                href={attempt.responses.assignmentFileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 text-center text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                Download
+              </a>
+            </div>
           </div>
         </div>
       )}
@@ -351,13 +383,13 @@ export default function AttemptDetailPage() {
           <div>
             <p className="text-sm text-blue-700">Marks Obtained</p>
             <p className="text-2xl font-bold text-blue-900">
-              {mcqGrading.reduce((sum, item) => sum + item.marksObtained, 0)}
+              {totalMarksObtained}
             </p>
           </div>
           <div>
             <p className="text-sm text-blue-700">Percentage</p>
             <p className="text-2xl font-bold text-blue-900">
-              {((mcqGrading.reduce((sum, item) => sum + item.marksObtained, 0) / attempt.score.total) * 100).toFixed(1)}%
+              {scorePercentage.toFixed(1)}%
             </p>
           </div>
         </div>

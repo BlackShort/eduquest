@@ -108,6 +108,39 @@ export const submitAssignment = async (req, res) => {
 };
 
 /**
+ * Get the logged-in student's attempt for a test/assignment
+ */
+export const getMyAttemptForTest = async (req, res) => {
+    try {
+        const { testId } = req.params;
+
+        const attempt = await StudentAttempt.findOne({
+            testId,
+            studentId: req.user.userId
+        });
+
+        if (!attempt) {
+            return res.status(404).json({
+                success: false,
+                message: 'No submission found for this assignment'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: withStudentSnapshot(attempt)
+        });
+    } catch (error) {
+        console.error('Error fetching student attempt:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch submission',
+            error: error.message
+        });
+    }
+};
+
+/**
  * Get all attempts for a specific test (Faculty view)
  */
 export const getTestAttempts = async (req, res) => {
@@ -176,8 +209,7 @@ export const getAttemptById = async (req, res) => {
         const { attemptId } = req.params;
 
         const attempt = await StudentAttempt.findById(attemptId)
-            .populate('testId')
-            .populate('gradedBy', 'username');
+            .populate('testId');
 
         if (!attempt) {
             return res.status(404).json({

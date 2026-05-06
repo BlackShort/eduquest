@@ -14,6 +14,8 @@ router.post(
     submissionsController.submitAssignment
 );
 
+router.get('/assignment/:testId/my-attempt', submissionsController.getMyAttemptForTest);
+
 router.use(verifyFaculty);
 
 // Faculty analytics

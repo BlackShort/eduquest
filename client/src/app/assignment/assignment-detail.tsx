@@ -7,14 +7,30 @@ type Assignment = {
     title: string;
     subjectId: string;
     num_questions: number;
+    totalMarks: number;
     questions: Question[];
 };
 
+type AssignmentAttempt = {
+    status: 'in_progress' | 'submitted' | 'graded';
+    submittedAt: string | null;
+    gradedAt: string | null;
+    feedback: string;
+    responses: {
+        assignmentFileUrl: string | null;
+    };
+    score: {
+        obtained: number;
+        total: number;
+        percentage: number;
+    };
+};
+
 import { useParams, useNavigate } from "react-router";
-import { ArrowLeft, Send, AlertCircle, Upload, File, X, Download } from "lucide-react";
+import { ArrowLeft, Send, AlertCircle, Upload, File, X, Download, Award, CheckCircle, MessageSquare } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import jsPDF from "jspdf";
-import { getTestById, submitAssignment } from "@/apis/test-api";
+import { getMyAssignmentAttempt, getTestById, submitAssignment } from "@/apis/test-api";
 
 
 export const AssignmentDetail = () => {
@@ -22,6 +38,7 @@ export const AssignmentDetail = () => {
     const navigate = useNavigate();
 
     const [assignment, setAssignment] = useState<Assignment | null>(null);
+    const [attempt, setAttempt] = useState<AssignmentAttempt | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
@@ -42,8 +59,17 @@ export const AssignmentDetail = () => {
                     title: test.title,
                     subjectId: test.subjectId,
                     num_questions: questions.length,
+                    totalMarks: test.totalMarks || 0,
                     questions,
                 });
+
+                try {
+                    const attemptRes = await getMyAssignmentAttempt(assignmentId);
+                    setAttempt(attemptRes.data.data);
+                } catch (attemptError) {
+                    console.info("No previous assignment submission found", attemptError);
+                    setAttempt(null);
+                }
             } catch (error) {
                 console.error("Failed to load assignment", error);
             } finally {
@@ -106,9 +132,13 @@ export const AssignmentDetail = () => {
             const formData = new FormData();
             formData.append('file', uploadedFile);
 
-            await submitAssignment(assignmentId, formData);
+            const response = await submitAssignment(assignmentId, formData);
+            setAttempt(response.data.data);
+            setUploadedFile(null);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
             alert('Assignment submitted successfully!');
-            navigate('/dashboard/assignments');
         } catch (error) {
             console.error('Failed to submit assignment', error);
             alert('Failed to submit assignment. Please try again.');
@@ -199,6 +229,58 @@ export const AssignmentDetail = () => {
                     Download PDF
                 </button>
             </div>
+
+            {/* Submission Status */}
+            {attempt && (
+                <div className="bg-neutral-800 rounded-xl border border-neutral-700 p-6">
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                            <div className="flex items-center gap-3 mb-3">
+                                <CheckCircle className={attempt.status === 'graded' ? 'text-green-500' : 'text-orange-500'} size={22} />
+                                <h3 className="text-xl font-bold text-neutral-100">
+                                    {attempt.status === 'graded' ? 'Assignment Graded' : 'Assignment Submitted'}
+                                </h3>
+                            </div>
+                            <p className="text-sm text-neutral-400">
+                                Submitted: {attempt.submittedAt ? new Date(attempt.submittedAt).toLocaleString() : 'Not submitted'}
+                            </p>
+                            {attempt.responses.assignmentFileUrl && (
+                                <a
+                                    href={attempt.responses.assignmentFileUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-orange-400 hover:text-orange-300"
+                                >
+                                    <Download size={16} />
+                                    View submitted PDF
+                                </a>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:min-w-96">
+                            <div className="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+                                <div className="flex items-center gap-2 text-neutral-400 text-sm mb-2">
+                                    <Award size={16} />
+                                    Score
+                                </div>
+                                <p className="text-2xl font-bold text-neutral-100">
+                                    {attempt.score.obtained}/{attempt.score.total || assignment.totalMarks}
+                                </p>
+                                <p className="text-sm text-neutral-400">{attempt.score.percentage.toFixed(1)}%</p>
+                            </div>
+                            <div className="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+                                <div className="flex items-center gap-2 text-neutral-400 text-sm mb-2">
+                                    <MessageSquare size={16} />
+                                    Faculty Feedback
+                                </div>
+                                <p className="text-sm text-neutral-200 whitespace-pre-wrap">
+                                    {attempt.feedback || (attempt.status === 'graded' ? 'No feedback provided.' : 'Not reviewed yet.')}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Questions */}
             <div className="bg-neutral-800 rounded-xl border border-neutral-700 p-6">
