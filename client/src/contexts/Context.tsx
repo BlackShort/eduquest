@@ -12,6 +12,8 @@ export const ContextApp = ({ children }: { children: ReactNode }) => {
   const [appLoading, setAppLoading] = useState<boolean>(true);
   const [dashboardPath, setDashboardPath] = useState<string>("/auth/login");
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
 
   const toggleSidebar = () => {
     setSidebarOpen(prev => !prev);
@@ -21,14 +23,12 @@ export const ContextApp = ({ children }: { children: ReactNode }) => {
     const initAuth = async () => {
       try {
         const data = await verifyToken();
-        console.log("verifyToken response:", data);
 
         setUser(data.user);
         setDashboardPath(getDashboardPath(data.user?.role));
-        setUserID(data.user?.userId ?? null);
+        setUserID(data.user?._id ?? null);
         setIsLoggedIn(true);
-      } catch(err) {
-        console.error("verifyToken failed:", err);
+      } catch {
         setUser(null);
         setUserID(null);
         setIsLoggedIn(false);
@@ -43,6 +43,8 @@ export const ContextApp = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (user) {
       setDashboardPath(getDashboardPath(user.role));
+    } else {
+      setDashboardPath('/auth/login');
     }
   }, [user]);
 
@@ -53,6 +55,7 @@ export const ContextApp = ({ children }: { children: ReactNode }) => {
       userID, setUserID,
       isLoggedIn, setIsLoggedIn,
       appLoading, setAppLoading,
+      isLoggingOut, setIsLoggingOut,
       dashboardPath,
       sidebarOpen,
       toggleSidebar,

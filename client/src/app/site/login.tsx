@@ -10,7 +10,8 @@ import type { ApiError } from "@/types/error";
 
 export const Login = () => {
     const navigate = useNavigate();
-    const { dashboardPath, isLoggedIn, appLoading, setIsLoggedIn, setUser } = useContextAPI();
+    
+    const { dashboardPath, isLoggedIn, appLoading, isLoggingOut, setIsLoggedIn, setUser } = useContextAPI();
 
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -21,8 +22,6 @@ export const Login = () => {
     });
 
     useEffect(() => {
-        // Only redirect if app has finished loading AND user is logged in
-        // This prevents race conditions and infinite loops
         if (!appLoading && isLoggedIn && dashboardPath !== "/auth/login") {
             navigate(dashboardPath, { replace: true });
         }
@@ -64,7 +63,7 @@ export const Login = () => {
         setLoginData({ ...loginData, [name]: newValue });
     };
 
-    if (appLoading) {
+    if (appLoading || isLoggingOut) {
         return (
             <div className="flex items-center justify-center w-full h-screen bg-neutral-950">
                 <Loader />

@@ -1,5 +1,3 @@
-import "@tensorflow/tfjs-backend-webgl";
-import "@tensorflow/tfjs-backend-cpu";
 import * as cocoSsd from "@tensorflow-models/coco-ssd";
 import * as blazeface from "@tensorflow-models/blazeface";
 import * as faceapi from "@vladmandic/face-api";

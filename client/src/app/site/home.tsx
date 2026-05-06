@@ -4,14 +4,19 @@ import contestImage from "@/assets/screenshot/contest-preview.jpeg";
 import problemImage from "@/assets/screenshot/problemlist-preview.jpeg";
 import { FaJava, FaSwift, FaPython, FaPhp, FaRust, FaJs } from "react-icons/fa";
 import { TbBrandCpp, TbSql } from "react-icons/tb";
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useContextAPI } from '@/hooks/useContext';
 import { useState } from 'react';
 
 export const Home = () => {
   const icons = [TbBrandCpp, TbSql, FaRust, FaSwift, FaPython, FaPhp, FaJava, FaJs];
   const [activeTab, setActiveTab] = useState('For Students');
-  const { dashboardPath } = useContextAPI();
+  const { dashboardPath, isLoggedIn } = useContextAPI();
+  const navigate = useNavigate();
+
+  if (isLoggedIn) {
+    navigate(dashboardPath);
+  }
 
   const features = [
     {

@@ -12,10 +12,10 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ navigation }: SidebarProps) => {
-    const { user, setUser, setIsLoggedIn, setSidebarOpen, setAppLoading } = useContextAPI();
+    const { user, setUser, setIsLoggedIn, setSidebarOpen, isLoggingOut, setIsLoggingOut } = useContextAPI();
+
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
     const settingsPath = user?.role === 'faculty' ? '/faculty-dashboard/settings' : '/dashboard/settings';
@@ -33,12 +33,9 @@ export const Sidebar = ({ navigation }: SidebarProps) => {
             console.error('Logout error:', error);
             toast.error('Failed to logout, but clearing local session');
         } finally {
-            setAppLoading(true);
             setSidebarOpen(false);
             setIsMenuOpen(false);
-            sessionStorage.clear();
             navigate('/', { replace: true });
-
             setUser(null);
             setIsLoggedIn(false);
             setIsLoggingOut(false);

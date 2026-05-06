@@ -174,15 +174,6 @@ export const createApi = (baseURL: string): AxiosInstance => {
 
                     refreshQueue.processError(refreshTokenError);
 
-                    // Clear authentication and redirect to login
-                    try {
-                        // Clear any stored auth data
-                        localStorage.removeItem('user');
-                        sessionStorage.removeItem('user');
-                    } catch (storageError) {
-                        console.warn('Failed to clear storage:', storageError);
-                    }
-
                     // Redirect to login page
                     window.location.href = '/auth/login';
 

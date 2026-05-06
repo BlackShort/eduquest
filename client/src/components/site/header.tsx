@@ -12,7 +12,7 @@ interface HeaderProps {
 }
 
 export function Header({ layout = "site", variant = "default", theme = "light", menu = true }: HeaderProps) {
-    const { isLoggedIn, user, toggleSidebar } = useContextAPI();
+    const { isLoggedIn, user, toggleSidebar, dashboardPath } = useContextAPI();
 
     const links = [
         { name: "Problems", path: "/problemset" },
@@ -45,17 +45,7 @@ export function Header({ layout = "site", variant = "default", theme = "light", 
                         </div>
                     </Link>
 
-                    {/* <div className="flex flex-row-reverse md:flex-row items-center gap-4"> */}
-                    {/* Search Bar */}
-                    {/* <div className="hidden border border-gray-300 md:flex items-center gap-2 bg-gray-50 rounded-full px-4 py-2 w-full max-w-sm focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-200 transition-all duration-200">
-                        <Search className="w-5 h-5 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Search Opportunities"
-                            className="bg-transparent border-none outline-none text-sm tracking-wider w-full"
-                        />
-                    </div> */}
-
+                    
                     {menu && <nav
                         className={`hidden lg:flex items-center gap-8 font-normal ${theme === "light" ? "text-gray-700" : "text-neutral-400"
                             }`}
@@ -77,7 +67,7 @@ export function Header({ layout = "site", variant = "default", theme = "light", 
 
                     <div className="flex items-center gap-2">
                         {isLoggedIn && user ? (
-                            <Link to={'/dashboard'}>
+                            <Link to={dashboardPath}>
                                 <button
                                     type="button"
                                     className="cursor-pointer flex items-center justify-center gap-2 px-1.5 md:px-3 py-1.5 text-sm font-medium text-neutral-100 border border-orange-600/60 bg-orange-500 rounded-full hover:bg-orange-600 transition-all duration-200 hover:shadow-lg hover:shadow-orange-500/50"

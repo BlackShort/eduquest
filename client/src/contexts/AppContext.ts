@@ -26,6 +26,8 @@ export interface ContextType {
   sidebarOpen: boolean;
   toggleSidebar: () => void;
   setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isLoggingOut: boolean;
+  setIsLoggingOut: React.Dispatch<React.SetStateAction<boolean>>;
 }
 export interface AssessmentContextType {
   // State
