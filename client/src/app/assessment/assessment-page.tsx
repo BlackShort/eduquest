@@ -381,7 +381,7 @@ const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
                     </div>
                     <div className="flex items-center gap-3 text-sm text-neutral-300">
                         <Clock className="w-4 h-4 text-neutral-500" />
-                        <span className="font-medium truncate">{formatDate(assessment.startTime || "")}</span>
+                        <span className="font-medium truncate">{formatDate(assessment.endTime || "")}</span>
                     </div>
                 </div>
 

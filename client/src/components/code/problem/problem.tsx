@@ -352,85 +352,112 @@ export const ProblemDetail = ({
               </div>
             </div>
           </TabsContent>
-          <TabsContent value="test-cases" className="flex-1 overflow-y-auto px-4 py-4 text-gray-100">
+          <TabsContent
+            value="test-cases"
+            className="flex-1 overflow-y-auto px-4 py-4 text-gray-100"
+          >
             {externalTestResults && externalTestResults.length > 0 ? (
               <div className="space-y-4">
 
                 {/* ✅ Summary */}
-                <div className="bg-neutral-800/40 p-4 rounded-lg border border-neutral-700">
-                  <h3 className="text-lg font-semibold mb-2">
-                    Testcase Results
-                  </h3>
+                {(() => {
+                  const total = externalTestResults.length;
 
-                  {(() => {
-                    const total = externalTestResults.length;
-                    const passed = externalTestResults.filter(r => r.status === "PASSED").length;
+                  const passed = externalTestResults.filter(
+                    r => r.status === "PASSED"
+                  ).length;
 
-                    return (
-                      <p className={`text-sm font-medium ${passed === total ? "text-green-500" : "text-red-400"}`}>
-                        {passed} / {total} testcases passed
-                      </p>
-                    );
-                  })()}
-                </div>
+                  const allPassed = passed === total;
 
-                {/* ✅ Individual Testcases */}
-                <div className="space-y-3">
-                  {externalTestResults.map((result, index) => (
-                    <div
-                      key={index}
-                      className={`p-3 rounded-md border ${result.status === "PASSED"
-                          ? "border-green-500/40 bg-green-500/5"
-                          : "border-red-500/40 bg-red-500/5"
-                        }`}
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium">
-                          Testcase #{index + 1}
-                        </span>
+                  const failedCase = externalTestResults.find(
+                    r => r.status !== "PASSED"
+                  );
 
-                        <span
-                          className={`text-xs px-2 py-1 rounded ${result.status === "PASSED"
-                              ? "bg-green-600/20 text-green-400"
-                              : "bg-red-600/20 text-red-400"
+                  return (
+                    <>
+                      {/* Verdict Summary */}
+                      <div
+                        className={`p-4 rounded-lg border ${allPassed
+                            ? "border-green-500/30 bg-green-500/5"
+                            : "border-red-500/30 bg-red-500/5"
+                          }`}
+                      >
+                        <h2
+                          className={`text-lg font-semibold mb-2 ${allPassed ? "text-green-400" : "text-red-400"
                             }`}
                         >
-                          {result.status}
-                        </span>
+                          {allPassed ? "Accepted" : "Wrong Answer"}
+                        </h2>
+
+                        <p className="text-sm text-neutral-300">
+                          {passed} / {total} testcases passed
+                        </p>
                       </div>
 
-                      <div className="text-xs text-neutral-400 mb-1">Input</div>
-                      <div className="text-sm bg-neutral-700/50 p-2 rounded font-mono mb-2">
-                        {result.input}
-                      </div>
+                      {/* ✅ Show ONLY first failed testcase */}
+                      {!allPassed && failedCase && (
+                        <div className="border border-red-500/30 bg-red-500/5 rounded-lg p-4 space-y-3">
 
-                      <div className="text-xs text-neutral-400 mb-1">Output</div>
-                      <div className="text-sm bg-neutral-700/50 p-2 rounded font-mono mb-2">
-                        {result.actualOutput}
-                      </div>
+                          <h3 className="text-red-400 font-medium">
+                            Failed Testcase
+                          </h3>
 
-                      <div className="text-xs text-neutral-400 mb-1">Expected</div>
-                      <div className="text-sm bg-neutral-700/50 p-2 rounded font-mono">
-                        {result.expectedOutput}
-                      </div>
+                          {/* Input */}
+                          <div>
+                            <div className="text-xs text-neutral-400 mb-1">
+                              Input
+                            </div>
 
-                      {/* 🔴 Error display */}
-                      {result.status !== "PASSED" && result.errorMessage && (
-                        <div className="mt-2">
-                          <div className="text-xs text-red-400 mb-1">Error</div>
-                          <div className="text-sm text-red-400 bg-red-500/5 p-2 rounded font-mono whitespace-pre-wrap">
-                            {result.errorMessage}
+                            <div className="bg-neutral-800 rounded p-2 font-mono text-sm whitespace-pre-wrap">
+                              {failedCase.input}
+                            </div>
                           </div>
+
+                          {/* Your Output */}
+                          <div>
+                            <div className="text-xs text-neutral-400 mb-1">
+                              Your Output
+                            </div>
+
+                            <div className="bg-neutral-800 rounded p-2 font-mono text-sm whitespace-pre-wrap">
+                              {failedCase.actualOutput || "No Output"}
+                            </div>
+                          </div>
+
+                          {/* Expected Output */}
+                          <div>
+                            <div className="text-xs text-neutral-400 mb-1">
+                              Expected Output
+                            </div>
+
+                            <div className="bg-neutral-800 rounded p-2 font-mono text-sm whitespace-pre-wrap">
+                              {failedCase.expectedOutput}
+                            </div>
+                          </div>
+
+                          {/* Error */}
+                          {failedCase.errorMessage && (
+                            <div>
+                              <div className="text-xs text-red-400 mb-1">
+                                Error
+                              </div>
+
+                              <div className="bg-red-500/10 text-red-300 rounded p-2 font-mono text-sm whitespace-pre-wrap">
+                                {failedCase.errorMessage}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
-                    </div>
-                  ))}
-                </div>
-
+                    </>
+                  );
+                })()}
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-sm text-[#7c7c7c]">Run or Submit code to see results</p>
+                <p className="text-sm text-[#7c7c7c]">
+                  Submit code to see testcase results
+                </p>
               </div>
             )}
           </TabsContent>
@@ -654,7 +681,7 @@ export const ProblemDetail = ({
                       <div className="p-3">
                         <Tabs defaultValue="res-0" className="w-full h-full text-neutral-100">
                           <TabsList className="p-1 w-full bg-neutral-800 rounded-md flex items-center justify-start gap-2">
-                            {externalTestResults.map((result, index) => (
+                            {externalTestResults.slice(0, 3).map((result, index) => (
                               <TabsTrigger
                                 key={index}
                                 value={`res-${index}`}
@@ -673,7 +700,7 @@ export const ProblemDetail = ({
                             ))}
                           </TabsList>
 
-                          {externalTestResults.map((result, index) => (
+                          {externalTestResults.slice(0, 3).map((result, index) => (
                             <TabsContent key={index} value={`res-${index}`} className="mt-0 space-y-3">
                               <div>
                                 <div className="text-xs text-neutral-400 mb-1.5">Input</div>
