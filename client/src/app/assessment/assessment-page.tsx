@@ -13,174 +13,9 @@ import {
     Timer,
     Users,
     Award,
-    AlertCircle,
     Pause,
     Play,
 } from "lucide-react";
-// import { dummyAssignments, dummyCoding, dummyMcqs } from "@/data/dummy-data";
-
-
-// Mock assessment data with status and dates
-// const mockAssessments = [
-//     // Current/Live Assessments
-//     {
-//         _id: "assess_001",
-//         test_id: dummyAssignments[0].test_id,
-//         title: "Data Structures Theory Assessment",
-//         type: "assignment",
-//         subject: dummyAssignments[0].subject_id,
-//         num_questions: dummyAssignments[0].num_questions,
-//         duration: 60,
-//         status: "live",
-//         startTime: "2026-02-16T14:00:00",
-//         endTime: "2026-02-16T18:00:00",
-//         totalMarks: 50,
-//         attempted: false,
-//     },
-//     {
-//         _id: "assess_002",
-//         test_id: dummyCoding[0].test_id,
-//         title: "Programming Fundamentals - Coding Test",
-//         type: "coding",
-//         subject: dummyCoding[0].subject_id,
-//         num_questions: dummyCoding[0].num_questions,
-//         duration: 90,
-//         status: "live",
-//         startTime: "2026-02-16T10:00:00",
-//         endTime: "2026-02-16T20:00:00",
-//         totalMarks: 100,
-//         attempted: true,
-//         progress: 67,
-//     },
-//     {
-//         _id: "assess_003",
-//         test_id: dummyMcqs[0].test_id,
-//         title: "Object-Oriented Programming MCQ",
-//         type: "mcq",
-//         subject: dummyMcqs[0].subject_id,
-//         num_questions: dummyMcqs[0].num_questions,
-//         duration: 30,
-//         status: "live",
-//         startTime: "2026-02-16T09:00:00",
-//         endTime: "2026-02-16T23:59:00",
-//         totalMarks: 30,
-//         attempted: false,
-//     },
-
-//     // // Upcoming Assessments
-//     {
-//         _id: "assess_004",
-//         test_id: dummyAssignments[1].test_id,
-//         title: "Algorithms Analysis Assignment",
-//         type: "assignment",
-//         subject: dummyAssignments[1].subject_id,
-//         num_questions: dummyAssignments[1].num_questions,
-//         duration: 120,
-//         status: "upcoming",
-//         startTime: "2026-02-18T10:00:00",
-//         endTime: "2026-02-18T16:00:00",
-//         totalMarks: 75,
-//         attempted: false,
-//     },
-//     {
-//         _id: "assess_005",
-//         test_id: dummyCoding[1].test_id,
-//         title: "Advanced Data Structures Coding",
-//         type: "coding",
-//         subject: dummyCoding[1].subject_id,
-//         num_questions: dummyCoding[1].num_questions,
-//         duration: 120,
-//         status: "upcoming",
-//         startTime: "2026-02-20T14:00:00",
-//         endTime: "2026-02-20T18:00:00",
-//         totalMarks: 100,
-//         attempted: false,
-//     },
-//     {
-//         _id: "assess_006",
-//         test_id: dummyMcqs[1].test_id,
-//         title: "Database Management Systems MCQ",
-//         type: "mcq",
-//         subject: dummyMcqs[1].subject_id,
-//         num_questions: dummyMcqs[1].num_questions,
-//         duration: 45,
-//         status: "upcoming",
-//         startTime: "2026-02-19T15:00:00",
-//         endTime: "2026-02-19T17:00:00",
-//         totalMarks: 50,
-//         attempted: false,
-//     },
-
-//     // // History (Completed)
-//     {
-//         _id: "assess_007",
-//         test_id: dummyAssignments[2].test_id,
-//         title: "Software Engineering Principles",
-//         type: "assignment",
-//         subject: dummyAssignments[2].subject_id,
-//         num_questions: dummyAssignments[2].num_questions,
-//         duration: 90,
-//         status: "completed",
-//         startTime: "2026-02-10T10:00:00",
-//         endTime: "2026-02-10T14:00:00",
-//         totalMarks: 60,
-//         attempted: true,
-//         score: 52,
-//         percentage: 86.67,
-//         submittedAt: "2026-02-10T12:45:00",
-//     },
-//     {
-//         _id: "assess_008",
-//         test_id: dummyCoding[1].test_id,
-//         title: "Array and String Manipulation",
-//         type: "coding",
-//         subject: dummyCoding[1].subject_id,
-//         num_questions: dummyCoding[1].num_questions,
-//         duration: 60,
-//         status: "completed",
-//         startTime: "2026-02-12T14:00:00",
-//         endTime: "2026-02-12T16:00:00",
-//         totalMarks: 80,
-//         attempted: true,
-//         score: 68,
-//         percentage: 85,
-//         submittedAt: "2026-02-12T15:42:00",
-//     },
-//     {
-//         _id: "assess_009",
-//         test_id: dummyMcqs[2].test_id,
-//         title: "Computer Networks Fundamentals",
-//         type: "mcq",
-//         subject: dummyMcqs[2].subject_id,
-//         num_questions: dummyMcqs[2].num_questions,
-//         duration: 30,
-//         status: "completed",
-//         startTime: "2026-02-14T11:00:00",
-//         endTime: "2026-02-14T12:00:00",
-//         totalMarks: 30,
-//         attempted: true,
-//         score: 27,
-//         percentage: 90,
-//         submittedAt: "2026-02-14T11:28:00",
-//     },
-//     {
-//         _id: "assess_010",
-//         test_id: "test_code_old_001",
-//         title: "Recursion and Backtracking",
-//         type: "coding",
-//         subject: "sub_cs101",
-//         num_questions: 4,
-//         duration: 90,
-//         status: "completed",
-//         startTime: "2026-02-08T10:00:00",
-//         endTime: "2026-02-08T13:00:00",
-//         totalMarks: 100,
-//         attempted: true,
-//         score: 75,
-//         percentage: 75,
-//         submittedAt: "2026-02-08T12:15:00",
-//     },
-// ];
 
 type TestType = {
   _id: string;
@@ -281,203 +116,201 @@ const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
         switch (assessment.type) {
             case "coding":
                 return {
-                    icon: <Code2 className="w-6 h-6" />,
-                    color: "text-blue-400",
-                    glow: "bg-blue-500/10",
-                    hoverGlow: "group-hover:bg-blue-500/20",
+                    icon: <Code2 className="w-4.5 h-4.5" />,
+                    iconBg: "bg-blue-500/10",
+                    iconColor: "text-blue-400",
                     badge: "bg-blue-500/10 border-blue-500/20 text-blue-400",
-                    bar: "from-blue-600 to-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.5)]"
                 };
             case "mcq":
                 return {
-                    icon: <CheckCircle2 className="w-6 h-6" />,
-                    color: "text-emerald-400",
-                    glow: "bg-emerald-500/10",
-                    hoverGlow: "group-hover:bg-emerald-500/20",
+                    icon: <CheckCircle2 className="w-4.5 h-4.5" />,
+                    iconBg: "bg-emerald-500/10",
+                    iconColor: "text-emerald-400",
                     badge: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-                    bar: "from-emerald-600 to-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]"
                 };
             case "assignment":
                 return {
-                    icon: <FileText className="w-6 h-6" />,
-                    color: "text-purple-400",
-                    glow: "bg-purple-500/10",
-                    hoverGlow: "group-hover:bg-purple-500/20",
+                    icon: <FileText className="w-4.5 h-4.5" />,
+                    iconBg: "bg-purple-500/10",
+                    iconColor: "text-purple-400",
                     badge: "bg-purple-500/10 border-purple-500/20 text-purple-400",
-                    bar: "from-purple-600 to-purple-400 shadow-[0_0_10px_rgba(192,132,252,0.5)]"
                 };
             default:
                 return {
-                    icon: <FileText className="w-6 h-6" />,
-                    color: "text-gray-400",
-                    glow: "bg-gray-500/10",
-                    hoverGlow: "group-hover:bg-gray-500/20",
-                    badge: "bg-gray-500/10 border-gray-500/20 text-gray-400",
-                    bar: "from-gray-600 to-gray-400"
+                    icon: <FileText className="w-4.5 h-4.5" />,
+                    iconBg: "bg-neutral-500/10",
+                    iconColor: "text-neutral-400",
+                    badge: "bg-neutral-500/10 border-neutral-500/20 text-neutral-400",
                 };
         }
     };
 
     const styles = getTypeStyles();
 
-    // const formatDate = (dateStr: string) => {
-    //     return new Date(dateStr).toLocaleString("en-US", {
-    //         month: "short",
-    //         day: "numeric",
-    //         hour: "2-digit",
-    //         minute: "2-digit",
-    //     });
-    // };
-
     const getTimeRemaining = () => {
         const now = new Date();
         const end = new Date(assessment.endTime || "");
         const diff = end.getTime() - now.getTime();
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-        if (hours > 0) return `${hours}h ${minutes}m remaining`;
-        if (minutes > 0) return `${minutes}m remaining`;
+        if (diff <= 0) return "Ended";
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor(
+            (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
+        const minutes = Math.floor(
+            (diff % (1000 * 60 * 60)) / (1000 * 60)
+        );
+
+        if (days > 0) {
+            return `${days}d ${hours}h remaining`;
+        }
+
+        if (hours > 0) {
+            return `${hours}h ${minutes}m remaining`;
+        }
+
+        if (minutes > 0) {
+            return `${minutes}m remaining`;
+        }
+
         return "Ending soon";
     };
 
     return (
-        <div className={`group relative bg-white/2 rounded-2xl p-6 border border-white/5 overflow-hidden hover:bg-white/2 transition-all duration-500`}>
-            <div className={`absolute top-0 right-0 w-32 h-32 ${styles.glow} rounded-full blur-[50px] pointer-events-none ${styles.hoverGlow} transition-all duration-500`}></div>
+        <div className="bg-white/2 border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-all duration-300">
 
-            <div className="relative z-10">
-                <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-start gap-4">
-                        <div className={`w-12 h-12 bg-white/3 border border-white/10 rounded-lg flex items-center justify-center shrink-0 shadow-lg ${styles.color} group-hover:scale-110 transition-transform duration-500`}>
+            {/* Main Content */}
+            <div className="p-5">
+
+                {/* Header */}
+                <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="flex items-start gap-3">
+                        <div className={`w-10 h-10 rounded-xl ${styles.iconBg} flex items-center justify-center shrink-0 ${styles.iconColor}`}>
                             {styles.icon}
                         </div>
-                        <div className="mt-1">
-                            <h3 className={`text-xl font-semibold text-white mb-1 transition-colors tracking-tight`}>
+                        <div>
+                            <h3 className="text-base font-semibold text-white leading-snug mb-0.5">
                                 {assessment.title}
                             </h3>
-                            <p className="text-sm text-neutral-400 font-medium">
-                                {assessment.subject} <span className="mx-2 opacity-50">•</span> {assessment.num_questions} Questions
+                            <p className="text-sm text-neutral-400">
+                                {assessment.subject} <span className="mx-1.5 opacity-40">·</span> {assessment.num_questions} Questions
                             </p>
                         </div>
                     </div>
-                    {/* Badge */}
-                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${styles.badge} capitalize whitespace-nowrap`}>
+                    <span className={`shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full border capitalize ${styles.badge}`}>
                         {assessment.type}
                     </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-6 p-4 rounded-xl bg-white/2 border border-white/5">
-                    <div className="flex items-center gap-3 text-sm text-neutral-300">
-                        <Timer className="w-4 h-4 text-neutral-500" />
-                        <span className="font-medium">{assessment.duration} mins</span>
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                    <div className="flex items-center gap-2.5 px-3 py-2.5 bg-white/3 rounded-xl">
+                        <Timer className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                        <div>
+                            <p className="text-[10px] text-neutral-500 leading-none mb-1">Duration</p>
+                            <p className="text-sm font-medium text-neutral-200 leading-none">{assessment.duration} mins</p>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-neutral-300">
-                        <Award className="w-4 h-4 text-neutral-500" />
-                        <span className="font-medium">{assessment.totalMarks} marks</span>
+                    <div className="flex items-center gap-2.5 px-3 py-2.5 bg-white/3 rounded-xl">
+                        <Award className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                        <div>
+                            <p className="text-[10px] text-neutral-500 leading-none mb-1">Marks</p>
+                            <p className="text-sm font-medium text-neutral-200 leading-none">{assessment.totalMarks} marks</p>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-neutral-300">
-                        <Calendar className="w-4 h-4 text-neutral-500" />
-                        <span className="font-medium truncate">{formatDate(assessment.startTime || "")}</span>
+                    <div className="flex items-center gap-2.5 px-3 py-2.5 bg-white/3 rounded-xl">
+                        <Calendar className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                        <div>
+                            <p className="text-[10px] text-neutral-500 leading-none mb-1">Starts</p>
+                            <p className="text-sm font-medium text-neutral-200 leading-none truncate">{formatDate(assessment.startTime || "")}</p>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-neutral-300">
-                        <Clock className="w-4 h-4 text-neutral-500" />
-                        <span className="font-medium truncate">{formatDate(assessment.endTime || "")}</span>
+                    <div className="flex items-center gap-2.5 px-3 py-2.5 bg-white/3 rounded-xl">
+                        <Clock className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                        <div>
+                            <p className="text-[10px] text-neutral-500 leading-none mb-1">Ends</p>
+                            <p className="text-sm font-medium text-neutral-200 leading-none truncate">{formatDate(assessment.endTime || "")}</p>
+                        </div>
                     </div>
                 </div>
 
-                {/* Status-specific content */}
+                {/* Status Content */}
                 {assessment.status === "live" && (
-                    <div className="mb-6">
-                        {assessment.attempted && assessment.progress ? (
-                            <div>
-                                <div className="flex justify-between text-sm mb-2">
-                                    <span className="text-neutral-400 font-medium">Progress</span>
-                                    <span className="text-white font-medium">{assessment.progress}%</span>
-                                </div>
-                                <div className="h-1.5 w-full bg-neutral-800/80 rounded-full overflow-hidden shadow-inner">
-                                    <div
-                                        className={`h-full bg-linear-to-r ${styles.bar} rounded-full transition-all duration-1000 relative`}
-                                        style={{ width: `${assessment.progress}%` }}
-                                    >
-                                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,1)]"></div>
-                                    </div>
-                                </div>
+                    assessment.attempted && assessment.progress ? (
+                        <div className="mb-1">
+                            <div className="flex justify-between text-xs mb-2">
+                                <span className="text-neutral-400">Progress</span>
+                                <span className="text-neutral-200 font-medium">{assessment.progress}%</span>
                             </div>
-                        ) : (
-                            <div className="flex items-center gap-2 text-sm text-blue-400 bg-blue-500/10 border border-blue-500/20 px-4 py-2.5 rounded-lg font-medium">
-                                <AlertCircle className="w-4 h-4" />
-                                <span>{getTimeRemaining()}</span>
+                            <div className="h-1.5 w-full bg-neutral-800 rounded-full overflow-hidden">
+                                <div
+                                    className={`h-full bg-linear-to-r ${styles.iconBg} rounded-full transition-all duration-700`}
+                                    style={{ width: `${assessment.progress}%` }}
+                                />
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+                                </span>
+                                <span className="text-xs font-semibold tracking-widest uppercase text-red-400">Live</span>
+                            </div>
+                            <span className="text-xs text-neutral-500">{getTimeRemaining()}</span>
+                        </div>
+                    )
                 )}
 
                 {assessment.status === "completed" && assessment.score !== undefined && (
-                    <div className="mb-6 p-4 bg-white/2 rounded-lg border border-white/5">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-neutral-400 mb-1 font-medium">Your Score</p>
-                                <div className="flex items-baseline gap-1">
-                                    <p className="text-2xl font-bold text-white tracking-tighter">
-                                        {assessment.score}
-                                    </p>
-                                    <span className="text-neutral-500 text-sm">/{assessment.totalMarks}</span>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-sm text-neutral-400 mb-1 font-medium">Percentage</p>
-                                <p
-                                    className={`text-2xl font-bold tracking-tighter ${assessment.percentage! >= 80
-                                        ? "text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]"
-                                        : assessment.percentage! >= 60
-                                            ? "text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.3)]"
-                                            : "text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.3)]"
-                                        }`}
-                                >
-                                    {assessment.percentage}%
-                                </p>
-                            </div>
+                    <div className="flex items-center justify-between px-4 py-3 bg-white/3 rounded-xl">
+                        <div>
+                            <p className="text-[10px] text-neutral-500 mb-1">Your Score</p>
+                            <p className="text-xl font-semibold text-white leading-none">
+                                {assessment.score}
+                                <span className="text-sm font-normal text-neutral-500 ml-1">/ {assessment.totalMarks}</span>
+                            </p>
+                        </div>
+                        <div className="w-px h-8 bg-white/5" />
+                        <div className="text-right">
+                            <p className="text-[10px] text-neutral-500 mb-1">Percentage</p>
+                            <p className={`text-xl font-semibold leading-none ${assessment.percentage! >= 80
+                                    ? "text-emerald-400"
+                                    : assessment.percentage! >= 60
+                                        ? "text-blue-400"
+                                        : "text-red-400"
+                                }`}>
+                                {assessment.percentage}%
+                            </p>
                         </div>
                     </div>
                 )}
+            </div>
 
-                {/* Action Button */}
+            {/* Action Button */}
+            <div className="border-t border-white/5 px-5 py-4">
                 <Link
                     to={`/assessment/${assessment._id}`}
-                    className={`flex items-center justify-center gap-2 w-full px-3 py-3 rounded-lg font-medium text-center transition-all duration-300 
-                        bg-white/5 text-neutral-100 hover:bg-white/10 border border-white/10 active:scale-[0.98]`}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium text-neutral-200 bg-white/5 hover:bg-white/8 border border-white/8 hover:border-white/15 transition-all duration-200 active:scale-[0.98]"
                 >
                     {assessment.status === "live" ? (
-                        <>
-                            {assessment.attempted ? (
-                                <>
-                                    <Pause className="w-4 h-4 text-neutral-300" />
-                                    Resume Assessment
-                                </>
-                            ) : (
-                                <>
-                                    <Play className="w-4 h-4 text-neutral-300" />
-                                    Start Assessment
-                                </>
-                            )}
-                        </>
+                        assessment.attempted ? (
+                            <><Pause className="w-4 h-4 text-neutral-400" /> Resume Assessment</>
+                        ) : (
+                            <><Play className="w-4 h-4 text-neutral-400" /> Start Assessment</>
+                        )
                     ) : assessment.status === "upcoming" ? (
-                        <>
-                            <Clock className="w-5 h-5" />
-                            Starts {formatDate(assessment.startTime)}
-                        </>
+                        <><Clock className="w-4 h-4 text-neutral-400" /> Starts {formatDate(assessment.startTime)}</>
                     ) : (
-                        <>
-                            <Eye className="w-5 h-5" />
-                            View Results
-                        </>
+                        <><Eye className="w-4 h-4 text-neutral-400" /> View Results</>
                     )}
                 </Link>
             </div>
         </div>
     );
 };
-
 export const AssessmentHome = () => {
 
     
@@ -602,8 +435,8 @@ const assessments = tests
                             ))}
                         </div>
                     ) : (
-                        <div className="bg-[#09090b] rounded-3xl p-16 border border-white/5 text-center shadow-2xl relative overflow-hidden">
-                            <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-xl shadow-black/50 relative z-10 backdrop-blur-xl">
+                        <div className="bg-white/2 rounded-3xl p-16 border border-white/5 text-center relative overflow-hidden">
+                            <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 relative z-10 backdrop-blur-xl">
                                 <PlayCircle className="w-10 h-10 text-neutral-400" />
                             </div>
                             <h3 className="text-2xl font-semibold text-white mb-3 tracking-tight relative z-10">No Active Assessments</h3>
@@ -621,9 +454,8 @@ const assessments = tests
                             ))}
                         </div>
                     ) : (
-                        <div className="bg-[#09090b] rounded-3xl p-16 border border-white/5 text-center shadow-2xl relative overflow-hidden">
-                            <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dhe1ygeid/image/upload/v1714495861/grid_m4tnsi.svg')] opacity-[0.03] bg-repeat bg-size-[32px_32px]"></div>
-                            <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-xl shadow-black/50 relative z-10 backdrop-blur-xl">
+                        <div className="bg-white/2 rounded-3xl p-16 border border-white/5 text-center relative overflow-hidden">
+                            <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 relative z-10 backdrop-blur-xl">
                                 <Calendar className="w-10 h-10 text-neutral-400" />
                             </div>
                             <h3 className="text-2xl font-semibold text-white mb-3 tracking-tight relative z-10">No Upcoming Assessments</h3>
@@ -641,9 +473,8 @@ const assessments = tests
                             ))}
                         </div>
                     ) : (
-                        <div className="bg-[#09090b] rounded-3xl p-16 border border-white/5 text-center shadow-2xl relative overflow-hidden">
-                            <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dhe1ygeid/image/upload/v1714495861/grid_m4tnsi.svg')] opacity-[0.03] bg-repeat bg-size-[32px_32px]"></div>
-                            <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-xl shadow-black/50 relative z-10 backdrop-blur-xl">
+                        <div className="bg-white/2 rounded-3xl p-16 border border-white/5 text-center relative overflow-hidden">
+                            <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 relative z-10 backdrop-blur-xl">
                                 <CheckCircle2 className="w-10 h-10 text-neutral-400" />
                             </div>
                             <h3 className="text-2xl font-semibold text-white mb-3 tracking-tight relative z-10">No Completed Assessments</h3>

@@ -1,4 +1,4 @@
-import { Link, NavLink } from 'react-router'
+import { Link } from 'react-router'
 import { User } from 'lucide-react';
 import { logo } from '@/assets/logo'
 import { useContextAPI } from '@/hooks/useContext';
@@ -14,11 +14,11 @@ interface HeaderProps {
 export function Header({ layout = "site", variant = "default", theme = "light", menu = true }: HeaderProps) {
     const { isLoggedIn, user, toggleSidebar, dashboardPath } = useContextAPI();
 
-    const links = [
-        { name: "Problems", path: "/problemset" },
-        { name: "Contests", path: "/contest" },
-        { name: "Leaderboard", path: "/leaderboard" },
-    ];
+    // const links = [
+    //     { name: "Problems", path: "/problemset" },
+    //     { name: "Contests", path: "/contest" },
+    //     { name: "Leaderboard", path: "/leaderboard" },
+    // ];
 
 
     return (
@@ -50,7 +50,7 @@ export function Header({ layout = "site", variant = "default", theme = "light", 
                         className={`hidden lg:flex items-center gap-8 font-normal ${theme === "light" ? "text-gray-700" : "text-neutral-400"
                             }`}
                     >
-                        {links.map((link, index) => (
+                        {/* {links.map((link, index) => (
                             <NavLink
                                 key={index}
                                 to={link.path}
@@ -60,7 +60,7 @@ export function Header({ layout = "site", variant = "default", theme = "light", 
                             >
                                 {link.name}
                             </NavLink>
-                        ))}
+                        ))} */}
                     </nav>}
 
 

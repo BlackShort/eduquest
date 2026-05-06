@@ -212,7 +212,6 @@ export const DashboardHome = () => {
 
           {/* Badge / Profile Card - very minimalist */}
           <div className="bg-linear-to-b from-[#18181b] to-white/5 border border-white/5 rounded-2xl p-4 md:p-8 text-center relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-full h-full bg-[url('https://res.cloudinary.com/dhe1ygeid/image/upload/v1714495861/grid_m4tnsi.svg')] opacity-[0.03] pointer-events-none"></div>
             <div className="absolute top-0 right-0 w-full h-full bg-linear-to-br from-orange-500/10 via-transparent to-purple-500/5 pointer-events-none"></div>
             <div className="mx-auto w-24 h-24 mb-6 rounded-2xl rotate-12 bg-linear-to-tr from-orange-400 to-amber-300 flex items-center justify-center shadow-[0_0_30px_rgba(249,115,22,0.3)] relative z-10 transition-transform group-hover:rotate-0 group-hover:scale-105 duration-500">
               <Award className="w-10 h-10 text-orange-950 -rotate-12 group-hover:rotate-0 transition-transform duration-500" />

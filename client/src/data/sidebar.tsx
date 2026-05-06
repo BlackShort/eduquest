@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { CodeXml, FileCodeCorner, ChartNoAxesColumn, ListTodo, LayoutDashboard, ChartColumnDecreasing, Upload, FileText } from "lucide-react";
+import { CodeXml, FileCodeCorner, ListTodo, LayoutDashboard, ChartColumnDecreasing, Upload, FileText } from "lucide-react";
 
 export interface NavigationItem {
     featured?: boolean;
@@ -17,25 +17,11 @@ export const studentNavigation: Navigation = {
     dashboard: [
         { featured: false, path: `/dashboard`, icon: LayoutDashboard, title: 'Dashboard' },
         { featured: true, path: `assessment`, icon: ListTodo, title: 'Assessment' },
-        { featured: false, path: `contest`, icon: ChartNoAxesColumn, title: 'Contests' },
-        // { featured: false, path: `/problems`, icon: CodeXml, title: 'Problems' },
-        // { featured: false, path: `/leaderboard`, icon: ChartColumnDecreasing, title: 'Leaderboard' },
     ],
 
     learning: [
         { featured: false, path: `assignments`, icon: FileCodeCorner, title: 'Assignments' },
-        // { path: `courses`, icon: FileText, title: 'Courses' },
-        // { path: `resources`, icon: FolderClosed, title: 'Resources' },
     ],
-
-    // account: [
-    //     { featured: false, path: `me`, icon: UserRound, title: 'Profile' },
-    //     { featured: false, path: `settings`, icon: Settings, title: 'Settings' },
-    // ],
-
-    // app: [
-    //     { path: `appshare`, icon: QrCode, title: 'Share App' },
-    // ],
 };
 
 // Faculty dashboard navigation

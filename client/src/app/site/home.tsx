@@ -6,7 +6,7 @@ import { FaJava, FaSwift, FaPython, FaPhp, FaRust, FaJs } from "react-icons/fa";
 import { TbBrandCpp, TbSql } from "react-icons/tb";
 import { Link, useNavigate } from 'react-router';
 import { useContextAPI } from '@/hooks/useContext';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export const Home = () => {
   const icons = [TbBrandCpp, TbSql, FaRust, FaSwift, FaPython, FaPhp, FaJava, FaJs];
@@ -14,9 +14,11 @@ export const Home = () => {
   const { dashboardPath, isLoggedIn } = useContextAPI();
   const navigate = useNavigate();
 
-  if (isLoggedIn) {
-    navigate(dashboardPath);
-  }
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate(dashboardPath);
+    }
+  }, [isLoggedIn, dashboardPath, navigate]);
 
   const features = [
     {
