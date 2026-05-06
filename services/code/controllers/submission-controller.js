@@ -11,13 +11,43 @@ export const executeSubmission = async (req, res) => {
         const { questionId, env_type, testId, language, code, mode, testCase } = req.body;
         const studentId = req.headers["x-student-id"];
 
-        if (!studentId || !questionId || !language || !code || !mode || !env_type) {
+        // 🔍 DEBUG LOG (very important)
+        console.log("📥 Incoming Request:", {
+            studentId,
+            questionId,
+            env_type,
+            testId,
+            language,
+            codeLength: code ? code.length : 0,
+            mode,
+        });
+
+        // ✅ Better validation
+        const missingFields = [];
+
+        if (!studentId) missingFields.push("studentId");
+        if (!questionId) missingFields.push("questionId");
+        if (!env_type) missingFields.push("env_type");
+        if (!language) missingFields.push("language");
+        if (!code) missingFields.push("code");
+        if (!mode) missingFields.push("mode");
+
+        if (missingFields.length > 0) {
+            console.log("❌ Missing fields:", missingFields);
+
             return res.status(400).json({
-                message: 'studentId, questionId, env_type, language, code and mode are required',
+                message: `Missing fields: ${missingFields.join(", ")}`
             });
         }
 
-        if ((env_type === SUBMISSION_ENV_TYPES.ASSESSMENT || env_type === SUBMISSION_ENV_TYPES.ASSIGNMENT) && !testId) {
+        // ⚠️ Special validation for assessment/assignment
+        if (
+            (env_type === SUBMISSION_ENV_TYPES.ASSESSMENT ||
+                env_type === SUBMISSION_ENV_TYPES.ASSIGNMENT) &&
+            !testId
+        ) {
+            console.log("❌ Missing testId for env_type:", env_type);
+
             return res.status(400).json({
                 message: `testId is required for ${env_type}`,
             });
@@ -54,12 +84,12 @@ export const executeSubmission = async (req, res) => {
             await savedSubmission.save();
         }
 
-        console.log("Request processed successfully:", {
+        console.log("✅ Request processed successfully:", {
             message: 'Execution completed',
             executionResult,
             submissionId: savedSubmission ? savedSubmission._id : null,
             plagiarism: plagiarismResult,
-        })
+        });
 
         return res.status(200).json({
             message: 'Execution completed',
@@ -67,8 +97,14 @@ export const executeSubmission = async (req, res) => {
             submissionId: savedSubmission ? savedSubmission._id : null,
             plagiarism: plagiarismResult,
         });
+
     } catch (err) {
-        console.error('Error in executeSubmission:', err);
+        console.error('❌ executeSubmission error:', {
+            message: err.message,
+            name: err.name,
+            stack: err.stack,
+            });
+
         return res.status(500).json({
             message: 'Internal server error',
         });

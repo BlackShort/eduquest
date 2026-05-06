@@ -21,12 +21,14 @@ export const ContextApp = ({ children }: { children: ReactNode }) => {
     const initAuth = async () => {
       try {
         const data = await verifyToken();
+        console.log("verifyToken response:", data);
 
         setUser(data.user);
         setDashboardPath(getDashboardPath(data.user?.role));
-        setUserID(data.user?._id ?? null);
+        setUserID(data.user?.userId ?? null);
         setIsLoggedIn(true);
-      } catch {
+      } catch(err) {
+        console.error("verifyToken failed:", err);
         setUser(null);
         setUserID(null);
         setIsLoggedIn(false);

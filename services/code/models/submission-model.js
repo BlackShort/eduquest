@@ -56,66 +56,62 @@ const PlagiarismInfoSchema = new mongoose.Schema(
     { _id: false }
 );
 
-const SubmissionSchema = new mongoose.Schema(
-    {
-        env_type: {
-            type: String,
-            enum: Object.values(SUBMISSION_ENV_TYPES),
-            default: SUBMISSION_ENV_TYPES.PROBLEM,
-        },
-        testId: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-        },
-        studentId: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-        },
-        questionId: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-        },
-        language: {
-            type: String,
-            required: true,
-            enum: ['cpp', 'java', 'python', 'c', 'javascript'],
-        },
-        code: {
-            type: String,
-            required: true,
-        },
-        mode: {
-            type: String,
-            enum: ['run', 'submit'],
-            required: true,
-        },
-        totalTestcases: {
-            type: Number,
-            default: 0,
-        },
-        passedTestcases: {
-            type: Number,
-            default: 0,
-        },
-        verdict: {
-            type: String,
-            enum: ['ACCEPTED', 'PARTIALLY_CORRECT', 'WRONG_ANSWER', 'ERROR', 'PENDING'],
-            default: 'PENDING',
-        },
-        overallTimeMs: {
-            type: Number,
-            default: 0,
-        },
-        testcaseResults: [TestcaseResultSchema],
-        plagiarism: {
-            type: PlagiarismInfoSchema,
-            default: () => ({}),
-        },
+const SubmissionSchema = new mongoose.Schema({
+    env_type: {
+        type: String,
+        enum: Object.values(SUBMISSION_ENV_TYPES),
+        default: SUBMISSION_ENV_TYPES.PROBLEM,
     },
-    {
-        timestamps: true,
-    }
-);
+
+    testId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: false,
+    },
+
+    studentId: {
+        type: String, 
+        required: true,
+    },
+
+    questionId: {
+        type: String, 
+        required: true,
+    },
+
+    language: {
+        type: String,
+        required: true,
+        enum: ['cpp', 'java', 'python', 'c', 'javascript'],
+    },
+
+    code: {
+        type: String,
+        required: true,
+    },
+
+    mode: {
+        type: String,
+        enum: ['run', 'submit'],
+        required: true,
+    },
+
+    totalTestcases: Number,
+    passedTestcases: Number,
+
+    verdict: {
+        type: String,
+        enum: ['ACCEPTED', 'PARTIALLY_CORRECT', 'WRONG_ANSWER', 'ERROR', 'PENDING'],
+        default: 'PENDING',
+    },
+
+    overallTimeMs: Number,
+    testcaseResults: [TestcaseResultSchema],
+
+    plagiarism: {
+        type: PlagiarismInfoSchema,
+        default: () => ({}),
+    },
+}, { timestamps: true });
 
 SubmissionSchema.index({ studentId: 1, questionId: 1 });
 SubmissionSchema.index({ questionId: 1 });

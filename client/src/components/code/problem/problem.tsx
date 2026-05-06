@@ -51,6 +51,8 @@ interface TestResult {
   actualOutput: string;
   passed: boolean;
   runtime: string;
+  status: string; 
+  errorMessage?: string;
 }
 
 interface DisplayProblem {
@@ -79,6 +81,8 @@ interface ProblemDetailProps {
   sendTestCase?: (testCases: Testcase[]) => void;
   actionBarLayout?: "global-header" | "editor-top" | "editor-bottom";
 }
+
+
 
 export const ProblemDetail = ({
   problemId,
@@ -174,6 +178,20 @@ export const ProblemDetail = ({
     );
   }
 
+  const [activeProblemTab, setActiveProblemTab] = useState("description");
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  useEffect(() => {
+    if (
+      hasSubmitted &&
+      !isRunning &&
+      externalTestResults.length > 0
+    ) {
+      setActiveProblemTab("test-cases");
+    }
+  }, [externalTestResults, hasSubmitted, isRunning]);
+
+ 
+
   const handleLanguageChange = (newLang: string) => {
     setLanguage(newLang);
     const newCode = languageTemplates[newLang as keyof typeof languageTemplates];
@@ -189,14 +207,28 @@ export const ProblemDetail = ({
   };
 
   const handleRun = () => {
+    setHasSubmitted(false); 
+
     if (problem) {
-      onRun?.(code, language, problem.test_cases, (problem as { mode?: string }).mode || "practice");
+      onRun?.(
+        code,
+        language,
+        problem.test_cases,
+        (problem as { mode?: string }).mode || "practice"
+      );
     }
   };
 
   const handleSubmit = () => {
     if (problem) {
-      onSubmit?.(code, language, problem.test_cases, (problem as { mode?: string }).mode || "practice");
+      setHasSubmitted(true);
+
+      onSubmit?.(
+        code,
+        language,
+        problem.test_cases,
+        (problem as { mode?: string }).mode || "practice"
+      );
     }
   };
 
@@ -208,6 +240,7 @@ export const ProblemDetail = ({
 
   const renderActionButtons = () => {
     if (actionBarLayout === "global-header") return null;
+
 
     return (
       <div className="flex gap-2 items-center">
@@ -243,7 +276,11 @@ export const ProblemDetail = ({
       className="h-full w-full gap-0.75"
     >
       <ResizablePanel defaultSize={"45"} minSize={"30"} className="border border-neutral-500 rounded-lg bg-neutral-800">
-        <Tabs defaultValue="description" className="w-full h-full text-neutral-100">
+        <Tabs
+          value={activeProblemTab}
+          onValueChange={setActiveProblemTab}
+          className="w-full h-full text-neutral-100"
+        >
           <TabsList className="relative w-full bg-neutral-700/50 rounded-t-lg rounded-b-none p-0 m-0">
             <div className="w-full gap-1 px-1 flex items-center justify-start no-scrollbar overflow-x-auto">
               {
@@ -316,9 +353,86 @@ export const ProblemDetail = ({
             </div>
           </TabsContent>
           <TabsContent value="test-cases" className="flex-1 overflow-y-auto px-4 py-4 text-gray-100">
-            <div className="text-center py-12">
-              <p className="text-sm text-[#7c7c7c]">Test Case Result will be shown here</p>
-            </div>
+            {externalTestResults && externalTestResults.length > 0 ? (
+              <div className="space-y-4">
+
+                {/* ✅ Summary */}
+                <div className="bg-neutral-800/40 p-4 rounded-lg border border-neutral-700">
+                  <h3 className="text-lg font-semibold mb-2">
+                    Testcase Results
+                  </h3>
+
+                  {(() => {
+                    const total = externalTestResults.length;
+                    const passed = externalTestResults.filter(r => r.status === "PASSED").length;
+
+                    return (
+                      <p className={`text-sm font-medium ${passed === total ? "text-green-500" : "text-red-400"}`}>
+                        {passed} / {total} testcases passed
+                      </p>
+                    );
+                  })()}
+                </div>
+
+                {/* ✅ Individual Testcases */}
+                <div className="space-y-3">
+                  {externalTestResults.map((result, index) => (
+                    <div
+                      key={index}
+                      className={`p-3 rounded-md border ${result.status === "PASSED"
+                          ? "border-green-500/40 bg-green-500/5"
+                          : "border-red-500/40 bg-red-500/5"
+                        }`}
+                    >
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium">
+                          Testcase #{index + 1}
+                        </span>
+
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${result.status === "PASSED"
+                              ? "bg-green-600/20 text-green-400"
+                              : "bg-red-600/20 text-red-400"
+                            }`}
+                        >
+                          {result.status}
+                        </span>
+                      </div>
+
+                      <div className="text-xs text-neutral-400 mb-1">Input</div>
+                      <div className="text-sm bg-neutral-700/50 p-2 rounded font-mono mb-2">
+                        {result.input}
+                      </div>
+
+                      <div className="text-xs text-neutral-400 mb-1">Output</div>
+                      <div className="text-sm bg-neutral-700/50 p-2 rounded font-mono mb-2">
+                        {result.actualOutput}
+                      </div>
+
+                      <div className="text-xs text-neutral-400 mb-1">Expected</div>
+                      <div className="text-sm bg-neutral-700/50 p-2 rounded font-mono">
+                        {result.expectedOutput}
+                      </div>
+
+                      {/* 🔴 Error display */}
+                      {result.status !== "PASSED" && result.errorMessage && (
+                        <div className="mt-2">
+                          <div className="text-xs text-red-400 mb-1">Error</div>
+                          <div className="text-sm text-red-400 bg-red-500/5 p-2 rounded font-mono whitespace-pre-wrap">
+                            {result.errorMessage}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-sm text-[#7c7c7c]">Run or Submit code to see results</p>
+              </div>
+            )}
           </TabsContent>
           <TabsContent value="solutions" className="flex-1 overflow-y-auto px-4 py-4 text-gray-100">
             <div className="text-center py-12">
@@ -503,14 +617,32 @@ export const ProblemDetail = ({
                     <p className="text-sm text-[#7c7c7c]">You must run your code first.</p>
                   </div>
                 ) : (() => {
-                  const allPassed = externalTestResults.every(r => r.passed);
-                  const totalRuntime = externalTestResults.reduce((sum, r) => sum + parseInt(r.runtime), 0);
+                      const hasCompileError = externalTestResults.some(r => r.status === "COMPILE_ERROR");
+                      const hasRuntimeError = externalTestResults.some(r => r.status === "RUNTIME_ERROR");
+                      const hasTLE = externalTestResults.some(r => r.status === "TIME_LIMIT");
+                      const allPassed = externalTestResults.every(r => r.status === "PASSED");
+
+                      const totalRuntime = externalTestResults.reduce((sum, r) => sum + parseInt(r.runtime), 0);
+
+                      let verdictText = "Wrong Answer";
+                      let verdictColor = "text-red-500";
+
+                      if (hasCompileError) {
+                        verdictText = "Compilation Error";
+                      } else if (hasRuntimeError) {
+                        verdictText = "Runtime Error";
+                      } else if (hasTLE) {
+                        verdictText = "Time Limit Exceeded";
+                      } else if (allPassed) {
+                        verdictText = "Accepted";
+                        verdictColor = "text-green-500";
+                      }
                   return (
                     <>
                       {/* Verdict banner */}
                       <div className="flex items-center justify-between gap-2 px-4 pt-4">
-                        <h2 className={`text-xl font-semibold ${allPassed ? "text-green-500" : "text-red-500"}`}>
-                          {allPassed ? "Accepted" : "Wrong Answer"}
+                        <h2 className={`text-xl font-semibold ${verdictColor}`}>
+                          {verdictText}
                         </h2>
                         <div className="flex items-center gap-1.5 text-xs text-neutral-400">
                           <Clock className="w-3.5 h-3.5" />
@@ -555,12 +687,14 @@ export const ProblemDetail = ({
                                   {result.actualOutput}
                                 </div>
                               </div>
-                              <div>
-                                <div className="text-xs text-neutral-400 mb-1.5">Expected</div>
-                                <div className="text-sm text-neutral-100 bg-neutral-700/50 p-2.5 rounded-md font-mono">
-                                  {result.expectedOutput}
+                              {result.status !== "PASSED" && result.errorMessage && (
+                                <div>
+                                  <div className="text-xs text-red-400 mb-1.5">Error</div>
+                                  <div className="text-sm text-red-400 bg-red-500/5 p-2.5 rounded-md font-mono whitespace-pre-wrap">
+                                    {result.errorMessage}
+                                  </div>
                                 </div>
-                              </div>
+                              )}
                             </TabsContent>
                           ))}
                         </Tabs>
