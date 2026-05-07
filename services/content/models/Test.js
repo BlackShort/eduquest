@@ -1,5 +1,63 @@
 import mongoose from 'mongoose';
 
+const customMcqQuestionSchema = new mongoose.Schema({
+    question_id: { type: String, required: true },
+    question_text: { type: String, required: true },
+    options: [{ type: String, required: true }],
+    correct_answer: { type: String, required: true },
+    marks: { type: Number, default: 1 },
+    difficulty: {
+        type: String,
+        enum: ['easy', 'medium', 'hard'],
+        default: 'medium'
+    },
+    tags: [{ type: String }],
+    explanation: { type: String, default: '' }
+}, { _id: false });
+
+const customCodingTestCaseSchema = new mongoose.Schema({
+    input: { type: String, required: true },
+    output: { type: String, required: true },
+    isHidden: { type: Boolean, default: false }
+}, { _id: false });
+
+const customCodingQuestionSchema = new mongoose.Schema({
+    question_id: { type: String, required: true },
+    question_text: { type: String, required: true },
+    marks: { type: Number, default: 10 },
+    difficulty: {
+        type: String,
+        enum: ['easy', 'medium', 'hard'],
+        default: 'medium'
+    },
+    tags: [{ type: String }],
+    timeLimit: { type: Number, default: 1 },
+    memoryLimit: { type: Number, default: 256 },
+    constraints: { type: String, default: '' },
+    inputFormat: { type: String, default: '' },
+    outputFormat: { type: String, default: '' },
+    sampleInput: { type: String, default: '' },
+    sampleOutput: { type: String, default: '' },
+    test_cases: {
+        type: [customCodingTestCaseSchema],
+        default: []
+    }
+}, { _id: false });
+
+const customAssignmentQuestionSchema = new mongoose.Schema({
+    question_id: { type: String, required: true },
+    question_text: { type: String, required: true },
+    marks: { type: Number, default: 5 },
+    difficulty: {
+        type: String,
+        enum: ['easy', 'medium', 'hard'],
+        default: 'medium'
+    },
+    tags: [{ type: String }],
+    wordLimit: { type: Number, default: null },
+    attachmentRequired: { type: Boolean, default: false }
+}, { _id: false });
+
 const testSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -72,6 +130,20 @@ const testSchema = new mongoose.Schema({
             type: String,
             trim: true
         }]
+    },
+    customQuestions: {
+        mcq: {
+            type: [customMcqQuestionSchema],
+            default: []
+        },
+        coding: {
+            type: [customCodingQuestionSchema],
+            default: []
+        },
+        assignment: {
+            type: [customAssignmentQuestionSchema],
+            default: []
+        }
     },
     settings: {
         allowLateSubmission: {

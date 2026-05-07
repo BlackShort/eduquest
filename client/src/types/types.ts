@@ -88,6 +88,11 @@ export interface Test {
         codingIds: string[];
         assignmentIds: string[];
     };
+    customQuestions?: {
+        mcq: EnhancedMCQQuestion[];
+        coding: EnhancedCodingQuestion[];
+        assignment: EnhancedAssignmentQuestion[];
+    };
     settings: {
         allowLateSubmission: boolean;
         showResultsImmediately: boolean;
