@@ -5,12 +5,13 @@ import { useContextAPI } from '@/hooks/useContext';
 import { CgMenuLeftAlt } from "react-icons/cg";
 
 interface HeaderProps {
+    layout?: "site" | "student" | "faculty" | "admin";
     variant?: "default" | "sticky" | "fixed";
     theme?: "light" | "dark";
     menu?: boolean;
 }
 
-export function Header({ variant = "default", theme = "light", menu = true }: HeaderProps) {
+export function Header({ layout = "site", variant = "default", theme = "light", menu = true }: HeaderProps) {
     const { isLoggedIn, user, toggleSidebar, dashboardPath } = useContextAPI();
 
     // const links = [
@@ -25,7 +26,7 @@ export function Header({ variant = "default", theme = "light", menu = true }: He
 
 
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className={`flex items-center justify-between h-14`}>
+                <div className={`flex items-center justify-between ${layout === "faculty" || layout === "admin" ? "h-12" : "h-14"}`}>
                     <button
                         onClick={toggleSidebar}
                         className="md:hidden flex items-center justify-center p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors duration-200 cursor-pointer group"

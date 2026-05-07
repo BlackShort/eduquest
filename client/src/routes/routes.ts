@@ -9,13 +9,9 @@ import {
   RootLayout,
   SiteLayout,
   AssessmentView,
-  FDashboardLayout,
 } from "@/layouts";
 import { ProtectedRoute } from "@/components/site/protected-route";
-import {
-  StudentRoleRoute,
-  FacultyRoleRoute,
-} from "@/components/site/role-wrappers";
+import { StudentRoleRoute } from "@/components/site/role-wrappers";
 
 // Site pages
 const Home = lazy(() =>
@@ -93,47 +89,8 @@ const LeaderboardHome = lazy(() =>
   import("@/app/leaderboard").then((m) => ({ default: m.LeaderboardHome })),
 );
 
-// Faculty pages (default exports)
-const FDashboardHome = lazy(
-  () => import("@/app/dashboard/faculty/fdashboard-page"),
-);
-const FDashboardAssessment = lazy(
-  () => import("@/app/dashboard/faculty/fdashboard-assessment"),
-);
-const FDashboardAssignments = lazy(
-  () => import("@/app/dashboard/faculty/fdashboard-assignments"),
-);
-const FacultyAnalyticsPage = lazy(
-  () => import("@/app/dashboard/faculty/fdashboard-analytics"),
-);
-const FacultyProblemBankPage = lazy(
-  () => import("@/app/dashboard/faculty/fdashboard-problems"),
-);
-const CreateTestPage = lazy(
-  () => import("@/app/dashboard/faculty/fdashboard-create-test"),
-);
-const EditTestPage = lazy(
-  () => import("@/app/dashboard/faculty/fdashboard-edit-test"),
-);
-const TestResultsPage = lazy(
-  () => import("@/app/dashboard/faculty/fdashboard-test-results"),
-);
-const FacultySettingsPage = lazy(
-  () => import("@/app/dashboard/faculty/fdashboard-settings"),
-);
-const AttemptDetailPage = lazy(
-  () => import("@/app/dashboard/faculty/fdashboard-attempt-detail"),
-);
-const BulkImportPage = lazy(
-  () => import("@/app/dashboard/faculty/fdashboard-bulk-import"),
-);
-const ReportsPage = lazy(
-  () => import("@/app/dashboard/faculty/fdashboard-reports"),
-);
-
 export const router = createBrowserRouter([
   {
-    path: "/",
     Component: RootLayout,
     children: [
       { path: "*", Component: ErrorPage },
@@ -220,29 +177,6 @@ export const router = createBrowserRouter([
                 ],
               },
               { path: "proctor-test", Component: ProctorTestPage },
-            ],
-          },
-          {
-            Component: FacultyRoleRoute,
-            children: [
-              {
-                path: "faculty-dashboard",
-                Component: FDashboardLayout,
-                children: [
-                  { index: true, Component: FDashboardHome },
-                  { path: "assessment", Component: FDashboardAssessment },
-                  { path: "assignments", Component: FDashboardAssignments },
-                  { path: "analytics", Component: FacultyAnalyticsPage },
-                  { path: "problems", Component: FacultyProblemBankPage },
-                  { path: "settings", Component: FacultySettingsPage },
-                  { path: "tests/create", Component: CreateTestPage },
-                  { path: "tests/:testId/edit", Component: EditTestPage },
-                  { path: "tests/:testId/results", Component: TestResultsPage },
-                  { path: "attempt/:attemptId", Component: AttemptDetailPage },
-                  { path: "bulk-import", Component: BulkImportPage },
-                  { path: "reports", Component: ReportsPage },
-                ],
-              },
             ],
           },
         ],

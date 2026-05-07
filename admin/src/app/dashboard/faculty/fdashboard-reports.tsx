@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   FileText, 
   Download, 
@@ -24,17 +24,20 @@ interface ReportCard {
   title: string;
   description: string;
   icon: LucideIcon;
-  color: string;
+  color: 'blue' | 'green' | 'purple';
+  bgClass: string;
+  iconClass: string;
+  buttonClass: string;
 }
 
 export default function ReportsPage() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState<ReportType | null>(null);
-  const [dateRange, setDateRange] = useState({
+  const [dateRange, setDateRange] = useState(() => ({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0]
-  });
+  }));
   const [selectedTestId, setSelectedTestId] = useState<string>('');
 
   const reportCards: ReportCard[] = [
@@ -43,39 +46,48 @@ export default function ReportsPage() {
       title: 'Test Results Report',
       description: 'Export detailed results for a specific test including student scores and analytics',
       icon: ClipboardCheck,
-      color: 'blue'
+      color: 'blue',
+      bgClass: 'bg-blue-900/20',
+      iconClass: 'text-blue-600',
+      buttonClass: 'bg-blue-600 hover:bg-blue-700'
     },
     {
       id: 'student-performance',
       title: 'Student Performance Report',
       description: 'Export comprehensive performance data for all students across all tests',
       icon: Users,
-      color: 'green'
+      color: 'green',
+      bgClass: 'bg-green-900/20',
+      iconClass: 'text-green-600',
+      buttonClass: 'bg-green-600 hover:bg-green-700'
     },
     {
       id: 'analytics-summary',
       title: 'Analytics Summary Report',
       description: 'Export overall analytics including test statistics and trends',
       icon: TrendingUp,
-      color: 'purple'
+      color: 'purple',
+      bgClass: 'bg-purple-900/20',
+      iconClass: 'text-purple-600',
+      buttonClass: 'bg-purple-600 hover:bg-purple-700'
     }
   ];
 
-  const fetchAnalytics = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await getFacultyAnalytics(dateRange.startDate, dateRange.endDate);
-      setAnalytics(response.data);
-    } catch (error) {
-      console.error('Error fetching analytics:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [dateRange.startDate, dateRange.endDate]);
-
   useEffect(() => {
-    fetchAnalytics();
-  }, [fetchAnalytics]);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await getFacultyAnalytics(dateRange.startDate, dateRange.endDate);
+        setAnalytics(response.data);
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [dateRange.startDate, dateRange.endDate]);
 
   const handleExportReport = async (reportType: ReportType) => {
     try {
@@ -91,17 +103,17 @@ export default function ReportsPage() {
             return;
           }
           blob = await exportTestResults(selectedTestId);
-          filename = `test-results-${selectedTestId}-${Date.now()}.xlsx`;
+          filename = `test-results-${selectedTestId}-${new Date().getTime()}.xlsx`;
           break;
 
         case 'student-performance':
           blob = await exportStudentPerformance(dateRange.startDate, dateRange.endDate);
-          filename = `student-performance-${Date.now()}.xlsx`;
+          filename = `student-performance-${new Date().getTime()}.xlsx`;
           break;
 
         case 'analytics-summary':
           blob = await exportAnalyticsReport(dateRange.startDate, dateRange.endDate);
-          filename = `analytics-summary-${Date.now()}.xlsx`;
+          filename = `analytics-summary-${new Date().getTime()}.xlsx`;
           break;
 
         default:
@@ -205,7 +217,7 @@ export default function ReportsPage() {
               <p className="text-sm font-medium text-orange-700">Avg. Score</p>
               <TrendingUp className="w-5 h-5 text-orange-600" />
             </div>
-            <p className="text-3xl font-bold text-orange-900">{analytics.averageScore.toFixed(1)}%</p>
+            <p className="text-3xl font-bold text-orange-900">{(analytics.averageScore ?? 0).toFixed(1)}%</p>
           </div>
         </div>
       )}
@@ -224,8 +236,8 @@ export default function ReportsPage() {
                 key={report.id}
                 className="bg-neutral-800 rounded-lg border border-neutral-700 p-6 hover:shadow-lg transition-shadow"
               >
-                <div className={`p-3 bg-${report.color}-900/20 rounded-lg w-fit mb-4`}>
-                  <Icon className={`w-6 h-6 text-${report.color}-600`} />
+                <div className={`p-3 ${report.bgClass} rounded-lg w-fit mb-4`}>
+                  <Icon className={`w-6 h-6 ${report.iconClass}`} />
                 </div>
 
                 <h3 className="text-lg font-semibold text-gray-100 mb-2">
@@ -258,7 +270,7 @@ export default function ReportsPage() {
                 <button
                   onClick={() => handleExportReport(report.id)}
                   disabled={isExporting || (report.id === 'test-results' && !selectedTestId)}
-                  className={`w-full flex items-center justify-center gap-2 px-4 py-2 bg-${report.color}-600 text-white rounded-lg hover:bg-${report.color}-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors`}
+                  className={`w-full flex items-center justify-center gap-2 px-4 py-2 ${report.buttonClass} text-white rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors`}
                 >
                   {isExporting ? (
                     <>
@@ -295,7 +307,7 @@ export default function ReportsPage() {
                       {activity.studentName} - {activity.testTitle}
                     </p>
                     <p className="text-sm text-gray-400">
-                      Score: {activity.score}/{activity.totalMarks} ({activity.percentage.toFixed(1)}%) • {new Date(activity.submittedAt).toLocaleString()}
+                      Score: {activity.score ?? 0}/{activity.totalMarks ?? 0} ({(activity.percentage ?? 0).toFixed(1)}%) • {new Date(activity.submittedAt).toLocaleString()}
                     </p>
                   </div>
                 </div>

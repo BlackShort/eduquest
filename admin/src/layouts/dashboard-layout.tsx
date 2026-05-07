@@ -1,12 +1,24 @@
-import { Sidebar } from "@/components/dashboard/sidebar";
+import { Sidebar } from "@/components/site/sidebar";
 import { Header } from "@/components/site/header";
 import { Outlet } from "react-router";
 import { useContextAPI } from "@/hooks/useContext";
-import { studentNavigation, facultyNavigation, adminNavigation } from "@/data/sidebar";
+import { studentNavigation, facultyNavigation, adminNavigation } from "@/lib/sidebar";
 
 
 export const DashboardLayout = () => {
   const { user, sidebarOpen, setSidebarOpen } = useContextAPI();
+
+  const getLayoutFromRole = (role: string): "student" | "faculty" | "admin" => {
+    switch (role) {
+      case "faculty":
+        return "faculty";
+      case "admin":
+        return "admin";
+      case "user":
+      default:
+        return "student";
+    }
+  };
 
   const getNavigationFromRole = (role: string) => {
     switch (role) {
@@ -20,11 +32,12 @@ export const DashboardLayout = () => {
     }
   };
 
+  const layout = user ? getLayoutFromRole(user.role) : "student";
   const navigation = user ? getNavigationFromRole(user.role) : studentNavigation;
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-neutral-900">
-      <Header variant="sticky" theme="dark" menu={false} />
+      <Header layout={layout} variant="sticky" theme="dark" menu={false} />
 
       <div className="flex flex-1 relative">
         {sidebarOpen && (
@@ -35,7 +48,7 @@ export const DashboardLayout = () => {
         )}
 
         <aside
-          className={`fixed md:sticky bg-black/50 top-14 h-[calc(100vh-3.5rem)] left-0 shrink-0 transform transition-transform duration-300 ease-in-out md:translate-x-0 z-20 md:z-auto ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+          className={`fixed md:sticky bg-black/50 ${(layout === "admin" || layout === "faculty") ? "top-12 h-[calc(100vh-3rem)]" : "top-14 h-[calc(100vh-3.5rem)]"} left-0 shrink-0 transform transition-transform duration-300 ease-in-out md:translate-x-0 z-20 md:z-auto ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
             }`}>
           <Sidebar navigation={navigation} />
         </aside>
