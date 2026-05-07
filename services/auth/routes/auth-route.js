@@ -12,7 +12,9 @@ import {
     getUserSessions,
     logoutSession,
     logoutAllSessions,
-    verifyUserToken
+    verifyUserToken,
+    getUsersByRole,
+    bulkRegisterUsers
 } from '../controllers/auth-controller.js';
 import { verifyToken, verifyRole } from '../middlewares/verify-token.js';
 
@@ -34,6 +36,8 @@ authRouter.post('/me/change-password', verifyToken, changePassword);
 authRouter.post('/me/request-email-verification', verifyToken, requestEmailVerification);
 authRouter.post('/me/verify-email', verifyToken, verifyEmailCode);
 authRouter.get('/sessions', verifyToken, getUserSessions);
+authRouter.get('/users', verifyToken, getUsersByRole);
+authRouter.post('/users/bulk-register', verifyToken, bulkRegisterUsers);
 
 // Token verification endpoint (for microservices)
 authRouter.get('/verify-token', verifyToken, verifyUserToken);

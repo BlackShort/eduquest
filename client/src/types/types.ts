@@ -7,6 +7,8 @@ export interface User {
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
+    course: string;
+    semester: number;
 }
 
 export interface Assignment {

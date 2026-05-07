@@ -24,20 +24,18 @@ const USERNAME_REGEX = /^[a-zA-Z0-9._]{3,30}$/;
 */
 export const register = async (req, res) => {
     try {
-        const { email, password, role = 'user' } = req.body;
 
-        // Validation
-        if (!email || !password) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Email and password are required' 
-            });
-        }
+        const {
+            course,
+            semester,
+            email,
+            role = "user"
+        } = req.body;
 
-        if (password.length < 8) {
+        if (!email) {
             return res.status(400).json({
                 success: false,
-                message: 'Password must be at least 8 characters long'
+                message: "Email is required"
             });
         }
 
@@ -46,60 +44,219 @@ export const register = async (req, res) => {
         if (!parsedEmail) {
             return res.status(400).json({
                 success: false,
-                message: 'Use GEHU email format: username.studentId@gehu.ac.in'
+                message: "Use GEHU email format: username.studentId@gehu.ac.in"
             });
         }
 
-        const { normalizedEmail, username, studentId } = parsedEmail;
+        const {
+            normalizedEmail,
+            username,
+            studentId
+        } = parsedEmail;
 
-        // Check if user already exists
-        const existingUser = await userModel.findOne({ 
-            $or: [{ email: normalizedEmail }, { username }, { studentId }]
+        const existingUser = await userModel.findOne({
+            $or: [
+                { email: normalizedEmail },
+                { username },
+                { studentId }
+            ]
         });
 
         if (existingUser) {
-            return res.status(409).json({ 
-                success: false, 
-                message: 'User already exists with this email, username, or student ID' 
+            return res.status(409).json({
+                success: false,
+                message: "User already exists with this email, username, or student ID"
             });
         }
 
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const generatedPassword = `${username}@123`;
 
-        // Create new user
+        const hashedPassword = await bcrypt.hash(
+            generatedPassword,
+            10
+        );
+
         const newUser = new userModel({
             username,
             studentId,
             email: normalizedEmail,
             password: hashedPassword,
             role,
-            isVerified: false,
+            course,
+            semester,
+            isVerified: true,
             isActive: true
         });
 
         await newUser.save();
 
-        return res.status(201).json({ 
-            success: true, 
-            message: 'User registered successfully',
+        return res.status(201).json({
+            success: true,
+            message: "User registered successfully",
+
+            generatedCredentials: {
+                username,
+                password: generatedPassword
+            },
+
             user: {
                 id: newUser._id,
                 username: newUser.username,
                 studentId: newUser.studentId,
                 email: newUser.email,
-                role: newUser.role
+                role: newUser.role,
+                course: newUser.course,
+                semester: newUser.semester
             }
         });
 
     } catch (error) {
-        console.error('Register error:', error);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'Registration failed', 
-            error: error.message 
+
+        console.error("Register error:", error);
+
+        if (error.code === 11000) {
+
+            return res.status(409).json({
+                success: false,
+                message: "User already exists"
+            });
+
+        }
+
+        return res.status(500).json({
+            success: false,
+            message: "Registration failed",
+            error: error.message
         });
+
     }
+};
+
+export const bulkRegisterUsers = async (req, res) => {
+    try {
+
+        const {
+            users,
+            role = "user"
+        } = req.body;
+
+        if (!users || !Array.isArray(users)) {
+            return res.status(400).json({
+                success: false,
+                message: "Users array is required"
+            });
+        }
+
+        const createdUsers = [];
+        const failedUsers = [];
+
+        for (const userData of users) {
+
+            try {
+
+                const {
+                    email,
+                    course,
+                    semester
+                } = userData;
+
+                const parsedEmail = parseGehuEmail(email);
+
+                if (!parsedEmail) {
+
+                    failedUsers.push({
+                        email,
+                        reason: "Invalid GEHU email format"
+                    });
+
+                    continue;
+
+                }
+
+                const {
+                    normalizedEmail,
+                    username,
+                    studentId
+                } = parsedEmail;
+
+                const existingUser = await userModel.findOne({
+                    $or: [
+                        { email: normalizedEmail },
+                        { username },
+                        { studentId }
+                    ]
+                });
+
+                if (existingUser) {
+
+                    failedUsers.push({
+                        email,
+                        reason: "User already exists"
+                    });
+
+                    continue;
+
+                }
+
+                const generatedPassword =
+                    `${username}@123`;
+
+                const hashedPassword =
+                    await bcrypt.hash(
+                        generatedPassword,
+                        10
+                    );
+
+                const newUser = await userModel.create({
+                    username,
+                    studentId,
+                    email: normalizedEmail,
+                    password: hashedPassword,
+                    role,
+                    course,
+                    semester,
+                    isVerified: true,
+                    isActive: true
+                });
+
+                createdUsers.push(newUser);
+
+            } catch (error) {
+
+                failedUsers.push({
+                    email: userData.email,
+                    reason: error.message
+                });
+
+            }
+
+        }
+
+        return res.status(201).json({
+            success: true,
+            message: "Bulk registration completed",
+            totalUsers: users.length,
+            successCount: createdUsers.length,
+            failedCount: failedUsers.length,
+            createdUsers,
+            failedUsers
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Bulk register error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Bulk registration failed",
+            error: error.message
+        });
+
+    }
+
 };
 
 /*
@@ -714,6 +871,24 @@ export const verifyEmailCode = async (req, res) => {
             success: false,
             message: 'Failed to verify email',
             error: error.message
+        });
+    }
+};
+
+export const getUsersByRole = async (req, res) => {
+    try {
+        const { role } = req.query;
+        const users = await userModel.find({
+            role
+        });
+        res.status(200).json({
+            success: true,
+            users
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
         });
     }
 };

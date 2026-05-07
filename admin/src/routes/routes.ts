@@ -46,6 +46,14 @@ const ReportsPage = lazy(
   () => import("@/app/dashboard/faculty/fdashboard-reports"),
 );
 
+const StudentDashboard = lazy(
+  () => import("@/app/dashboard/admin/student/student-dashboard"),
+);
+
+const FacultyDashboard = lazy(
+  () => import("@/app/dashboard/admin/faculty/faculty-dashboard"),
+);
+
 export const router = createBrowserRouter([
   {
     Component: RootLayout,
@@ -89,6 +97,8 @@ export const router = createBrowserRouter([
                 Component: DashboardLayout,
                 children: [
                   { index: true, Component: FDashboardHome },
+                  { path: "students", Component: StudentDashboard },
+                  { path: "faculty", Component: FacultyDashboard },
                 ]
               }
             ]

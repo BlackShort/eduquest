@@ -26,6 +26,14 @@ const userSchema = new mongoose.Schema({
         enum: ['user', 'faculty', 'admin'],
         default: 'user'
     },
+    course: {
+        type: String,
+        default: null
+    },
+    semester: {
+        type: Number,
+        default: null
+    },  
     isVerified: {
         type: Boolean,
         default: false

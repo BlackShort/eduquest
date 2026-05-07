@@ -8,9 +8,29 @@ export const login = async (email: string, password: string) => {
     return data;
 };
 
-export const register = async (email: string, password: string) => {
-    const { data } = await authApi.post("/v1/register", { email, password });
+export const register = async (email: string, password: string, course: string, semester: number, role:string) => {
+    const { data } = await authApi.post("/v1/register", { email, password, course, semester, role });
     return data;
+};
+
+export const bulkRegisterUsers = async (
+    users: {
+        email: string;
+        course: string;
+        semester: number;
+    }[],
+    role: string) => {
+
+    const { data } = await authApi.post(
+        "/v1/users/bulk-register",
+        {
+            users,
+            role
+        }
+    );
+
+    return data;
+
 };
 
 export const logout = async () => {
@@ -58,5 +78,12 @@ export const verifyEmailCode = async (code: string) => {
 
 export const refreshAccessToken = async () => {
     const { data } = await authApi.post("/v1/refresh-token");
+    return data;
+};
+
+export const getUsersByRole = async (role: string) => {
+    const { data } = await authApi.get(
+        `/v1/users?role=${role}`
+    );
     return data;
 };

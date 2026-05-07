@@ -44,7 +44,8 @@ export const facultyNavigation: Navigation = {
 export const adminNavigation: Navigation = {
     dashboard: [
         { featured: false, path: `/admin-dashboard`, icon: LayoutDashboard, title: 'Dashboard' },
-        { featured: true, path: `users`, icon: ListTodo, title: 'Users' },
+        { featured: true, path: `/admin-dashboard/students`, icon: ListTodo, title: 'Students' },
+        { featured: true, path: `/admin-dashboard/faculty`, icon: ListTodo, title: 'Faculty' },
         { featured: false, path: `settings`, icon: ChartColumnDecreasing, title: 'Settings' },
     ],
 };
