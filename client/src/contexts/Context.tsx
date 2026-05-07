@@ -26,7 +26,7 @@ export const ContextApp = ({ children }: { children: ReactNode }) => {
 
         setUser(data.user);
         setDashboardPath(getDashboardPath(data.user?.role));
-        setUserID(data.user?._id ?? null);
+        setUserID(data.user?.userId ?? null);
         setIsLoggedIn(true);
       } catch {
         setUser(null);

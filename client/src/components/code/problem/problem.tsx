@@ -680,49 +680,97 @@ export const ProblemDetail = ({
                       {/* Per-case tabs */}
                       <div className="p-3">
                         <Tabs defaultValue="res-0" className="w-full h-full text-neutral-100">
-                          <TabsList className="p-1 w-full bg-neutral-800 rounded-md flex items-center justify-start gap-2">
-                            {externalTestResults.slice(0, 3).map((result, index) => (
-                              <TabsTrigger
-                                key={index}
-                                value={`res-${index}`}
-                                className={`max-w-18 px-3 py-1.5 text-xs rounded-sm border bg-transparent shadow-none hover:bg-neutral-700/50 data-[state=active]:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:ring-offset-0 group-data-[variant=default]/tabs-list:data-[state=active]:shadow-none
-                                  ${result.passed
-                                    ? "text-neutral-400 data-[state=active]:bg-neutral-700 data-[state=active]:text-neutral-100 hover:text-neutral-200 cursor-pointer"
-                                    : "text-neutral-400 data-[state=active]:bg-red-500/10 data-[state=active]:text-red-400 hover:text-red-100 cursor-pointer"
-                                  }`}
-                              >
-                                {result.passed
-                                  ? <CheckCircle2 className="w-3 h-3 text-green-500" />
-                                  : <XCircle className="w-3 h-3 text-red-500" />
-                                }
-                                Case {index + 1}
-                              </TabsTrigger>
-                            ))}
-                          </TabsList>
+                          {!externalTestResults.some(r =>
+                            ["COMPILE_ERROR", "RUNTIME_ERROR", "TIME_LIMIT"].includes(r.status)
+                          ) && (
+                              <TabsList className="p-1 w-full bg-neutral-800 rounded-md flex items-center justify-start gap-2">
+                                {externalTestResults.slice(0, 3).map((result, index) => (
+                                  <TabsTrigger
+                                    key={index}
+                                    value={`res-${index}`}
+                                    className={`max-w-18 px-3 py-1.5 text-xs rounded-sm border bg-transparent shadow-none hover:bg-neutral-700/50 data-[state=active]:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:ring-offset-0 group-data-[variant=default]/tabs-list:data-[state=active]:shadow-none
+          ${result.passed
+                                        ? "text-neutral-400 data-[state=active]:bg-neutral-700 data-[state=active]:text-neutral-100 hover:text-neutral-200 cursor-pointer"
+                                        : "text-neutral-400 data-[state=active]:bg-red-500/10 data-[state=active]:text-red-400 hover:text-red-100 cursor-pointer"
+                                      }`}
+                                  >
+                                    {result.passed
+                                      ? <CheckCircle2 className="w-3 h-3 text-green-500" />
+                                      : <XCircle className="w-3 h-3 text-red-500" />
+                                    }
+
+                                    Case {index + 1}
+                                  </TabsTrigger>
+                                ))}
+                              </TabsList>
+                            )}
 
                           {externalTestResults.slice(0, 3).map((result, index) => (
-                            <TabsContent key={index} value={`res-${index}`} className="mt-0 space-y-3">
-                              <div>
-                                <div className="text-xs text-neutral-400 mb-1.5">Input</div>
-                                <div className="text-sm text-neutral-100 bg-neutral-700/50 p-2.5 rounded-md font-mono">
-                                  {result.input}
-                                </div>
-                              </div>
-                              <div>
-                                <div className="text-xs text-neutral-400 mb-1.5">Output</div>
-                                <div className={`text-sm p-2.5 rounded-md font-mono ${result.passed ? "text-neutral-100 bg-neutral-700/50" : "text-red-400 bg-red-500/5"}`}>
-                                  {result.actualOutput}
-                                </div>
-                              </div>
-                              {result.status !== "PASSED" && result.errorMessage && (
-                                <div>
-                                  <div className="text-xs text-red-400 mb-1.5">Error</div>
-                                  <div className="text-sm text-red-400 bg-red-500/5 p-2.5 rounded-md font-mono whitespace-pre-wrap">
-                                    {result.errorMessage}
+                            <TabsContent
+                              key={index}
+                              value={`res-${index}`}
+                              className="mt-0 space-y-3"
+                            >
+                              {["COMPILE_ERROR", "RUNTIME_ERROR", "TIME_LIMIT"].includes(result.status) ? (
+
+                                /* ✅ ONLY ERROR UI */
+                                <div className="space-y-3">
+                                  {/* <div className="text-red-400 font-medium text-sm">
+                                    {result.status === "COMPILE_ERROR"
+                                      ? "Compilation Error"
+                                      : result.status === "TIME_LIMIT"
+                                        ? "Time Limit Exceeded"
+                                        : "Runtime Error"}
+                                  </div> */}
+
+                                  <div className="bg-red-500/10 text-red-300 rounded-md p-3 font-mono text-sm whitespace-pre-wrap border border-red-500/20">
+                                    {result.errorMessage || "Unknown error"}
                                   </div>
                                 </div>
+
+                              ) : (
+
+                                /* ✅ NORMAL TESTCASE UI */
+                                <>
+                                  <div>
+                                    <div className="text-xs text-neutral-400 mb-1.5">
+                                      Input
+                                    </div>
+
+                                    <div className="text-sm text-neutral-100 bg-neutral-700/50 p-2.5 rounded-md font-mono">
+                                      {result.input}
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <div className="text-xs text-neutral-400 mb-1.5">
+                                      Output
+                                    </div>
+
+                                    <div
+                                      className={`text-sm p-2.5 rounded-md font-mono ${result.passed
+                                          ? "text-neutral-100 bg-neutral-700/50"
+                                          : "text-red-400 bg-red-500/5"
+                                        }`}
+                                    >
+                                      {result.actualOutput}
+                                    </div>
+                                  </div>
+
+                                  {!result.passed && (
+                                    <div>
+                                      <div className="text-xs text-neutral-400 mb-1.5">
+                                        Expected
+                                      </div>
+
+                                      <div className="text-sm text-neutral-100 bg-neutral-700/50 p-2.5 rounded-md font-mono">
+                                        {result.expectedOutput}
+                                      </div>
+                                    </div>
+                                  )}
+                                </>
                               )}
-                            </TabsContent>
+                          </TabsContent>
                           ))}
                         </Tabs>
                       </div>

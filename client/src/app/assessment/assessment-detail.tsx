@@ -6,6 +6,7 @@ import { codeSubmission } from "@/apis/code-api";
 import type { Testcase } from "@/types/types";
 import type { Question } from "@/types/assessment.types";
 import { ContextAPI } from "@/contexts/AppContext";
+import { useContextAPI } from "@/hooks/useContext";
 
 interface TestResult {
   index: number;
@@ -166,13 +167,13 @@ export const AssessmentDetail = ({
   savedAnswer,
 }: AssessmentDetailProps) => {
   // Get user ID from context
-  const context = useContext(ContextAPI);
-
-  if (!context || context.appLoading) {
+  
+  const { appLoading, userID } = useContextAPI();
+  if (appLoading) {
     return <div className="text-white p-4">Loading...</div>;
   }
 
-  const userID = context.userID;
+  
   // --- Isolated State for Coding Questions ---
   const [currentCode, setCurrentCode] = useState(savedAnswer || "");
   const [currentLanguage, setCurrentLanguage] = useState("javascript");
