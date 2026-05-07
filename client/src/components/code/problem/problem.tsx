@@ -51,7 +51,7 @@ interface TestResult {
   actualOutput: string;
   passed: boolean;
   runtime: string;
-  status: string; 
+  status: string;
   errorMessage?: string;
 }
 
@@ -121,11 +121,11 @@ export const ProblemDetail = ({
 
   const problem: DisplayProblem | undefined = externalProblem
     ? {
-        question_id: externalProblem.question_id || externalProblem.id,
-        question_text: externalProblem.question_text || externalProblem.title,
-        difficulty: externalProblem.difficulty || "medium",
-        test_cases: externalProblem.test_cases || [],
-      }
+      question_id: externalProblem.question_id || externalProblem.id,
+      question_text: externalProblem.question_text || externalProblem.title,
+      difficulty: externalProblem.difficulty || "medium",
+      test_cases: externalProblem.test_cases || [],
+    }
     : dummyCoding[0]?.questions.find(q => q.question_id === problemId) || dummyCoding[0]?.questions[0];
 
   // Auto-switch to result tab when running starts
@@ -190,7 +190,7 @@ export const ProblemDetail = ({
     }
   }, [externalTestResults, hasSubmitted, isRunning]);
 
- 
+
 
   const handleLanguageChange = (newLang: string) => {
     setLanguage(newLang);
@@ -207,7 +207,7 @@ export const ProblemDetail = ({
   };
 
   const handleRun = () => {
-    setHasSubmitted(false); 
+    setHasSubmitted(false);
 
     if (problem) {
       onRun?.(
@@ -378,8 +378,8 @@ export const ProblemDetail = ({
                       {/* Verdict Summary */}
                       <div
                         className={`p-4 rounded-lg border ${allPassed
-                            ? "border-green-500/30 bg-green-500/5"
-                            : "border-red-500/30 bg-red-500/5"
+                          ? "border-green-500/30 bg-green-500/5"
+                          : "border-red-500/30 bg-red-500/5"
                           }`}
                       >
                         <h2
@@ -644,26 +644,26 @@ export const ProblemDetail = ({
                     <p className="text-sm text-[#7c7c7c]">You must run your code first.</p>
                   </div>
                 ) : (() => {
-                      const hasCompileError = externalTestResults.some(r => r.status === "COMPILE_ERROR");
-                      const hasRuntimeError = externalTestResults.some(r => r.status === "RUNTIME_ERROR");
-                      const hasTLE = externalTestResults.some(r => r.status === "TIME_LIMIT");
-                      const allPassed = externalTestResults.every(r => r.status === "PASSED");
+                  const hasCompileError = externalTestResults.some(r => r.status === "COMPILE_ERROR");
+                  const hasRuntimeError = externalTestResults.some(r => r.status === "RUNTIME_ERROR");
+                  const hasTLE = externalTestResults.some(r => r.status === "TIME_LIMIT");
+                  const allPassed = externalTestResults.every(r => r.status === "PASSED");
 
-                      const totalRuntime = externalTestResults.reduce((sum, r) => sum + parseInt(r.runtime), 0);
+                  const totalRuntime = externalTestResults.reduce((sum, r) => sum + parseInt(r.runtime), 0);
 
-                      let verdictText = "Wrong Answer";
-                      let verdictColor = "text-red-500";
+                  let verdictText = "Wrong Answer";
+                  let verdictColor = "text-red-500";
 
-                      if (hasCompileError) {
-                        verdictText = "Compilation Error";
-                      } else if (hasRuntimeError) {
-                        verdictText = "Runtime Error";
-                      } else if (hasTLE) {
-                        verdictText = "Time Limit Exceeded";
-                      } else if (allPassed) {
-                        verdictText = "Accepted";
-                        verdictColor = "text-green-500";
-                      }
+                  if (hasCompileError) {
+                    verdictText = "Compilation Error";
+                  } else if (hasRuntimeError) {
+                    verdictText = "Runtime Error";
+                  } else if (hasTLE) {
+                    verdictText = "Time Limit Exceeded";
+                  } else if (allPassed) {
+                    verdictText = "Accepted";
+                    verdictColor = "text-green-500";
+                  }
                   return (
                     <>
                       {/* Verdict banner */}
@@ -715,13 +715,6 @@ export const ProblemDetail = ({
 
                                 /* ✅ ONLY ERROR UI */
                                 <div className="space-y-3">
-                                  {/* <div className="text-red-400 font-medium text-sm">
-                                    {result.status === "COMPILE_ERROR"
-                                      ? "Compilation Error"
-                                      : result.status === "TIME_LIMIT"
-                                        ? "Time Limit Exceeded"
-                                        : "Runtime Error"}
-                                  </div> */}
 
                                   <div className="bg-red-500/10 text-red-300 rounded-md p-3 font-mono text-sm whitespace-pre-wrap border border-red-500/20">
                                     {result.errorMessage || "Unknown error"}
@@ -749,8 +742,8 @@ export const ProblemDetail = ({
 
                                     <div
                                       className={`text-sm p-2.5 rounded-md font-mono ${result.passed
-                                          ? "text-neutral-100 bg-neutral-700/50"
-                                          : "text-red-400 bg-red-500/5"
+                                        ? "text-neutral-100 bg-neutral-700/50"
+                                        : "text-red-400 bg-red-500/5"
                                         }`}
                                     >
                                       {result.actualOutput}
@@ -770,7 +763,7 @@ export const ProblemDetail = ({
                                   )}
                                 </>
                               )}
-                          </TabsContent>
+                            </TabsContent>
                           ))}
                         </Tabs>
                       </div>

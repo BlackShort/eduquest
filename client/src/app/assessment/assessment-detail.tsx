@@ -1,11 +1,10 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import { Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProblemDetail } from "@/components/code/problem/problem";
 import { codeSubmission } from "@/apis/code-api";
 import type { Testcase } from "@/types/types";
 import type { Question } from "@/types/assessment.types";
-import { ContextAPI } from "@/contexts/AppContext";
 import { useContextAPI } from "@/hooks/useContext";
 
 interface TestResult {
