@@ -8,12 +8,66 @@ import {
   Clock, 
   FileText, 
   Settings as SettingsIcon,
-  Plus
+  Plus,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 
 import { createTest } from '@/apis/faculty-api';
 import { getQuestions } from '@/apis/faculty-api';
 import type { Test } from '@/types/types';
+
+type QuestionType = 'mcq' | 'coding' | 'assignment';
+type Difficulty = 'easy' | 'medium' | 'hard';
+
+type TestCaseDraft = {
+  input: string;
+  output: string;
+  isHidden: boolean;
+  enabled: boolean;
+};
+
+type QuestionDraft = {
+  question_id: string;
+  question_text: string;
+  title?: string;
+  options: string[];
+  correct_answer: string;
+  marks?: number;
+  difficulty: Difficulty;
+  explanation?: string;
+  test_cases: TestCaseDraft[];
+  tags?: string[];
+  timeLimit?: number;
+  memoryLimit?: number;
+  constraints?: string;
+  inputFormat?: string;
+  outputFormat?: string;
+  sampleInput?: string;
+  sampleOutput?: string;
+  wordLimit?: number | null;
+  attachmentRequired?: boolean;
+};
+
+type QuestionItem = {
+  _id: string;
+  test_id: string;
+  subject_id: string;
+  type: QuestionType;
+  questions: Array<Partial<QuestionDraft> & {
+    question_id?: string;
+    _id?: string;
+    question_text?: string;
+    title?: string;
+  }>;
+};
+
+type EditingQuestion = {
+  type: QuestionType;
+  setId: string;
+  questionId: string;
+  draft: QuestionDraft;
+};
 
 export default function CreateTestPage() {
   const navigate = useNavigate();
@@ -24,23 +78,12 @@ export default function CreateTestPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
   const [selectedQuestions, setSelectedQuestions] = useState<Record<string, string[]>>({});
+  const [editedQuestions, setEditedQuestions] = useState<Record<string, QuestionDraft>>({});
+  const [editingQuestion, setEditingQuestion] = useState<EditingQuestion | null>(null);
 
   const [loading, setLoading] = useState(false);
-type QuestionItem = {
-  _id: string;
-  test_id: string;
-  subject_id: string;
-  type: 'mcq' | 'coding' | 'assignment'; // ✅ ADD THIS
-  questions: {
-    question_id?: string;
-    _id?: string;
-    question_text?: string;
-    title?: string;
-  }[];
-};
-
 const [activeQuestionTab, setActiveQuestionTab] = useState<
-  'mcq' | 'coding' | 'assignment'
+  QuestionType
 >('mcq');
 
 const [questionBankMap, setQuestionBankMap] = useState<{
@@ -181,6 +224,163 @@ useEffect(() => {
   return () => clearTimeout(timer);
 }, [searchQuery]);
 
+const makeQuestionKey = (type: QuestionType, setId: string, questionId: string) =>
+  `${type}:${setId}:${questionId}`;
+
+const normalizeQuestion = (
+  question: QuestionItem['questions'][number],
+  questionId: string
+): QuestionDraft => ({
+  question_id: questionId,
+  question_text: question.question_text || question.title || '',
+  title: question.title || '',
+  options: question.options && question.options.length > 0 ? [...question.options] : ['', '', '', ''],
+  correct_answer: question.correct_answer || '',
+  marks: question.marks,
+  difficulty: question.difficulty || 'medium',
+  explanation: question.explanation || '',
+  test_cases: (question.test_cases || []).map((testCase) => ({
+    input: testCase.input || '',
+    output: testCase.output || '',
+    isHidden: Boolean(testCase.isHidden),
+    enabled: true
+  })),
+  tags: question.tags || [],
+  timeLimit: question.timeLimit,
+  memoryLimit: question.memoryLimit,
+  constraints: question.constraints || '',
+  inputFormat: question.inputFormat || '',
+  outputFormat: question.outputFormat || '',
+  sampleInput: question.sampleInput || '',
+  sampleOutput: question.sampleOutput || '',
+  wordLimit: question.wordLimit ?? null,
+  attachmentRequired: Boolean(question.attachmentRequired)
+});
+
+const openQuestionEditor = (
+  type: QuestionType,
+  setId: string,
+  questionId: string,
+  question: QuestionItem['questions'][number]
+) => {
+  const key = makeQuestionKey(type, setId, questionId);
+  setEditingQuestion({
+    type,
+    setId,
+    questionId,
+    draft: editedQuestions[key] || normalizeQuestion(question, questionId)
+  });
+};
+
+const updateEditingDraft = (updates: Partial<QuestionDraft>) => {
+  setEditingQuestion((current) =>
+    current ? { ...current, draft: { ...current.draft, ...updates } } : current
+  );
+};
+
+const updateEditingOption = (index: number, value: string) => {
+  setEditingQuestion((current) => {
+    if (!current) return current;
+    const options = [...current.draft.options];
+    options[index] = value;
+    return { ...current, draft: { ...current.draft, options } };
+  });
+};
+
+const updateEditingTestCase = (
+  index: number,
+  updates: Partial<TestCaseDraft>
+) => {
+  setEditingQuestion((current) => {
+    if (!current) return current;
+    const testCases = current.draft.test_cases.map((testCase, testCaseIndex) =>
+      testCaseIndex === index ? { ...testCase, ...updates } : testCase
+    );
+    return { ...current, draft: { ...current.draft, test_cases: testCases } };
+  });
+};
+
+const addEditingTestCase = () => {
+  setEditingQuestion((current) => {
+    if (!current) return current;
+    return {
+      ...current,
+      draft: {
+        ...current.draft,
+        test_cases: [
+          ...current.draft.test_cases,
+          { input: '', output: '', isHidden: false, enabled: true }
+        ]
+      }
+    };
+  });
+};
+
+const removeEditingTestCase = (index: number) => {
+  setEditingQuestion((current) => {
+    if (!current) return current;
+    return {
+      ...current,
+      draft: {
+        ...current.draft,
+        test_cases: current.draft.test_cases.filter((_, testCaseIndex) => testCaseIndex !== index)
+      }
+    };
+  });
+};
+
+const saveQuestionEdits = () => {
+  if (!editingQuestion) return;
+  const key = makeQuestionKey(
+    editingQuestion.type,
+    editingQuestion.setId,
+    editingQuestion.questionId
+  );
+
+  setEditedQuestions((prev) => ({
+    ...prev,
+    [key]: editingQuestion.draft
+  }));
+  setEditingQuestion(null);
+};
+
+const buildCustomQuestions = () => {
+  const customQuestions = {
+    mcq: [] as QuestionDraft[],
+    coding: [] as QuestionDraft[],
+    assignment: [] as QuestionDraft[]
+  };
+
+  (['mcq', 'coding', 'assignment'] as const).forEach((type) => {
+    questionBankMap[type].forEach((set) => {
+      const selected = selectedQuestions[set._id] || [];
+
+      set.questions.forEach((question) => {
+        const questionId = question.question_id || question._id || '';
+        if (!questionId || !selected.includes(questionId)) return;
+
+        const key = makeQuestionKey(type, set._id, questionId);
+        const draft = editedQuestions[key] || normalizeQuestion(question, questionId);
+
+        if (type === 'mcq') {
+          customQuestions.mcq.push(draft);
+        } else if (type === 'coding') {
+          customQuestions.coding.push({
+            ...draft,
+            test_cases: draft.test_cases
+              .filter((testCase) => testCase.enabled && testCase.input.trim() && testCase.output.trim())
+              .map((testCase) => ({ ...testCase, enabled: true }))
+          });
+        } else {
+          customQuestions.assignment.push(draft);
+        }
+      });
+    });
+  });
+
+  return customQuestions;
+};
+
 
 
 const handleSubmit = async (publishNow = false) => {
@@ -226,6 +426,7 @@ const rawAssignmentIds: string[] = [];
 const mcqIds = Array.from(new Set(rawMcqIds));
 const codingIds = Array.from(new Set(rawCodingIds));
 const assignmentIds = Array.from(new Set(rawAssignmentIds));
+const customQuestions = buildCustomQuestions();
 
     const dataToSubmit = {
       ...formData,
@@ -234,6 +435,7 @@ const assignmentIds = Array.from(new Set(rawAssignmentIds));
       codingIds,
       assignmentIds
     },
+      customQuestions,
       status,
       ...(formData.scheduledStart
         ? { scheduledStart: formData.scheduledStart }
@@ -269,15 +471,10 @@ if (
 };
 
 const buildPreviewData = () => {
-  type QuestionPreview = {
-  question_text?: string;
-  title?: string;
-};
-
 const result = {
-  mcq: [] as QuestionPreview[],
-  coding: [] as QuestionPreview[],
-  assignment: [] as QuestionPreview[]
+  mcq: [] as QuestionDraft[],
+  coding: [] as QuestionDraft[],
+  assignment: [] as QuestionDraft[]
 };
 
   (['mcq', 'coding', 'assignment'] as const).forEach((type) => {
@@ -288,7 +485,8 @@ const result = {
         const qid = q.question_id || q._id || '';
 
         if (selected.includes(qid)) {
-          result[type].push(q);
+          const key = makeQuestionKey(type, set._id, qid);
+          result[type].push(editedQuestions[key] || normalizeQuestion(q, qid));
         }
       });
     });
@@ -680,11 +878,13 @@ const previewData = buildPreviewData();
             const qid = q.question_id || q._id || '';
             const checked =
   selectedQuestions[set._id]?.includes(qid) || false;
+            const questionKey = makeQuestionKey(activeQuestionTab, set._id, qid);
+            const editedQuestion = editedQuestions[questionKey];
 
             return (
-              <label
+              <div
                 key={qid}
-                className="flex items-center gap-3 text-gray-300"
+                className="flex items-start gap-3 text-gray-300"
               >
                 <input
                   type="checkbox"
@@ -692,13 +892,29 @@ const previewData = buildPreviewData();
                   onChange={() =>
                     toggleQuestionSelection(set._id, qid)
                   }
+                  className="mt-1"
                 />
 
-                <span>
-                  Q{index + 1}.{' '}
-                  {q.question_text || q.title || 'Untitled'}
-                </span>
-              </label>
+                <div className="min-w-0 flex-1">
+                  <p className="break-words">
+                    Q{index + 1}.{' '}
+                    {editedQuestion?.question_text || q.question_text || q.title || 'Untitled'}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Difficulty: {editedQuestion?.difficulty || q.difficulty || 'medium'}
+                    {editedQuestion ? ' - edited for this test' : ''}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => openQuestionEditor(activeQuestionTab, set._id, qid, q)}
+                  className="flex items-center gap-1 px-3 py-1 text-sm text-blue-300 hover:text-blue-200 hover:bg-blue-500/10 rounded-md"
+                >
+                  <Pencil className="w-4 h-4" />
+                  Edit
+                </button>
+              </div>
             );
           })}
         </div>
@@ -707,6 +923,189 @@ const previewData = buildPreviewData();
   )}
 </div>
 </div>
+{editingQuestion && (
+  <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+    <div className="bg-neutral-900 border border-neutral-700 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6">
+      <div className="flex items-center justify-between gap-4 mb-5">
+        <div>
+          <h2 className="text-xl font-semibold text-white">Edit Question</h2>
+          <p className="text-sm text-gray-400">
+            Changes are saved only inside this test.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setEditingQuestion(null)}
+          className="p-2 text-gray-400 hover:text-white hover:bg-neutral-800 rounded-lg"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="space-y-5">
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Question Sentence
+          </label>
+          <textarea
+            value={editingQuestion.draft.question_text}
+            onChange={(e) => updateEditingDraft({ question_text: e.target.value })}
+            rows={4}
+            className="w-full px-4 py-2 bg-neutral-800 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Difficulty
+          </label>
+          <select
+            value={editingQuestion.draft.difficulty}
+            onChange={(e) => updateEditingDraft({ difficulty: e.target.value as Difficulty })}
+            className="w-full px-4 py-2 bg-neutral-800 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+
+        {editingQuestion.type === 'mcq' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Options
+              </label>
+              <div className="space-y-3">
+                {editingQuestion.draft.options.map((option, optionIndex) => (
+                  <input
+                    key={optionIndex}
+                    type="text"
+                    value={option}
+                    onChange={(e) => updateEditingOption(optionIndex, e.target.value)}
+                    placeholder={`Option ${optionIndex + 1}`}
+                    className="w-full px-4 py-2 bg-neutral-800 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Correct Answer
+              </label>
+              <input
+                type="text"
+                value={editingQuestion.draft.correct_answer}
+                onChange={(e) => updateEditingDraft({ correct_answer: e.target.value })}
+                className="w-full px-4 py-2 bg-neutral-800 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        )}
+
+        {editingQuestion.type === 'coding' && (
+          <div>
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h3 className="text-lg font-semibold text-gray-100">Test Cases</h3>
+              <button
+                type="button"
+                onClick={addEditingTestCase}
+                className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                <Plus className="w-4 h-4" />
+                Add Test Case
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {editingQuestion.draft.test_cases.map((testCase, testCaseIndex) => (
+                <div
+                  key={testCaseIndex}
+                  className="border border-neutral-700 rounded-lg p-4 space-y-3"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <label className="flex items-center gap-2 text-sm text-gray-300">
+                      <input
+                        type="checkbox"
+                        checked={testCase.enabled}
+                        onChange={(e) =>
+                          updateEditingTestCase(testCaseIndex, { enabled: e.target.checked })
+                        }
+                      />
+                      Include in this test
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => removeEditingTestCase(testCaseIndex)}
+                      className="flex items-center gap-1 text-sm text-red-400 hover:text-red-300"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Remove
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-2">Input</label>
+                      <textarea
+                        value={testCase.input}
+                        onChange={(e) =>
+                          updateEditingTestCase(testCaseIndex, { input: e.target.value })
+                        }
+                        rows={3}
+                        className="w-full px-3 py-2 bg-neutral-800 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-2">Expected Output</label>
+                      <textarea
+                        value={testCase.output}
+                        onChange={(e) =>
+                          updateEditingTestCase(testCaseIndex, { output: e.target.value })
+                        }
+                        rows={3}
+                        className="w-full px-3 py-2 bg-neutral-800 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <label className="flex items-center gap-2 text-sm text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={testCase.isHidden}
+                      onChange={(e) =>
+                        updateEditingTestCase(testCaseIndex, { isHidden: e.target.checked })
+                      }
+                    />
+                    Hidden test case
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-end gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => setEditingQuestion(null)}
+            className="px-4 py-2 bg-neutral-700 text-white rounded-lg hover:bg-neutral-600"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={saveQuestionEdits}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Save Question
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 {showPreview && (
   <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
     <div className="bg-neutral-900 p-6 rounded-lg w-[800px] max-h-[90vh] overflow-y-auto">

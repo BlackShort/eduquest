@@ -114,24 +114,28 @@ export const getTestById = async (req, res) => {
         // Fetch question details if needed
         const testWithQuestions = test.toObject();
 
-        // Fetch MCQ questions
-        if (test.questionRefs.mcqIds.length > 0) {
+        // Prefer per-test edited question snapshots when they exist.
+        if (testWithQuestions.customQuestions?.mcq?.length > 0) {
+            testWithQuestions.mcqQuestions = testWithQuestions.customQuestions.mcq;
+        } else if (test.questionRefs.mcqIds.length > 0) {
             const mcqDocs = await Mcq.find({ 
                 test_id: { $in: test.questionRefs.mcqIds } 
             });
             testWithQuestions.mcqQuestions = mcqDocs;
         }
 
-        // Fetch Coding questions
-        if (test.questionRefs.codingIds.length > 0) {
+        if (testWithQuestions.customQuestions?.coding?.length > 0) {
+            testWithQuestions.codingQuestions = testWithQuestions.customQuestions.coding;
+        } else if (test.questionRefs.codingIds.length > 0) {
             const codingDocs = await Coding.find({ 
                 test_id: { $in: test.questionRefs.codingIds } 
             });
             testWithQuestions.codingQuestions = codingDocs;
         }
 
-        // Fetch Assignment questions
-        if (test.questionRefs.assignmentIds.length > 0) {
+        if (testWithQuestions.customQuestions?.assignment?.length > 0) {
+            testWithQuestions.assignmentQuestions = testWithQuestions.customQuestions.assignment;
+        } else if (test.questionRefs.assignmentIds.length > 0) {
             const assignmentDocs = await Assignment.find({ 
                 test_id: { $in: test.questionRefs.assignmentIds } 
             });
@@ -219,7 +223,9 @@ export const getPublicTestById = async (req, res) => {
         const codingIds = test.questionRefs?.codingIds || [];
         const assignmentIds = test.questionRefs?.assignmentIds || [];
 
-        if (mcqIds.length > 0) {
+        if (testWithQuestions.customQuestions?.mcq?.length > 0) {
+            testWithQuestions.mcqQuestions = testWithQuestions.customQuestions.mcq;
+        } else if (mcqIds.length > 0) {
             const mcqDocs = await Mcq.find({
                 $or: [
                     { 'questions.question_id': { $in: mcqIds } },
@@ -233,7 +239,9 @@ export const getPublicTestById = async (req, res) => {
             testWithQuestions.mcqQuestions = [];
         }
 
-        if (codingIds.length > 0) {
+        if (testWithQuestions.customQuestions?.coding?.length > 0) {
+            testWithQuestions.codingQuestions = testWithQuestions.customQuestions.coding;
+        } else if (codingIds.length > 0) {
             const codingDocs = await Coding.find({
                 $or: [
                     { 'questions.question_id': { $in: codingIds } },
@@ -247,7 +255,9 @@ export const getPublicTestById = async (req, res) => {
             testWithQuestions.codingQuestions = [];
         }
 
-        if (assignmentIds.length > 0) {
+        if (testWithQuestions.customQuestions?.assignment?.length > 0) {
+            testWithQuestions.assignmentQuestions = testWithQuestions.customQuestions.assignment;
+        } else if (assignmentIds.length > 0) {
             const assignmentDocs = await Assignment.find({
                 $or: [
                     { 'questions.question_id': { $in: assignmentIds } },
