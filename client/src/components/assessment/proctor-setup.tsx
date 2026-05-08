@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { CheckItem, CheckStatus, PatchFn } from "@/types/assessment.types";
 import { CheckCard } from "@/components/assessment/check-card";
+import QualityGate from "@/components/assessment/quality-gate";
 import { runChecks } from "@/lib/utils";
 
 const INITIAL_CHECKS: CheckItem[] = [
@@ -52,33 +53,52 @@ interface ProctorSetupProps {
 }
 
 export const ProctorSetup = ({ onComplete }: ProctorSetupProps) => {
+  const [showQualityGate, setShowQualityGate] = useState(false);
   const [checks, setChecks] = useState<CheckItem[]>(INITIAL_CHECKS);
   const [phase, setPhase] = useState<"pre" | "running" | "done">("pre");
   const mountedRef = useRef(true);
 
   const patch: PatchFn = (id, update) => {
-    setChecks((prev) => prev.map((c) => (c.id === id ? { ...c, ...update } : c)));
+    setChecks((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, ...update } : c)),
+    );
   };
 
   const startChecks = () => {
     setPhase("pre");
-    setChecks(INITIAL_CHECKS.map((c) => ({ ...c, status: "idle" as CheckStatus, detail: undefined })));
+    setChecks(
+      INITIAL_CHECKS.map((c) => ({
+        ...c,
+        status: "idle" as CheckStatus,
+        detail: undefined,
+      })),
+    );
     runChecks(patch, setPhase, () => mountedRef.current);
   };
 
   useEffect(() => {
     mountedRef.current = true;
     runChecks(patch, setPhase, () => mountedRef.current);
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   // Derived state
-  const blockingFailed = checks.some((c) => c.blocking && c.status === "failed");
-  const anyPending = checks.some((c) => c.status === "checking" || c.status === "idle");
+  const blockingFailed = checks.some(
+    (c) => c.blocking && c.status === "failed",
+  );
+  const anyPending = checks.some(
+    (c) => c.status === "checking" || c.status === "idle",
+  );
   const canProceed = phase === "done" && !blockingFailed;
   const grantedCount = checks.filter((c) => c.status === "granted").length;
   const progress = Math.round((grantedCount / checks.length) * 100);
-  const barColor = blockingFailed ? "#ef4444" : canProceed ? "#22c55e" : "#f97316";
+  const barColor = blockingFailed
+    ? "#ef4444"
+    : canProceed
+      ? "#22c55e"
+      : "#f97316";
 
   const statusText = anyPending
     ? "Checking your environment..."
@@ -104,7 +124,8 @@ export const ProctorSetup = ({ onComplete }: ProctorSetupProps) => {
             Environment Check
           </h1>
           <p className="text-sm text-neutral-400 max-w-sm mx-auto leading-relaxed">
-            Verifying your setup for a secure, plagiarism-free assessment. All required checks must pass.
+            Verifying your setup for a secure, plagiarism-free assessment. All
+            required checks must pass.
           </p>
         </div>
 
@@ -119,7 +140,9 @@ export const ProctorSetup = ({ onComplete }: ProctorSetupProps) => {
         <div className="mt-6">
           <div className="flex items-center justify-between text-xs mb-2">
             <span className="text-neutral-400">{statusText}</span>
-            <span className="font-mono text-neutral-500">{grantedCount} / {checks.length}</span>
+            <span className="font-mono text-neutral-500">
+              {grantedCount} / {checks.length}
+            </span>
           </div>
           <div className="h-1 w-full bg-neutral-800 rounded-full overflow-hidden">
             <div
@@ -140,14 +163,21 @@ export const ProctorSetup = ({ onComplete }: ProctorSetupProps) => {
               Retry Failed Checks
             </button>
           )}
-          {canProceed && (
+          {canProceed && !showQualityGate && (
             <button
-              onClick={onComplete}
+              onClick={() => setShowQualityGate(true)}
               className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-400 active:bg-orange-600 text-white font-semibold text-base rounded-xl transition-all duration-200 cursor-pointer shadow-lg shadow-orange-500/20"
             >
-              Continue to Instructions
+              Proceed to Quality Check
               <ChevronRight className="w-4 h-4" />
             </button>
+          )}
+
+          {showQualityGate && (
+            <QualityGate
+              onComplete={onComplete}
+              onCancel={() => setShowQualityGate(false)}
+            />
           )}
         </div>
       </div>

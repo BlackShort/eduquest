@@ -10,7 +10,6 @@ import { useProctor } from "@/hooks/useProctor";
 import type { Question, Stage } from "@/types/assessment.types";
 import { getTestById } from "@/apis/test-api";
 
-
 export interface CodingQuestionAPI {
   _id?: string;
   question_id: string;
@@ -31,13 +30,8 @@ export interface McqQuestionAPI {
   difficulty?: string;
 }
 
-
-
 // ── Static question data ───────────────────────────────────────────────────────
 // Replace with an API fetch / prop when questions come from the backend.
-
-
-
 
 // const questions: Question[] = [
 //   {
@@ -90,70 +84,69 @@ export const AssessmentProvider = ({
   const [questions, setQuestions] = useState<Question[]>([]);
   const [stage, setStage] = useState<Stage>("fullscreen");
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(null);
+  const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(
+    null,
+  );
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(initialTime);
 
+  useEffect(() => {
+    if (!examId) return;
 
+    const fetchQuestions = async () => {
+      try {
+        // 1. GET TEST
+        const res = await getTestById(examId);
 
-useEffect(() => {
-  if (!examId) return;
+        const test = res.data?.data;
 
-  const fetchQuestions = async () => {
-    try {
-      // 1. GET TEST
-      const res = await getTestById(examId);
+        console.log("TEST:", test);
 
-      const test = res.data?.data;
+        const coding = test?.codingQuestions || [];
+        const mcqs = test?.mcqQuestions || [];
 
-      console.log("TEST:", test);
+        // 3. MAP
+        const mappedQuestions: Question[] = [
+          ...coding.map((q: CodingQuestionAPI) => ({
+            id: q.question_id || q._id || crypto.randomUUID(),
+            question_id: q.question_id,
+            question_text: q.question_text,
+            title: q.question_text,
+            description: q.question_text,
+            type: "coding",
+            section: "Coding Problems",
+            difficulty: q.difficulty || "easy",
+            test_cases: q.test_cases || [],
+          })),
 
-      const coding = test?.codingQuestions || [];
-      const mcqs = test?.mcqQuestions || [];
+          ...mcqs.map((q: McqQuestionAPI) => ({
+            id: q.question_id || q._id || crypto.randomUUID(),
+            question_id: q.question_id,
+            question_text: q.question_text,
+            title: q.question_text,
+            description: q.question_text,
+            type: "mcq",
+            section: "Multiple Choice",
+            difficulty: q.difficulty || "easy",
+            options: q.options || [],
+          })),
+        ];
 
-      // 3. MAP
-      const mappedQuestions: Question[] = [
-  ...coding.map((q: CodingQuestionAPI) => ({
-    id: q.question_id || q._id || crypto.randomUUID(),
-    question_id: q.question_id,
-    question_text: q.question_text,
-    title: q.question_text,
-    description: q.question_text,
-    type: "coding",
-    section: "Coding Problems",
-    difficulty: q.difficulty || "easy",
-    test_cases: q.test_cases || [],
-  })),
+        console.log("FINAL QUESTIONS:", mappedQuestions);
 
-  ...mcqs.map((q: McqQuestionAPI) => ({
-    id: q.question_id || q._id || crypto.randomUUID(),
-    question_id: q.question_id,
-    question_text: q.question_text,
-    title: q.question_text,
-    description: q.question_text,
-    type: "mcq",
-    section: "Multiple Choice",
-    difficulty: q.difficulty || "easy",
-    options: q.options || [],
-  })),
-];
+        setQuestions(mappedQuestions);
 
-      console.log("FINAL QUESTIONS:", mappedQuestions);
-
-      setQuestions(mappedQuestions);
-
-      if (mappedQuestions.length > 0) {
-        setCurrentQuestionId(mappedQuestions[0].id);
+        if (mappedQuestions.length > 0) {
+          setCurrentQuestionId(mappedQuestions[0].id);
+        }
+      } catch (err) {
+        console.error("FETCH ERROR:", err);
       }
+    };
 
-    } catch (err) {
-      console.error("FETCH ERROR:", err);
-    }
-  };
-
-  fetchQuestions();
-}, [examId]);
+    fetchQuestions();
+  }, [examId]);
 
   // ── Proctor — single instance for the entire assessment lifecycle ─────────
   // All callbacks (reportEvent, enrollIdentityFromVideo, verifyIdentityFromVideo,
@@ -174,24 +167,24 @@ useEffect(() => {
 
   // ── Submission ────────────────────────────────────────────────────────────
   const handleSubmitAssessment = useCallback(() => {
-  if (isSubmitted) return;
+    if (isSubmitted) return;
 
-  void proctor.endSession();
+    void proctor.endSession();
 
-  console.log("Submitting assessment:", {
-    answers,
-    timestamp: new Date().toISOString(),
-    totalQuestions: questions.length,
-    answeredQuestions: Object.keys(answers).length,
-  });
+    console.log("Submitting assessment:", {
+      answers,
+      timestamp: new Date().toISOString(),
+      totalQuestions: questions.length,
+      answeredQuestions: Object.keys(answers).length,
+    });
 
-  setIsSubmitted(true);
+    setIsSubmitted(true);
 
-  alert(
-    `Assessment submitted!\n\nTotal: ${questions.length}\n` +
-    `Answered: ${Object.keys(answers).length}\n\nResults will be announced soon.`
-  );
-}, [isSubmitted, answers, proctor, questions]);
+    alert(
+      `Assessment submitted!\n\nTotal: ${questions.length}\n` +
+        `Answered: ${Object.keys(answers).length}\n\nResults will be announced soon.`,
+    );
+  }, [isSubmitted, answers, proctor, questions]);
 
   // ── Refs — latest values readable inside the timer tick without deps ──────
   // Keeping these as refs means decrementTimeRemaining stays stable (empty
@@ -248,14 +241,14 @@ useEffect(() => {
 
   // ── Navigation helpers ────────────────────────────────────────────────────
   const getCurrentQuestion = useCallback(
-  () => questions.find((q) => q.id === currentQuestionId),
-  [currentQuestionId, questions],
-);
+    () => questions.find((q) => q.id === currentQuestionId),
+    [currentQuestionId, questions],
+  );
 
   const getMcqQuestions = useCallback(
-  () => questions.filter((q) => q.type === "mcq"),
-  [questions]
-);
+    () => questions.filter((q) => q.type === "mcq"),
+    [questions],
+  );
 
   const showNext = useCallback(() => {
     const mcq = getMcqQuestions();
@@ -285,8 +278,6 @@ useEffect(() => {
     }
   }, [currentQuestionId, getCurrentQuestion, getMcqQuestions]);
 
-
-  
   // ── Context value ─────────────────────────────────────────────────────────
   return (
     <AssessmentContext.Provider
@@ -323,6 +314,7 @@ useEffect(() => {
         suspendProctorSession,
         endProctorSession,
         proctorActive: proctor.active,
+        identityEnrolled: (proctor as any).identityEnrolled ?? false,
         proctorSessionId: proctor.sessionId,
 
         // Proctor — detection callbacks forwarded verbatim from useProctor.

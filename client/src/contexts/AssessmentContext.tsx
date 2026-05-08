@@ -36,6 +36,7 @@ export interface AssessmentContextType {
   endProctorSession: () => void;
   proctorActive: boolean;
   proctorSessionId: string | null;
+  identityEnrolled: boolean;
 
   // ── Proctor — detection callbacks (passed straight to ProctorOverlay) ──────
   reportEvent: (

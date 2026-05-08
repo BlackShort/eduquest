@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useAssessment } from "@/contexts/AssessmentContext";
 import {
   initFaceDetector,
   detectFaces,
@@ -64,14 +65,18 @@ export default function ProctorOverlay({
     };
   };
 
-  // Keep identity state stable across effect re-runs; reset only on session stop/change.
+  const { identityEnrolled } = useAssessment();
+
+  // Keep identity state stable across effect re-runs; reflect enrollment from context.
   useEffect(() => {
     if (!active || !sessionId) {
       identityEnrolledRef.current = false;
       lastEnrollAttemptAtRef.current = null;
       identityMismatchRef.current = false;
+    } else {
+      identityEnrolledRef.current = !!identityEnrolled;
     }
-  }, [active, sessionId]);
+  }, [active, sessionId, identityEnrolled]);
 
   useEffect(() => {
     if (!active) return;
@@ -161,35 +166,14 @@ export default function ProctorOverlay({
         tickCounter.current++;
 
         // Identity flow.
-        const now = Date.now();
         const readyForIdentity = video.readyState >= 2;
 
-        if (
-          readyForIdentity &&
-          !identityEnrolledRef.current &&
-          enrollIdentityFromVideo
-        ) {
-          const lastTry = lastEnrollAttemptAtRef.current;
-          const canRetry = !lastTry || now - lastTry >= 10000;
-
-          if (canRetry) {
-            lastEnrollAttemptAtRef.current = now;
-            try {
-              const enrolled = await enrollIdentityFromVideo(video);
-              if (enrolled) {
-                identityEnrolledRef.current = true;
-              }
-            } catch (err) {
-              console.error("Identity enrollment failed", err);
-            }
-          }
-        }
-
+        // Enrollment is handled earlier during setup/quality gate.
         if (
           readyForIdentity &&
           identityEnrolledRef.current &&
           verifyIdentityFromVideo &&
-          shouldRunIdentityVerification?.(5 * 1000)
+          shouldRunIdentityVerification?.()
         ) {
           try {
             const verifyResult = await verifyIdentityFromVideo(video);

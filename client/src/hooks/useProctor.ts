@@ -179,7 +179,8 @@ export function useProctor({ examId }: UseProctorOpts) {
       });
 
       setIdentityEnrolled(true);
-      lastIdentityVerifyAtRef.current = Date.now();
+      // Force the first verification to run on the next detector tick.
+      lastIdentityVerifyAtRef.current = null;
       return true;
     },
     [active, examId, sessionId],

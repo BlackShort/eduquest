@@ -8,8 +8,8 @@ let phoneDetector: cocoSsd.ObjectDetection | null = null;
 let faceApiReady = false;
 
 // Initialize face-api models
-async function initFaceApi() {
-  if (faceApiReady) return;
+export async function initFaceApi(): Promise<boolean> {
+  if (faceApiReady) return true;
 
   try {
     const MODEL_URL =
@@ -18,10 +18,12 @@ async function initFaceApi() {
     await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
     await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
     faceApiReady = true;
-    console.log("✅ Face-API models loaded successfully");
+    console.log("Face-API models loaded successfully");
+    return true;
   } catch (err) {
     console.error("Failed to load face-api models from CDN:", err);
     console.error("Make sure you have internet connection for CDN access");
+    return false;
   }
 }
 
@@ -160,14 +162,14 @@ export async function evaluateEnrollmentQuality(
   const checks: IdentityQualityChecks = {
     passed: false,
     singleFace: faceCount === 1,
-    brightnessOk: brightnessScore >= 30,
-    blurOk: blurScore >= 20,
+    brightnessOk: brightnessScore >= 95,
+    blurOk: blurScore >= 55,
     brightnessScore,
     blurScore,
   };
 
-  // Allow minor detector jitter while still enforcing basic quality constraints.
-  checks.passed = faceCount >= 1 && checks.brightnessOk && checks.blurOk;
+  // Keep enrollment strict: exactly one face with sufficient lighting and clarity.
+  checks.passed = checks.singleFace && checks.brightnessOk && checks.blurOk;
   return checks;
 }
 
@@ -192,7 +194,7 @@ export async function extractFaceEmbedding(
       .withFaceDescriptor();
 
     if (!detections || !detections.descriptor) {
-      console.log("No face detected by face-api");
+      // console.log("No face detected by face-api");
       return null;
     }
 
@@ -200,11 +202,11 @@ export async function extractFaceEmbedding(
     // Convert to array for consistency
     const embedding = Array.from(detections.descriptor);
 
-    console.log(
-      "🎯 Face embedding extracted via face-api:",
-      embedding.length,
-      "dimensions",
-    );
+    // console.log(
+    //   "🎯 Face embedding extracted via face-api:",
+    //   embedding.length,
+    //   "dimensions",
+    // );
     return embedding;
   } catch (err) {
     console.error("Error extracting face embedding with face-api:", err);
