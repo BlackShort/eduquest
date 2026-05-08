@@ -49,12 +49,18 @@ export default function AddManyUsersModal({
                             (user: any) => {
                                 if (role === "faculty") {
                                     return {
-                                        email: user.email
+                                        email: user.email,
+                                        courses: user.courses
+                                            .split(",")
+                                            .map((c: string) => c.trim()),
+                                        semester: Number(user.semester)
                                     };
                                 }
                                 return {
                                     email: user.email,
-                                    course: user.course,
+                                    courses: user.courses
+                                        .split(",")
+                                        .map((c: string) => c.trim()),
                                     semester: Number(user.semester)
                                 };
 
@@ -211,15 +217,15 @@ export default function AddManyUsersModal({
                             role === "faculty" ? (
 
                                 <div className="text-sm text-neutral-400 space-y-1">
-                                    <p>email</p>
-                                    <p>johndoe.220111111@gehu.ac.in</p>
+                                    <p>email,courses,semester</p>
+                                    <p>johndoe.220111111@gehu.ac.in,"BTech CSE,MCA",2</p>
                                 </div>
 
                             ) : (
 
                                 <div className="text-sm text-neutral-400 space-y-1">
-                                    <p>email,course,semester</p>
-                                    <p>johndoe.220111111@gehu.ac.in,B.Tech,6</p>
+                                        <p>email,courses,semester</p>
+                                        <p>johndoe.220111111@gehu.ac.in,"B.Tech",6</p>
                                 </div>
 
                             )

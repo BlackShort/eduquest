@@ -12,7 +12,7 @@ interface Student {
     username: string;
     email: string;
     lastLogin: string;
-    course: string;
+    courses: string[];
     semester: string;
 }
 
@@ -21,7 +21,7 @@ export default function StudentDashboard() {
     const [loading, setLoading] = useState(true);
     const [openAddModal, setOpenAddModal] = useState(false);
     const [openBulkModal, setOpenBulkModal] = useState(false);
-    
+
 
     const fetchStudents = async () => {
         try {
@@ -39,7 +39,7 @@ export default function StudentDashboard() {
         fetchStudents();
     }, []);
 
-    
+
 
     return (
         <div className="min-h-screen bg-neutral-950 text-white p-6">

@@ -1,3 +1,13 @@
+import {
+    Eye,
+    Pencil,
+    Trash2
+} from "lucide-react";
+
+import { useState } from "react";
+import { deleteUser } from "@/apis/auth-api";
+import ViewUserModal from "./ViewUserModal";
+import EditUserModal from "./EditUserModal";
 
 interface User {
     _id: string;
@@ -5,7 +15,7 @@ interface User {
     username: string;
     email: string;
     lastLogin: string;
-    course: string;
+    courses: string[];
     semester: string;
 }
 
@@ -16,6 +26,33 @@ interface UserTableProps {
 export default function UserTable({
     users
 }: UserTableProps) {
+
+    const [selectedUser, setSelectedUser] =
+        useState<User | null>(null);
+
+    const [openView, setOpenView] =
+        useState(false);
+
+    const [openEdit, setOpenEdit] =
+        useState(false);
+    
+    const handleDelete = async (
+        id: string
+    ) => {
+
+        try {
+
+            await deleteUser(id);
+
+            window.location.reload();
+
+        } catch (error) {
+
+            console.log(error);
+
+        }
+
+        };
 
     return (
         <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-lg">
@@ -48,6 +85,10 @@ export default function UserTable({
                             <th className="text-left px-6 py-4 font-semibold">
                                 Last Login
                             </th>
+
+                            <th className="text-left px-6 py-4 font-semibold">
+                                Actions
+                            </th>
                         </tr>
                     </thead>
 
@@ -72,7 +113,7 @@ export default function UserTable({
                                     <td className="px-4 py-4 text-neutral-300">
                                         {user.studentId}
                                     </td>
-                                    
+
 
                                     <td className="px-6 py-4 font-medium">
                                         {user.username}
@@ -83,7 +124,7 @@ export default function UserTable({
                                     </td>
 
                                     <td className="px-6 py-4 text-neutral-300">
-                                        {user.course==null ? "N/A": user.course}
+                                        {user.courses && user.courses.length > 0 ? user.courses.join(", ") : "N/A"}
                                     </td>
 
                                     <td className="px-6 py-4 text-neutral-300">
@@ -98,6 +139,43 @@ export default function UserTable({
                                         }
                                     </td>
 
+                                    <td className="px-6 py-4">
+
+                                        <div className="flex items-center gap-3">
+
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedUser(user);
+                                                    setOpenView(true);
+                                                }}
+                                                className="text-blue-400 hover:text-blue-300"
+                                            >
+                                                <Eye size={18} />
+                                            </button>
+
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedUser(user);
+                                                    setOpenEdit(true);
+                                                }}
+                                                className="text-yellow-400 hover:text-yellow-300"
+                                            >
+                                                <Pencil size={18} />
+                                            </button>
+
+                                            <button
+                                                onClick={() =>
+                                                    handleDelete(user._id)
+                                                }
+                                                className="text-red-400 hover:text-red-300"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+
+                                        </div>
+
+                                    </td>
+
                                 </tr>
 
                             ))
@@ -108,6 +186,20 @@ export default function UserTable({
                 </table>
 
             </div>
+            <ViewUserModal
+                open={openView}
+                onClose={() => setOpenView(false)}
+                user={selectedUser}
+            />
+
+            <EditUserModal
+                open={openEdit}
+                onClose={() => setOpenEdit(false)}
+                user={selectedUser}
+                onSuccess={() =>
+                    window.location.reload()
+                }
+            />
         </div>
     );
 }

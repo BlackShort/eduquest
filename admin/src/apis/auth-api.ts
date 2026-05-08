@@ -8,16 +8,16 @@ export const login = async (email: string, password: string) => {
     return data;
 };
 
-export const register = async (email: string, password: string, course: string, semester: number, role:string) => {
-    const { data } = await authApi.post("/v1/register", { email, password, course, semester, role });
+export const register = async (email: string, password: string, courses: string[], semester: number, role: string) => {
+    const { data } = await authApi.post("/v1/register", { email, password, courses, semester, role });
     return data;
 };
 
 export const bulkRegisterUsers = async (
     users: {
         email: string;
-        course: string;
-        semester: number;
+        courses?: string[];
+        semester?: number;
     }[],
     role: string) => {
 
@@ -86,4 +86,36 @@ export const getUsersByRole = async (role: string) => {
         `/v1/users?role=${role}`
     );
     return data;
+};
+
+export const deleteUser = async (
+    id: string
+) => {
+
+    const { data } =
+        await authApi.delete(
+            `/v1/users/${id}`
+        );
+
+    return data;
+
+};
+
+export const updateUser = async (
+    id: string,
+    payload: {
+        email: string;
+        courses: string[];
+        semester: number;
+    }
+) => {
+
+    const { data } =
+        await authApi.patch(
+            `/v1/users/${id}`,
+            payload
+        );
+
+    return data;
+
 };

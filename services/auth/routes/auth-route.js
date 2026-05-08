@@ -14,7 +14,9 @@ import {
     logoutAllSessions,
     verifyUserToken,
     getUsersByRole,
-    bulkRegisterUsers
+    bulkRegisterUsers,
+    deleteUser,
+    updateUser
 } from '../controllers/auth-controller.js';
 import { verifyToken, verifyRole } from '../middlewares/verify-token.js';
 
@@ -38,6 +40,17 @@ authRouter.post('/me/verify-email', verifyToken, verifyEmailCode);
 authRouter.get('/sessions', verifyToken, getUserSessions);
 authRouter.get('/users', verifyToken, getUsersByRole);
 authRouter.post('/users/bulk-register', verifyToken, bulkRegisterUsers);
-
+authRouter.delete('/users/:id', verifyToken, deleteUser);
+authRouter.patch('/users/:id', verifyToken, updateUser);
 // Token verification endpoint (for microservices)
 authRouter.get('/verify-token', verifyToken, verifyUserToken);
+
+// router.delete(
+//     "/v1/users/:id",
+//     deleteUser
+// );
+
+// router.patch(
+//     "/v1/users/:id",
+//     updateUser
+// );

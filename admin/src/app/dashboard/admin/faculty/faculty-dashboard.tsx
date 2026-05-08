@@ -11,7 +11,7 @@ interface Faculty {
     username: string;
     email: string;
     lastLogin: string;
-    course: string;
+    courses: string[];
     semester: string;
 }
 

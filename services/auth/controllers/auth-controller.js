@@ -26,7 +26,7 @@ export const register = async (req, res) => {
     try {
 
         const {
-            course,
+            courses,
             semester,
             email,
             role = "user"
@@ -82,7 +82,7 @@ export const register = async (req, res) => {
             email: normalizedEmail,
             password: hashedPassword,
             role,
-            course,
+            courses: courses || [],
             semester,
             isVerified: true,
             isActive: true
@@ -105,7 +105,7 @@ export const register = async (req, res) => {
                 studentId: newUser.studentId,
                 email: newUser.email,
                 role: newUser.role,
-                course: newUser.course,
+                courses: newUser.courses,
                 semester: newUser.semester
             }
         });
@@ -156,7 +156,7 @@ export const bulkRegisterUsers = async (req, res) => {
 
                 const {
                     email,
-                    course,
+                    courses,
                     semester
                 } = userData;
 
@@ -213,7 +213,7 @@ export const bulkRegisterUsers = async (req, res) => {
                     email: normalizedEmail,
                     password: hashedPassword,
                     role,
-                    course,
+                    courses: courses || [],
                     semester,
                     isVerified: true,
                     isActive: true
@@ -268,9 +268,9 @@ export const login = async (req, res) => {
 
         // Validation
         if (!email || !password) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Email and password are required' 
+            return res.status(400).json({
+                success: false,
+                message: 'Email and password are required'
             });
         }
 
@@ -279,9 +279,9 @@ export const login = async (req, res) => {
         const user = await userModel.findOne({ email: normalizedEmail });
 
         if (!user) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'User not found with this email' 
+            return res.status(404).json({
+                success: false,
+                message: 'User not found with this email'
             });
         }
 
@@ -289,17 +289,17 @@ export const login = async (req, res) => {
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Invalid credentials' 
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid credentials'
             });
         }
 
         // Check if user is active
         if (!user.isActive) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'User account is deactivated' 
+            return res.status(403).json({
+                success: false,
+                message: 'User account is deactivated'
             });
         }
 
@@ -349,8 +349,8 @@ export const login = async (req, res) => {
             maxAge: getTokenExpiry('7d')
         });
 
-        return res.status(200).json({ 
-            success: true, 
+        return res.status(200).json({
+            success: true,
             message: 'Login successful',
             user: {
                 id: user._id,
@@ -365,10 +365,10 @@ export const login = async (req, res) => {
 
     } catch (error) {
         console.error('Login error:', error);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'Login failed', 
-            error: error.message 
+        return res.status(500).json({
+            success: false,
+            message: 'Login failed',
+            error: error.message
         });
     }
 };
@@ -381,9 +381,9 @@ export const refreshAccessToken = async (req, res) => {
         const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
         if (!refreshToken) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Refresh token not provided' 
+            return res.status(401).json({
+                success: false,
+                message: 'Refresh token not provided'
             });
         }
 
@@ -391,15 +391,15 @@ export const refreshAccessToken = async (req, res) => {
         const decoded = verifyAccessToken(refreshToken);
 
         // Find session
-        const session = await sessionModel.findOne({ 
+        const session = await sessionModel.findOne({
             refreshToken,
             isActive: true
         });
 
         if (!session) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Invalid refresh token' 
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid refresh token'
             });
         }
 
@@ -407,9 +407,9 @@ export const refreshAccessToken = async (req, res) => {
         const user = await userModel.findById(decoded.userId);
 
         if (!user || !user.isActive) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'User not found or inactive' 
+            return res.status(401).json({
+                success: false,
+                message: 'User not found or inactive'
             });
         }
 
@@ -435,18 +435,18 @@ export const refreshAccessToken = async (req, res) => {
             maxAge: getTokenExpiry()
         });
 
-        return res.status(200).json({ 
-            success: true, 
+        return res.status(200).json({
+            success: true,
             message: 'Token refreshed successfully',
             accessToken: newAccessToken
         });
 
     } catch (error) {
         console.error('Token refresh error:', error);
-        return res.status(401).json({ 
-            success: false, 
-            message: 'Token refresh failed', 
-            error: error.message 
+        return res.status(401).json({
+            success: false,
+            message: 'Token refresh failed',
+            error: error.message
         });
     }
 };
@@ -475,17 +475,17 @@ export const logout = async (req, res) => {
         res.clearCookie('accessToken', cookieOptions);
         res.clearCookie('refreshToken', cookieOptions);
 
-        return res.status(200).json({ 
-            success: true, 
-            message: 'Logout successful' 
+        return res.status(200).json({
+            success: true,
+            message: 'Logout successful'
         });
 
     } catch (error) {
         console.error('Logout error:', error);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'Logout failed', 
-            error: error.message 
+        return res.status(500).json({
+            success: false,
+            message: 'Logout failed',
+            error: error.message
         });
     }
 };
@@ -499,17 +499,17 @@ export const getCurrentUser = async (req, res) => {
             .findById(req.user.userId)
             .select('-password -verificationCode -verificationCodeExpiresAt');
 
-        return res.status(200).json({ 
-            success: true, 
-            user 
+        return res.status(200).json({
+            success: true,
+            user
         });
 
     } catch (error) {
         console.error('Get user error:', error);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch user', 
-            error: error.message 
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch user',
+            error: error.message
         });
     }
 };
@@ -524,17 +524,17 @@ export const getUserSessions = async (req, res) => {
             isActive: true
         }).select('-token -refreshToken');
 
-        return res.status(200).json({ 
-            success: true, 
-            sessions 
+        return res.status(200).json({
+            success: true,
+            sessions
         });
 
     } catch (error) {
         console.error('Get sessions error:', error);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch sessions', 
-            error: error.message 
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch sessions',
+            error: error.message
         });
     }
 };
@@ -551,17 +551,17 @@ export const logoutSession = async (req, res) => {
             { isActive: false }
         );
 
-        return res.status(200).json({ 
-            success: true, 
-            message: 'Session terminated successfully' 
+        return res.status(200).json({
+            success: true,
+            message: 'Session terminated successfully'
         });
 
     } catch (error) {
         console.error('Logout session error:', error);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'Failed to logout session', 
-            error: error.message 
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to logout session',
+            error: error.message
         });
     }
 };
@@ -584,17 +584,17 @@ export const logoutAllSessions = async (req, res) => {
         res.clearCookie('accessToken', cookieOptions);
         res.clearCookie('refreshToken', cookieOptions);
 
-        return res.status(200).json({ 
-            success: true, 
-            message: 'All sessions terminated successfully' 
+        return res.status(200).json({
+            success: true,
+            message: 'All sessions terminated successfully'
         });
 
     } catch (error) {
         console.error('Logout all sessions error:', error);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'Failed to logout all sessions', 
-            error: error.message 
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to logout all sessions',
+            error: error.message
         });
     }
 };
@@ -605,20 +605,20 @@ export const logoutAllSessions = async (req, res) => {
 export const verifyUserToken = async (req, res) => {
     try {
         // Set user identity as response headers so nginx auth_request_set can forward them
-        res.set('X-User-Id',   String(req.user.userId));
+        res.set('X-User-Id', String(req.user.userId));
         res.set('X-User-Role', req.user.role);
-        res.set('X-Username',  req.user.username);
+        res.set('X-Username', req.user.username);
 
-        return res.status(200).json({ 
-            success: true, 
+        return res.status(200).json({
+            success: true,
             message: 'Token is valid',
             user: req.user
         });
 
     } catch (error) {
-        return res.status(401).json({ 
-            success: false, 
-            message: 'Token verification failed' 
+        return res.status(401).json({
+            success: false,
+            message: 'Token verification failed'
         });
     }
 };
@@ -891,4 +891,67 @@ export const getUsersByRole = async (req, res) => {
             message: error.message
         });
     }
+};
+
+export const deleteUser = async (req, res) => {
+
+    try {
+
+        const { id } = req.params;
+
+        await userModel.findByIdAndDelete(id);
+
+        return res.status(200).json({
+            success: true,
+            message: "User deleted successfully"
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+
+};
+
+export const updateUser = async (req, res) => {
+
+    try {
+
+        const { id } = req.params;
+
+        const {
+            email,
+            courses,
+            semester
+        } = req.body;
+
+        const updatedUser =
+            await userModel.findByIdAndUpdate(
+                id,
+                {
+                    email,
+                    courses,
+                    semester
+                },
+                { new: true }
+            );
+
+        return res.status(200).json({
+            success: true,
+            user: updatedUser
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+
 };

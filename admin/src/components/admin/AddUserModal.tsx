@@ -16,7 +16,7 @@ export default function AddUserModal({
 }: AddUserModalProps) {
 
     const [email, setEmail] = useState("");
-    const [course, setCourse] = useState("");
+    const [coursesInput, setCoursesInput] = useState("");
     const [semester, setSemester] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -39,13 +39,22 @@ export default function AddUserModal({
             const password =
                 `${username}@123`;
 
+            const formattedCourses =
+                role === "faculty"
+                    ? coursesInput
+                        .split(",")
+                        .map((c) => c.trim())
+                        .filter(Boolean)
+                    : coursesInput ? [coursesInput] : [];
+
             await register(
                 email,
                 password,
-                course,
+                formattedCourses,
                 semester,
                 role
             );
+
             await onSuccess();
             handleClose();
 
@@ -59,7 +68,7 @@ export default function AddUserModal({
                 "Something went wrong"
             );
             setEmail("");
-            setCourse("");
+            setCoursesInput("")
             setSemester(1);
 
         } finally {
@@ -72,7 +81,7 @@ export default function AddUserModal({
     const handleClose = () => {
 
         setEmail("");
-        setCourse("");
+        setCoursesInput("")
         setSemester(1);
         setError("");
 
@@ -105,31 +114,35 @@ export default function AddUserModal({
                         required
                     />
 
-                    {role == "user" &&
+                    {(role == "user" || role == "faculty") &&
                         <input
                             type="text"
-                            placeholder="Enter course"
-                            value={course}
+                            placeholder={
+                                role === "faculty"
+                                    ? "Enter courses separated by commas (optional)"
+                                    : "Enter course"
+                            }
+                            value={coursesInput}
                             onChange={(e) =>
-                                setCourse(e.target.value)
+                                setCoursesInput(e.target.value)
+                            }
+                            className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-white outline-none"
+                            required={role === "user"}
+                        />}
+
+                    {(role == "user" || role == "faculty") &&
+                        <input
+                            type="number"
+                            placeholder="Semester"
+                            value={semester}
+                            onChange={(e) =>
+                                setSemester(Number(e.target.value))
                             }
                             className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-white outline-none"
                             required
-                        />}
+                        />
+                    }
 
-                    {role == "user" &&
-                        <input
-                    type="number"
-                    placeholder="Semester"
-                    value={semester}
-                    onChange={(e) =>
-                        setSemester(Number(e.target.value))
-                    }
-                    className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-white outline-none"
-                    required
-                />
-                    }
-                    
                     {
                         error && (
                             <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm">
