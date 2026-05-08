@@ -35,3 +35,20 @@ export const submitAssignment = async (testId: string, formData: FormData) => {
 export const getMyAssignmentAttempt = async (testId: string) => {
   return api.get(`/v1/faculty/submissions/assignment/${testId}/my-attempt`);
 };
+
+export const submitAssessment = async (
+  testId: string,
+  payload: {
+    answers: Record<string, string>;
+    timeSpentMinutes: number;
+    codingResults?: Array<{
+      questionId: string;
+      submissionId: string | null;
+      passedTestcases: number;
+      totalTestcases: number;
+      verdict: string;
+    }>;
+  }
+) => {
+  return api.post(`/v1/faculty/submissions/assessment/${testId}`, payload);
+};

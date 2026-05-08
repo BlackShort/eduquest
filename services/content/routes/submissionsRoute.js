@@ -15,6 +15,7 @@ router.post(
 );
 
 router.get('/assignment/:testId/my-attempt', submissionsController.getMyAttemptForTest);
+router.post('/assessment/:testId', submissionsController.submitAssessment);
 
 router.use(verifyFaculty);
 

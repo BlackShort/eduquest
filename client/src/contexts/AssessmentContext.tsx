@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { Question, Stage } from "@/types/assessment.types";
+import type { CodingSubmissionResult, Question, Stage } from "@/types/assessment.types";
 import type { ProctorEventType } from "@/types/proctor";
 
 export interface AssessmentContextType {
@@ -25,6 +25,8 @@ export interface AssessmentContextType {
   // ── Answers ────────────────────────────────────────────────────────────────
   answers: Record<string, string>;
   handleAnswerChange: (questionId: string, answer: string) => void;
+  codingResults: Record<string, CodingSubmissionResult>;
+  handleCodingResultChange: (result: CodingSubmissionResult) => void;
 
   // ── Submission ─────────────────────────────────────────────────────────────
   isSubmitted: boolean;

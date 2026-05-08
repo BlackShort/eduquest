@@ -82,6 +82,10 @@ export default function TestResultsPage() {
     const studentName = typeof attempt.studentId === 'object' ? 
       (attempt.studentId.username || '') : '';
     return studentName.toLowerCase().includes(searchQuery.toLowerCase());
+  }).sort((a, b) => {
+    const scoreDiff = (b.score?.percentage || 0) - (a.score?.percentage || 0);
+    if (scoreDiff !== 0) return scoreDiff;
+    return (a.timeSpentMinutes || 0) - (b.timeSpentMinutes || 0);
   });
 
   if (loading) {
@@ -205,7 +209,13 @@ export default function TestResultsPage() {
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Score
+                  MCQ
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Coding
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Combined Score
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Time Spent
@@ -221,7 +231,7 @@ export default function TestResultsPage() {
             <tbody className="bg-neutral-800 divide-y divide-neutral-700">
               {filteredAttempts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                  <td colSpan={8} className="px-6 py-12 text-center text-gray-400">
                     No attempts found
                   </td>
                 </tr>
@@ -243,7 +253,17 @@ export default function TestResultsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-gray-100">
-                        {attempt.score.obtained}/{attempt.score.total}
+                        {(attempt.scoreBreakdown?.mcq?.obtained || 0).toFixed(1)}/{attempt.scoreBreakdown?.mcq?.total || 0}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-semibold text-gray-100">
+                        {(attempt.scoreBreakdown?.coding?.obtained || 0).toFixed(1)}/{attempt.scoreBreakdown?.coding?.total || 0}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-semibold text-gray-100">
+                        {attempt.score.obtained.toFixed(1)}/{attempt.score.total}
                       </div>
                       <div className="text-xs text-gray-400">
                         {attempt.score.percentage.toFixed(1)}%

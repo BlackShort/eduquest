@@ -17,6 +17,14 @@ export interface Question {
     question_text?: string;
 }
 
+export interface CodingSubmissionResult {
+    questionId: string;
+    submissionId: string | null;
+    passedTestcases: number;
+    totalTestcases: number;
+    verdict: string;
+}
+
 export type Stage = "fullscreen" | "setup" | "instructions" | "exam";
 
 export type PatchFn = (id: CheckId, update: Partial<CheckItem>) => void;

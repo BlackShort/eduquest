@@ -121,6 +121,16 @@ export interface MCQResponse {
     maxMarks: number;
 }
 
+export interface CodingResponse {
+    questionId: string;
+    submissionId: string | null;
+    passedTestcases: number;
+    totalTestcases: number;
+    marksObtained: number;
+    maxMarks: number;
+    verdict: string;
+}
+
 export interface StudentAttempt {
     _id: string;
     testId: string | Test;
@@ -131,12 +141,27 @@ export interface StudentAttempt {
     responses: {
         mcqResponses: MCQResponse[];
         codingSubmissionIds: string[];
+        codingResponses: CodingResponse[];
         assignmentFileUrl: string | null;
     };
     score: {
         obtained: number;
         total: number;
         percentage: number;
+    };
+    scoreBreakdown: {
+        mcq: {
+            obtained: number;
+            total: number;
+        };
+        coding: {
+            obtained: number;
+            total: number;
+        };
+        assignment: {
+            obtained: number;
+            total: number;
+        };
     };
     gradedBy: string | null;
     gradedAt: string | null;

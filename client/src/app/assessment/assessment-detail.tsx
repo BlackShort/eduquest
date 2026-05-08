@@ -6,6 +6,7 @@ import { codeSubmission } from "@/apis/code-api";
 import type { Testcase } from "@/types/types";
 import type { Question } from "@/types/assessment.types";
 import { useContextAPI } from "@/hooks/useContext";
+import type { CodingSubmissionResult } from "@/types/assessment.types";
 
 interface TestResult {
   index: number;
@@ -26,6 +27,7 @@ interface AssessmentDetailProps {
   onNext?: () => void;
   onPrevious?: () => void;
   onAnswerChange?: (questionId: string, answer: string) => void;
+  onCodingResultChange?: (result: CodingSubmissionResult) => void;
   savedAnswer?: string | null;
 }
 
@@ -163,6 +165,7 @@ export const AssessmentDetail = ({
   onNext,
   onPrevious,
   onAnswerChange,
+  onCodingResultChange,
   savedAnswer,
 }: AssessmentDetailProps) => {
   // Get user ID from context
@@ -274,6 +277,14 @@ export const AssessmentDetail = ({
         questionId,
         userID
       );
+
+      onCodingResultChange?.({
+        questionId,
+        submissionId: result.submissionId || null,
+        passedTestcases: Number(result.executionResult?.passedTestcases || 0),
+        totalTestcases: Number(result.executionResult?.totalTestcases || 0),
+        verdict: result.executionResult?.verdict || "PENDING",
+      });
 
       const mapped = (result.executionResult?.testcaseResults ?? []).map(
         (
