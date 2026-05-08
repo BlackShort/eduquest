@@ -22,3 +22,7 @@ export const submitAssignment = async (testId: string, formData: FormData) => {
 export const getMyAssignmentAttempt = async (testId: string) => {
   return api.get(`/v1/faculty/submissions/assignment/${testId}/my-attempt`);
 };
+
+export const getMyAssignmentDownloadUrl = async (testId: string) => {
+  return api.get(`/v1/faculty/submissions/assignment/${testId}/download-url`);
+};

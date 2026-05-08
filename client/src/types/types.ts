@@ -149,6 +149,15 @@ export interface MCQResponse {
   maxMarks: number;
 }
 
+export interface AssignmentFile {
+  bucket: string | null;
+  key: string | null;
+  originalName: string | null;
+  mimeType: string | null;
+  size: number | null;
+  uploadedAt: string | null;
+}
+
 export interface StudentAttempt {
   _id: string;
   testId: string | Test;
@@ -160,6 +169,7 @@ export interface StudentAttempt {
     mcqResponses: MCQResponse[];
     codingSubmissionIds: string[];
     assignmentFileUrl: string | null;
+    assignmentFile?: AssignmentFile | null;
   };
   score: {
     obtained: number;
