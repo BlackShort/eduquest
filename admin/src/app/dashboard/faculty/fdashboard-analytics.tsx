@@ -216,7 +216,7 @@ export default function FacultyAnalyticsPage() {
                     {activity.testTitle}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
-                    {activity.score}/{activity.totalMarks} ({activity.percentage.toFixed(1)}%)
+                    {activity.score}/{activity.totalMarks} ({(activity.percentage ?? 0).toFixed(1)}%)
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${
