@@ -20,6 +20,12 @@ import type { Test } from '@/types/types';
 type QuestionType = 'mcq' | 'coding' | 'assignment';
 type Difficulty = 'easy' | 'medium' | 'hard';
 
+const getAllowedQuestionTypes = (testType?: string): QuestionType[] => {
+  if (testType === 'assignment') return ['assignment'];
+  if (testType === 'assessment') return ['mcq', 'coding'];
+  return ['mcq', 'coding', 'assignment'];
+};
+
 type TestCaseDraft = {
   input: string;
   output: string;
@@ -351,7 +357,7 @@ const buildCustomQuestions = () => {
     assignment: [] as QuestionDraft[]
   };
 
-  (['mcq', 'coding', 'assignment'] as const).forEach((type) => {
+  getAllowedQuestionTypes(formData.type).forEach((type) => {
     questionBankMap[type].forEach((set) => {
       const selected = selectedQuestions[set._id] || [];
 
@@ -409,7 +415,7 @@ const rawMcqIds: string[] = [];
 const rawCodingIds: string[] = [];
 const rawAssignmentIds: string[] = [];
 
-(['mcq', 'coding', 'assignment'] as const).forEach((type) => {
+getAllowedQuestionTypes(formData.type).forEach((type) => {
   questionBankMap[type].forEach((set) => {
     const selected = selectedQuestions[set._id] || [];
 
@@ -427,15 +433,32 @@ const mcqIds = Array.from(new Set(rawMcqIds));
 const codingIds = Array.from(new Set(rawCodingIds));
 const assignmentIds = Array.from(new Set(rawAssignmentIds));
 const customQuestions = buildCustomQuestions();
+const normalizedMarksAllocation = {
+  mcq: selectedTestType === 'assignment' ? 0 : formData.marksAllocation?.mcq || 0,
+  coding: selectedTestType === 'assignment' ? 0 : formData.marksAllocation?.coding || 0,
+  assignment: selectedTestType === 'assessment' ? 0 : formData.marksAllocation?.assignment || 0
+};
+const normalizedSettings = selectedTestType === 'assignment'
+  ? {
+      allowLateSubmission: false,
+      showResultsImmediately: false,
+      randomizeQuestions: false,
+      enableProctoring: false
+    }
+  : formData.settings;
+const normalizedInstructions = selectedTestType === 'assignment' ? '' : formData.instructions || '';
 
     const dataToSubmit = {
       ...formData,
      questionRefs: {
-      mcqIds,
-      codingIds,
-      assignmentIds
+      mcqIds: selectedTestType === 'assignment' ? [] : mcqIds,
+      codingIds: selectedTestType === 'assignment' ? [] : codingIds,
+      assignmentIds: selectedTestType === 'assessment' ? [] : assignmentIds
     },
       customQuestions,
+      marksAllocation: normalizedMarksAllocation,
+      settings: normalizedSettings,
+      instructions: normalizedInstructions,
       status,
       ...(formData.scheduledStart
         ? { scheduledStart: formData.scheduledStart }
@@ -477,7 +500,7 @@ const result = {
   assignment: [] as QuestionDraft[]
 };
 
-  (['mcq', 'coding', 'assignment'] as const).forEach((type) => {
+  getAllowedQuestionTypes(formData.type).forEach((type) => {
     questionBankMap[type].forEach((set) => {
       const selected = selectedQuestions[set._id] || [];
 
@@ -524,12 +547,28 @@ const getSelectedCount = (type: 'mcq' | 'coding' | 'assignment') => {
 };
 
 const getTotalSelectedCount = () => {
-  return Object.values(selectedQuestions)
-    .flat()
+  return allowedQuestionTypes
+    .flatMap((type) =>
+      questionBankMap[type].flatMap((set) => selectedQuestions[set._id] || [])
+    )
     .length;
 };
 
 const previewData = buildPreviewData();
+const selectedTestType = formData.type || 'assessment';
+const allowedQuestionTypes = getAllowedQuestionTypes(selectedTestType);
+const showMcqMarks = selectedTestType !== 'assignment';
+const showCodingMarks = selectedTestType !== 'assignment';
+const showAssignmentMarks = selectedTestType !== 'assessment';
+const showTestSettings = selectedTestType !== 'assignment';
+const showInstructions = selectedTestType !== 'assignment';
+
+useEffect(() => {
+  const allowedTypes = getAllowedQuestionTypes(selectedTestType);
+  if (!allowedTypes.includes(activeQuestionTab)) {
+    setActiveQuestionTab(allowedTypes[0]);
+  }
+}, [activeQuestionTab, selectedTestType]);
 
 
 
@@ -669,7 +708,8 @@ const previewData = buildPreviewData();
       <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6 space-y-4">
         <h2 className="text-xl font-semibold text-gray-100">Marks Allocation</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className={`grid grid-cols-1 gap-4 ${selectedTestType === 'assignment' ? 'md:grid-cols-2' : selectedTestType === 'assessment' ? 'md:grid-cols-3' : 'md:grid-cols-4'}`}>
+          {showMcqMarks && (
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               MCQ Marks (per question)
@@ -682,7 +722,9 @@ const previewData = buildPreviewData();
               className="w-full px-4 py-2 bg-neutral-900 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+          )}
 
+          {showCodingMarks && (
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Coding Marks (per question)
@@ -695,7 +737,9 @@ const previewData = buildPreviewData();
               className="w-full px-4 py-2 bg-neutral-900 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+          )}
 
+          {showAssignmentMarks && (
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Assignment Marks (per question)
@@ -708,6 +752,7 @@ const previewData = buildPreviewData();
               className="w-full px-4 py-2 bg-neutral-900 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -726,6 +771,7 @@ const previewData = buildPreviewData();
       </div>
 
       {/* Settings */}
+      {showTestSettings && (
       <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6 space-y-4">
         <h2 className="text-xl font-semibold text-gray-100 flex items-center gap-2">
           <SettingsIcon className="w-5 h-5" />
@@ -774,8 +820,10 @@ const previewData = buildPreviewData();
           </label>
         </div>
       </div>
+      )}
 
       {/* Instructions */}
+      {showInstructions && (
       <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6 space-y-4">
         <h2 className="text-xl font-semibold text-gray-100">Instructions for Students</h2>
         <textarea
@@ -786,13 +834,14 @@ const previewData = buildPreviewData();
           className="w-full px-4 py-2 bg-neutral-900 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
+      )}
 
       <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6 space-y-4">
   <h2 className="text-xl font-semibold text-gray-100">Question Builder</h2>
   
 
   <div className="flex gap-2">
-    {(['mcq', 'coding', 'assignment'] as const).map((tab) => (
+    {allowedQuestionTypes.map((tab) => (
   <button
     key={tab}
     onClick={() => setActiveQuestionTab(tab)}
@@ -1121,7 +1170,7 @@ const previewData = buildPreviewData();
       </div>
 
       {/* Questions */}
-      {(['mcq', 'coding', 'assignment'] as const).map((type) => {
+      {allowedQuestionTypes.map((type) => {
         const questions = previewData[type];
 
         if (questions.length === 0) return null;
