@@ -8,7 +8,12 @@ import {
 import { AssessmentContext } from "@/contexts/AssessmentContext";
 import { useProctor } from "@/hooks/useProctor";
 import type { Question, Stage } from "@/types/assessment.types";
-import { getTestById } from "@/apis/test-api";
+import {
+  completeAssessmentSession,
+  getTestById,
+  startAssessmentSession,
+} from "@/apis/test-api";
+import type { AssessmentAccessState, Test } from "@/types/types";
 
 export interface CodingQuestionAPI {
   _id?: string;
@@ -90,18 +95,45 @@ export const AssessmentProvider = ({
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(initialTime);
+  const [isAssessmentLoading, setIsAssessmentLoading] = useState(true);
+  const [isAssessmentLocked, setIsAssessmentLocked] = useState(false);
+  const [assessmentLockReason, setAssessmentLockReason] = useState<
+    string | null
+  >(null);
+  const sessionStartedRef = useRef(false);
 
   useEffect(() => {
     if (!examId) return;
 
     const fetchQuestions = async () => {
       try {
-        // 1. GET TEST
+        setIsAssessmentLoading(true);
+
         const res = await getTestById(examId);
 
-        const test = res.data?.data;
+        const test: Test | undefined = res.data?.data;
 
         console.log("TEST:", test);
+
+        const access: AssessmentAccessState | undefined =
+          test?.assessmentAccess;
+
+        if (access?.isBlocked) {
+          setIsAssessmentLocked(true);
+          setAssessmentLockReason(
+            access.lockReason === "time_over"
+              ? "Your assessment time has expired."
+              : "This assessment has already been submitted.",
+          );
+        } else {
+          setIsAssessmentLocked(false);
+          setAssessmentLockReason(null);
+        }
+
+        const initialSeconds =
+          access?.remainingSeconds ?? (test?.durationMinutes || 0) * 60;
+        setTimeRemaining(initialSeconds);
+        sessionStartedRef.current = access?.status === "in_progress";
 
         const coding = test?.codingQuestions || [];
         const mcqs = test?.mcqQuestions || [];
@@ -114,7 +146,7 @@ export const AssessmentProvider = ({
             question_text: q.question_text,
             title: q.question_text,
             description: q.question_text,
-            type: "coding",
+            type: "coding" as const,
             section: "Coding Problems",
             difficulty: q.difficulty || "easy",
             test_cases: q.test_cases || [],
@@ -126,7 +158,7 @@ export const AssessmentProvider = ({
             question_text: q.question_text,
             title: q.question_text,
             description: q.question_text,
-            type: "mcq",
+            type: "mcq" as const,
             section: "Multiple Choice",
             difficulty: q.difficulty || "easy",
             options: q.options || [],
@@ -142,11 +174,52 @@ export const AssessmentProvider = ({
         }
       } catch (err) {
         console.error("FETCH ERROR:", err);
+        setIsAssessmentLocked(true);
+        setAssessmentLockReason("Failed to load assessment.");
+      } finally {
+        setIsAssessmentLoading(false);
       }
     };
 
     fetchQuestions();
   }, [examId]);
+
+  useEffect(() => {
+    if (
+      stage !== "exam" ||
+      !examId ||
+      isAssessmentLocked ||
+      sessionStartedRef.current
+    ) {
+      return;
+    }
+
+    const startSession = async () => {
+      try {
+        const response = await startAssessmentSession(examId);
+        const access: AssessmentAccessState | undefined = response.data?.data;
+
+        if (access?.isBlocked) {
+          setIsAssessmentLocked(true);
+          setAssessmentLockReason(
+            access.lockReason === "time_over"
+              ? "Your assessment time has expired."
+              : "This assessment has already been submitted.",
+          );
+          return;
+        }
+
+        sessionStartedRef.current = true;
+        if (typeof access?.remainingSeconds === "number") {
+          setTimeRemaining(access.remainingSeconds);
+        }
+      } catch (error) {
+        console.error("Failed to start assessment session:", error);
+      }
+    };
+
+    void startSession();
+  }, [examId, isAssessmentLocked, stage]);
 
   // ── Proctor — single instance for the entire assessment lifecycle ─────────
   // All callbacks (reportEvent, enrollIdentityFromVideo, verifyIdentityFromVideo,
@@ -166,25 +239,38 @@ export const AssessmentProvider = ({
   );
 
   // ── Submission ────────────────────────────────────────────────────────────
-  const handleSubmitAssessment = useCallback(() => {
-    if (isSubmitted) return;
+  const handleSubmitAssessment = useCallback(
+    (reason: "submitted" | "time_over" = "submitted") => {
+      if (isSubmitted) return;
 
-    void proctor.endSession();
+      if (examId) {
+        void completeAssessmentSession(examId, reason);
+      }
 
-    console.log("Submitting assessment:", {
-      answers,
-      timestamp: new Date().toISOString(),
-      totalQuestions: questions.length,
-      answeredQuestions: Object.keys(answers).length,
-    });
+      void proctor.endSession();
 
-    setIsSubmitted(true);
+      console.log("Submitting assessment:", {
+        answers,
+        timestamp: new Date().toISOString(),
+        totalQuestions: questions.length,
+        answeredQuestions: Object.keys(answers).length,
+      });
 
-    alert(
-      `Assessment submitted!\n\nTotal: ${questions.length}\n` +
-        `Answered: ${Object.keys(answers).length}\n\nResults will be announced soon.`,
-    );
-  }, [isSubmitted, answers, proctor, questions]);
+      setIsSubmitted(true);
+      setIsAssessmentLocked(true);
+      setAssessmentLockReason(
+        reason === "time_over"
+          ? "Your assessment time has expired."
+          : "This assessment has been submitted.",
+      );
+
+      alert(
+        `Assessment submitted!\n\nTotal: ${questions.length}\n` +
+          `Answered: ${Object.keys(answers).length}\n\nResults will be announced soon.`,
+      );
+    },
+    [answers, examId, isSubmitted, proctor, questions],
+  );
 
   // ── Refs — latest values readable inside the timer tick without deps ──────
   // Keeping these as refs means decrementTimeRemaining stays stable (empty
@@ -218,7 +304,7 @@ export const AssessmentProvider = ({
         // setTimeout defers the call out of the state updater so React
         // doesn't see two setState calls in the same synchronous frame.
         setTimeout(() => {
-          handleSubmitRef.current();
+          handleSubmitRef.current("time_over");
         }, 0);
       }
       return next;
@@ -283,6 +369,9 @@ export const AssessmentProvider = ({
     <AssessmentContext.Provider
       value={{
         examId,
+        isAssessmentLoading,
+        isAssessmentLocked,
+        assessmentLockReason,
         // Stage
         stage,
         setStage,

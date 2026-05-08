@@ -109,7 +109,7 @@ export const AssessmentHeader = () => {
               </Button>
               <Button
                 className="cursor-pointer rounded-sm bg-neutral-800 text-amber-500 hover:bg-neutral-700/50"
-                onClick={handleSubmitAssessment}
+                onClick={() => handleSubmitAssessment()}
                 disabled={!isRunning}
               >
                 <CloudUpload />

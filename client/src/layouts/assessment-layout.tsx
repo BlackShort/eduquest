@@ -9,6 +9,9 @@ import ProctorOverlay from "@/components/proctor/ProctorOverlay";
 
 export const AssessmentLayout = () => {
   const {
+    isAssessmentLoading,
+    isAssessmentLocked,
+    assessmentLockReason,
     stage,
     setStage,
     startProctorSession,
@@ -64,6 +67,33 @@ export const AssessmentLayout = () => {
       window.removeEventListener("blur", onBlur);
     };
   }, [handleViolation]);
+
+  if (isAssessmentLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-neutral-950 text-neutral-300">
+        Preparing assessment...
+      </div>
+    );
+  }
+
+  if (isAssessmentLocked) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-neutral-950 px-6 text-center">
+        <div className="max-w-lg rounded-2xl border border-neutral-800 bg-neutral-900 p-8">
+          <p className="mb-3 text-sm uppercase tracking-[0.2em] text-orange-400">
+            Assessment locked
+          </p>
+          <h1 className="mb-3 text-2xl font-semibold text-white">
+            Access is no longer available
+          </h1>
+          <p className="text-sm leading-6 text-neutral-400">
+            {assessmentLockReason ||
+              "This assessment cannot be reopened from this device."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const enterFullscreen = async () => {
     try {

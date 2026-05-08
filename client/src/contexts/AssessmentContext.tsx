@@ -4,6 +4,10 @@ import type { ProctorEventType } from "@/types/proctor";
 
 export interface AssessmentContextType {
   examId: string;
+  isAssessmentLoading: boolean;
+  isAssessmentLocked: boolean;
+  assessmentLockReason: string | null;
+
   // ── Stage ──────────────────────────────────────────────────────────────────
   stage: Stage;
   setStage: (stage: Stage) => void;
@@ -24,7 +28,7 @@ export interface AssessmentContextType {
 
   // ── Submission ─────────────────────────────────────────────────────────────
   isSubmitted: boolean;
-  handleSubmitAssessment: () => void;
+  handleSubmitAssessment: (reason?: "submitted" | "time_over") => void;
 
   // ── Timer ──────────────────────────────────────────────────────────────────
   timeRemaining: number;

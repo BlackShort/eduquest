@@ -11,6 +11,19 @@ export const getTestById = async (id: string) => {
   return api.get(`/v1/faculty/tests/public/${id}`);
 };
 
+export const startAssessmentSession = async (testId: string) => {
+  return api.post(`/v1/faculty/tests/public/${testId}/session/start`);
+};
+
+export const completeAssessmentSession = async (
+  testId: string,
+  reason: "submitted" | "time_over" = "submitted",
+) => {
+  return api.patch(`/v1/faculty/tests/public/${testId}/session/complete`, {
+    reason,
+  });
+};
+
 export const submitAssignment = async (testId: string, formData: FormData) => {
   return api.post(`/v1/faculty/submissions/assignment/${testId}`, formData, {
     headers: {
