@@ -42,6 +42,10 @@ export const getMyAssignmentAttempt = async (testId: string) => {
   return api.get(`/v1/faculty/submissions/assignment/${testId}/my-attempt`);
 };
 
+export const getMyAssignmentDownloadUrl = async (testId: string) => {
+  return api.get(`/v1/faculty/submissions/assignment/${testId}/download-url`);
+};
+
 export const submitAssessment = async (
   testId: string,
   payload: {

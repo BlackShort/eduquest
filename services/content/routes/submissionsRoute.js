@@ -1,34 +1,46 @@
-import express from 'express';
+import express from "express";
 const router = express.Router();
-import * as submissionsController from '../controllers/submissionsController.js';
-import { verifyToken, verifyFaculty } from '../middlewares/auth.js';
-import uploadAssignmentPDF from '../middlewares/uploadAssignmentPDF.js';
+import * as submissionsController from "../controllers/submissionsController.js";
+import { verifyToken, verifyFaculty } from "../middlewares/auth.js";
+import uploadAssignmentPDF from "../middlewares/uploadAssignmentPDF.js";
 
 // Apply auth middleware to all routes
 router.use(verifyToken);
 
 // Student assignment submission
 router.post(
-    '/assignment/:testId',
-    uploadAssignmentPDF.single('file'),
-    submissionsController.submitAssignment
+  "/assignment/:testId",
+  uploadAssignmentPDF.single("file"),
+  submissionsController.submitAssignment,
 );
 
-router.get('/assignment/:testId/my-attempt', submissionsController.getMyAttemptForTest);
-router.post('/assessment/:testId', submissionsController.submitAssessment);
+router.get(
+  "/assignment/:testId/my-attempt",
+  submissionsController.getMyAttemptForTest,
+);
+router.get(
+  "/assignment/:testId/download-url",
+  submissionsController.getMyAssignmentDownloadUrl,
+);
+router.post("/assessment/:testId", submissionsController.submitAssessment);
 
 router.use(verifyFaculty);
 
+router.get(
+  "/attempt/:attemptId/assignment/download-url",
+  submissionsController.getAttemptAssignmentDownloadUrl,
+);
+
 // Faculty analytics
-router.get('/analytics/overview', submissionsController.getFacultyAnalytics);
+router.get("/analytics/overview", submissionsController.getFacultyAnalytics);
 
 // Test-specific submissions
-router.get('/test/:testId', submissionsController.getTestAttempts);
-router.get('/test/:testId/analytics', submissionsController.getTestAnalytics);
-router.get('/test/:testId/export', submissionsController.exportTestResults);
+router.get("/test/:testId", submissionsController.getTestAttempts);
+router.get("/test/:testId/analytics", submissionsController.getTestAnalytics);
+router.get("/test/:testId/export", submissionsController.exportTestResults);
 
 // Individual attempt operations
-router.get('/:attemptId', submissionsController.getAttemptById);
-router.put('/:attemptId/grade', submissionsController.gradeAttempt);
+router.get("/:attemptId", submissionsController.getAttemptById);
+router.put("/:attemptId/grade", submissionsController.gradeAttempt);
 
 export default router;
