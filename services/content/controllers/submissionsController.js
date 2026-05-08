@@ -496,9 +496,13 @@ export const submitAssessment = async (req, res) => {
       assignmentFile: null,
     };
     attempt.score = {
-      obtained,
-      total,
-    };
+  obtained,
+  total,
+  percentage:
+    total > 0
+      ? Number(((obtained / total) * 100).toFixed(2))
+      : 0,
+};
     attempt.scoreBreakdown = {
       mcq: {
         obtained: mcqObtained,
@@ -696,7 +700,11 @@ export const gradeAttempt = async (req, res) => {
     // Update score
     if (score) {
       attempt.score.obtained = score.obtained;
-      attempt.score.total = score.total;
+attempt.score.total = score.total;
+attempt.score.percentage =
+  score.total > 0
+    ? Number(((score.obtained / score.total) * 100).toFixed(2))
+    : 0;
       const mcqObtained = attempt.responses.mcqResponses.reduce(
         (sum, response) => sum + (response.marksObtained || 0),
         0,
@@ -997,12 +1005,23 @@ export const getFacultyAnalytics = async (req, res) => {
       .limit(10);
 
     stats.recentActivity = recentAttempts.map((a) => ({
-      studentName: a.studentName || "Unknown",
-      testTitle: a.testId?.title,
-      score: a.score.percentage,
-      submittedAt: a.submittedAt,
-      status: a.status,
-    }));
+  studentName: a.studentName || "Unknown",
+  testTitle: a.testId?.title,
+  score: a.score?.obtained || 0,
+  totalMarks: a.score?.total || 0,
+  percentage:
+  a.score?.percentage && a.score.percentage > 0
+    ? a.score.percentage
+    : (
+        a.score?.total > 0
+          ? Number(
+              ((a.score.obtained / a.score.total) * 100).toFixed(2)
+            )
+          : 0
+      ),
+  submittedAt: a.submittedAt,
+  status: a.status,
+}));
 
     res.status(200).json({
       success: true,

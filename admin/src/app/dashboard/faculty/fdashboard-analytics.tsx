@@ -131,7 +131,7 @@ export default function FacultyAnalyticsPage() {
         />
         <StatCard
           title="Avg. Score"
-          value={`${analytics?.averageScore?.toFixed(1) || 0}%`}
+          value={`${(analytics?.averageScore ?? 0).toFixed(2)}%`}
           icon={<Award className="w-6 h-6" />}
           color="purple"
         />
@@ -216,7 +216,11 @@ export default function FacultyAnalyticsPage() {
                     {activity.testTitle}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
-                    {activity.score}/{activity.totalMarks} ({(activity.percentage ?? 0).toFixed(1)}%)
+                    {Number(activity.score || 0).toFixed(2)}/
+{Number(activity.totalMarks || 0).toFixed(2)}
+(
+{Number(activity.percentage || 0).toFixed(2)}%
+)
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -249,7 +253,7 @@ export default function FacultyAnalyticsPage() {
                 {analytics.testPerformance[0].testTitle}
               </p>
               <p className="text-sm text-blue-600 mt-2">
-                Avg Score: {analytics.testPerformance[0].averageScore.toFixed(1)}%
+                Avg Score: {analytics.testPerformance[0].averageScore.toFixed(2)}%
               </p>
             </>
           )}
@@ -258,7 +262,7 @@ export default function FacultyAnalyticsPage() {
         <div className="bg-linear-to-br from-green-50 to-green-100 rounded-lg border border-green-200 p-6">
           <h4 className="text-sm font-medium text-green-900 mb-2">Completion Rate</h4>
           <p className="text-2xl font-bold text-green-700">
-            {analytics?.completionRate?.toFixed(1) || 0}%
+            {(analytics?.completionRate ?? 0).toFixed(2)}%
           </p>
           <p className="text-sm text-green-600 mt-2">
             {analytics?.totalStudents || 0} students enrolled
@@ -268,7 +272,7 @@ export default function FacultyAnalyticsPage() {
         <div className="bg-linear-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200 p-6">
           <h4 className="text-sm font-medium text-purple-900 mb-2">Pass Rate</h4>
           <p className="text-2xl font-bold text-purple-700">
-            {analytics?.passRate?.toFixed(1) || 0}%
+            {(analytics?.passRate ?? 0).toFixed(2)}%
           </p>
           <p className="text-sm text-purple-600 mt-2">
             Based on 50% passing criteria
@@ -325,7 +329,9 @@ function SimpleBarChart({ data, color }: SimpleBarChartProps) {
         <div key={index} className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-400 font-medium">{item.label}</span>
-            <span className="text-gray-100 font-semibold">{item.value}</span>
+            <span className="text-gray-100 font-semibold">
+  {item.value.toFixed(2)}
+</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3">
             <div
