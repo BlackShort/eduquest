@@ -281,7 +281,11 @@ export const AssessmentProvider = ({
         console.error("Failed to save assessment submission:", error);
       });
 
-      void completeAssessmentSession(examId, reason).catch((error) => {
+      void completeAssessmentSession(examId, {
+        reason,
+        totalQuestions: questions.length,
+        answeredQuestions: Object.keys(answers).length,
+      }).catch((error) => {
         console.error("Failed to complete assessment session:", error);
       });
 
@@ -291,11 +295,6 @@ export const AssessmentProvider = ({
         reason === "time_over"
           ? "Your assessment time has expired."
           : "This assessment has been submitted.",
-      );
-
-      alert(
-        `Assessment submitted!\n\nTotal: ${questions.length}\n` +
-          `Answered: ${Object.keys(answers).length}\n\nResults will be announced soon.`,
       );
     },
     [

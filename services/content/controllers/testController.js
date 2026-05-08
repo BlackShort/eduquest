@@ -19,6 +19,8 @@ const buildAssessmentAccess = async (test, studentId) => {
       endsAt: null,
       submittedAt: null,
       lockReason: null,
+      totalQuestions: 0,
+      answeredQuestions: 0,
     };
   }
 
@@ -51,6 +53,8 @@ const buildAssessmentAccess = async (test, studentId) => {
       endsAt: null,
       submittedAt: null,
       lockReason: null,
+      totalQuestions: 0,
+      answeredQuestions: 0,
     };
   }
 
@@ -69,6 +73,8 @@ const buildAssessmentAccess = async (test, studentId) => {
     startedAt: session.startedAt,
     endsAt: session.endsAt,
     submittedAt: session.submittedAt,
+    totalQuestions: session.totalQuestions || 0,
+    answeredQuestions: session.answeredQuestions || 0,
     lockReason:
       session.lockReason ||
       (session.status === "submitted"
@@ -236,9 +242,24 @@ export const getPublicTests = async (req, res) => {
       scheduledEnd: { $gte: now }, // remove expired
     }).sort({ scheduledStart: 1 });
 
+    const testsWithAccess = await Promise.all(
+      tests.map(async (test) => {
+        const testData = test.toObject();
+
+        if (testData.type === "assessment") {
+          testData.assessmentAccess = await buildAssessmentAccess(
+            test,
+            req.user?.userId,
+          );
+        }
+
+        return testData;
+      }),
+    );
+
     res.status(200).json({
       success: true,
-      data: tests,
+      data: testsWithAccess,
     });
   } catch (error) {
     console.error("Error fetching public tests:", error);
@@ -458,7 +479,11 @@ export const startPublicAssessmentSession = async (req, res) => {
 export const completePublicAssessmentSession = async (req, res) => {
   try {
     const { id } = req.params;
-    const { reason = "submitted" } = req.body || {};
+    const {
+      reason = "submitted",
+      totalQuestions = 0,
+      answeredQuestions = 0,
+    } = req.body || {};
 
     const test = await Test.findOne({
       _id: id,
@@ -492,6 +517,12 @@ export const completePublicAssessmentSession = async (req, res) => {
     session.status = isTimeOver ? "time_over" : "submitted";
     session.lockReason = isTimeOver ? "time_over" : "submitted";
     session.submittedAt = new Date();
+    session.totalQuestions = Number.isFinite(Number(totalQuestions))
+      ? Math.max(0, Number(totalQuestions))
+      : 0;
+    session.answeredQuestions = Number.isFinite(Number(answeredQuestions))
+      ? Math.max(0, Number(answeredQuestions))
+      : 0;
     session.ipAddress = req.ip;
     session.userAgent = req.get("user-agent") || session.userAgent || null;
 

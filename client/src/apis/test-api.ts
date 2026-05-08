@@ -17,10 +17,16 @@ export const startAssessmentSession = async (testId: string) => {
 
 export const completeAssessmentSession = async (
   testId: string,
-  reason: "submitted" | "time_over" = "submitted",
+  payload: {
+    reason?: "submitted" | "time_over";
+    totalQuestions?: number;
+    answeredQuestions?: number;
+  } = {},
 ) => {
   return api.patch(`/v1/faculty/tests/public/${testId}/session/complete`, {
-    reason,
+    reason: payload.reason ?? "submitted",
+    totalQuestions: payload.totalQuestions ?? 0,
+    answeredQuestions: payload.answeredQuestions ?? 0,
   });
 };
 
@@ -48,7 +54,7 @@ export const submitAssessment = async (
       totalTestcases: number;
       verdict: string;
     }>;
-  }
+  },
 ) => {
   return api.post(`/v1/faculty/submissions/assessment/${testId}`, payload);
 };

@@ -126,6 +126,8 @@ export interface AssessmentAccessState {
   startedAt: string | null;
   endsAt: string | null;
   submittedAt: string | null;
+  totalQuestions: number;
+  answeredQuestions: number;
   lockReason: "submitted" | "time_over" | null;
 }
 

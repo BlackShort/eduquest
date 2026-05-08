@@ -7,6 +7,43 @@ let faceDetector: blazeface.BlazeFaceModel | null = null;
 let phoneDetector: cocoSsd.ObjectDetection | null = null;
 let faceApiReady = false;
 
+function isVideoReady(video: HTMLVideoElement): boolean {
+  return video.videoWidth > 0 && video.videoHeight > 0;
+}
+
+async function waitForVideoReady(
+  video: HTMLVideoElement,
+  timeoutMs = 3000,
+): Promise<void> {
+  if (isVideoReady(video)) return;
+
+  await new Promise<void>((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      cleanup();
+      reject(new Error("Camera video is not ready"));
+    }, timeoutMs);
+
+    const onReady = () => {
+      if (isVideoReady(video)) {
+        cleanup();
+        resolve();
+      }
+    };
+
+    const cleanup = () => {
+      window.clearTimeout(timeoutId);
+      video.removeEventListener("loadedmetadata", onReady);
+      video.removeEventListener("canplay", onReady);
+      video.removeEventListener("playing", onReady);
+    };
+
+    video.addEventListener("loadedmetadata", onReady);
+    video.addEventListener("canplay", onReady);
+    video.addEventListener("playing", onReady);
+    onReady();
+  });
+}
+
 // Initialize face-api models
 export async function initFaceApi(): Promise<boolean> {
   if (faceApiReady) return true;
@@ -43,6 +80,7 @@ export async function initFaceDetector() {
 
 export async function detectFaces(video: HTMLVideoElement): Promise<number> {
   if (!faceDetector) return 0;
+  if (!isVideoReady(video)) return 0;
 
   const faces = await faceDetector.estimateFaces(video, false, false); // false = don't flip horizontally
   return faces.length;
@@ -68,8 +106,15 @@ export async function detectPhone(video: HTMLVideoElement): Promise<boolean> {
 
 function getCanvasFromVideo(video: HTMLVideoElement): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth || 640;
-  canvas.height = video.videoHeight || 480;
+  const width = video.videoWidth;
+  const height = video.videoHeight;
+
+  if (!width || !height) {
+    throw new Error("Camera video is not ready for capture");
+  }
+
+  canvas.width = width;
+  canvas.height = height;
   const ctx = canvas.getContext("2d");
 
   if (!ctx) {
@@ -135,6 +180,10 @@ export function captureVideoFrameAsBase64(
   video: HTMLVideoElement,
   quality = 0.9,
 ): string {
+  if (!isVideoReady(video)) {
+    throw new Error("Camera video is not ready for capture");
+  }
+
   const canvas = getCanvasFromVideo(video);
   return canvas.toDataURL("image/jpeg", quality);
 }
@@ -142,6 +191,8 @@ export function captureVideoFrameAsBase64(
 export async function evaluateEnrollmentQuality(
   video: HTMLVideoElement,
 ): Promise<IdentityQualityChecks> {
+  await waitForVideoReady(video);
+
   const canvas = getCanvasFromVideo(video);
   const ctx = canvas.getContext("2d");
 
@@ -162,7 +213,7 @@ export async function evaluateEnrollmentQuality(
   const checks: IdentityQualityChecks = {
     passed: false,
     singleFace: faceCount === 1,
-    brightnessOk: brightnessScore >= 95,
+    brightnessOk: brightnessScore >= 75,
     blurOk: blurScore >= 55,
     brightnessScore,
     blurScore,
@@ -176,6 +227,8 @@ export async function evaluateEnrollmentQuality(
 export async function extractFaceEmbedding(
   video: HTMLVideoElement,
 ): Promise<number[] | null> {
+  await waitForVideoReady(video);
+
   // Initialize face-api if not already done
   if (!faceApiReady) {
     await initFaceApi();

@@ -50,6 +50,16 @@ const assessmentSessionSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    totalQuestions: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    answeredQuestions: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     ipAddress: {
       type: String,
       default: null,

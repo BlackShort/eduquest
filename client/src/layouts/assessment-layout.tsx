@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
+import { Link } from "react-router";
 import { useAssessment } from "@/contexts/AssessmentContext";
 import { FullscreenGate } from "@/components/assessment/fullscreen-gate";
 import { ProctorSetup } from "@/components/assessment/proctor-setup";
@@ -34,6 +35,14 @@ export const AssessmentLayout = () => {
     setStage("fullscreen");
     suspendProctorSession();
   }, [setStage, suspendProctorSession]);
+
+  const isTimeOver =
+    assessmentLockReason?.toLowerCase().includes("expired") ||
+    assessmentLockReason === "time_over";
+  const lockTitle = isTimeOver ? "Time Limit Over" : "Assessment submitted";
+  const lockMessage = isTimeOver
+    ? "The assessment time has ended and this attempt is now closed."
+    : "This assessment has already been submitted and cannot be reopened.";
 
   useEffect(() => {
     // Fullscreen API exit — ESC key, F11, browser chrome buttons
@@ -79,17 +88,22 @@ export const AssessmentLayout = () => {
   if (isAssessmentLocked) {
     return (
       <div className="flex h-screen items-center justify-center bg-neutral-950 px-6 text-center">
-        <div className="max-w-lg rounded-2xl border border-neutral-800 bg-neutral-900 p-8">
+        <div className="max-w-lg rounded-2xl border border-neutral-800 bg-neutral-900 p-8 shadow-2xl shadow-black/20">
           <p className="mb-3 text-sm uppercase tracking-[0.2em] text-orange-400">
-            Assessment locked
+            {lockTitle}
           </p>
           <h1 className="mb-3 text-2xl font-semibold text-white">
-            Access is no longer available
+            {lockTitle}
           </h1>
-          <p className="text-sm leading-6 text-neutral-400">
-            {assessmentLockReason ||
-              "This assessment cannot be reopened from this device."}
+          <p className="mb-6 text-sm leading-6 text-neutral-400">
+            {assessmentLockReason || lockMessage}
           </p>
+          <Link
+            to="/dashboard/assessment"
+            className="inline-flex items-center justify-center rounded-xl border border-orange-500/30 bg-orange-500/10 px-5 py-2.5 text-sm font-medium text-orange-200 transition-colors hover:bg-orange-500/20"
+          >
+            Back to Assessments
+          </Link>
         </div>
       </div>
     );

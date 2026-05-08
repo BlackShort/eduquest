@@ -19,13 +19,14 @@ export const QualityGate = ({ onComplete, onCancel }: Props) => {
   const { enrollIdentityFromVideo } = useAssessment();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [streamActive, setStreamActive] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const [modelsReady, setModelsReady] = useState(false);
   const [quality, setQuality] = useState<IdentityQualityChecks | null>(null);
   const [checking, setChecking] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const BRIGHTNESS_EXPECTED = 95;
+  const BRIGHTNESS_EXPECTED = 75;
   const BLUR_EXPECTED = 55;
 
   const brightnessScore = quality?.brightnessScore ?? 0;
@@ -90,7 +91,10 @@ export const QualityGate = ({ onComplete, onCancel }: Props) => {
 
   const runCheck = async () => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !videoReady) {
+      setError("Camera is still loading. Please wait a moment.");
+      return;
+    }
     setChecking(true);
     try {
       const q = await evaluateEnrollmentQuality(video);
@@ -105,7 +109,10 @@ export const QualityGate = ({ onComplete, onCancel }: Props) => {
 
   const handleEnroll = useCallback(async () => {
     const video = videoRef.current;
-    if (!video || !enrollIdentityFromVideo) return;
+    if (!video || !videoReady || !enrollIdentityFromVideo) {
+      setError("Camera is still loading. Please wait a moment.");
+      return;
+    }
     setEnrolling(true);
     setError(null);
     try {
@@ -121,7 +128,7 @@ export const QualityGate = ({ onComplete, onCancel }: Props) => {
     } finally {
       setEnrolling(false);
     }
-  }, [enrollIdentityFromVideo, onComplete]);
+  }, [enrollIdentityFromVideo, onComplete, videoReady]);
 
   useEffect(() => {
     if (quality?.passed && !enrolling) {
@@ -156,6 +163,8 @@ export const QualityGate = ({ onComplete, onCancel }: Props) => {
                   autoPlay
                   muted
                   playsInline
+                  onLoadedMetadata={() => setVideoReady(true)}
+                  onPlaying={() => setVideoReady(true)}
                   className="h-40 w-full rounded-lg bg-black object-cover sm:h-48"
                 />
                 <div className="mt-1.5 text-center text-xs text-neutral-400">
@@ -244,7 +253,9 @@ export const QualityGate = ({ onComplete, onCancel }: Props) => {
             <button
               className="flex-1 rounded-lg bg-neutral-800 px-3 py-2 text-xs font-medium text-white hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none sm:px-4"
               onClick={runCheck}
-              disabled={!streamActive || !modelsReady || checking}
+              disabled={
+                !streamActive || !modelsReady || !videoReady || checking
+              }
             >
               {!modelsReady
                 ? "Loading..."
@@ -255,7 +266,7 @@ export const QualityGate = ({ onComplete, onCancel }: Props) => {
             <button
               className="flex-1 rounded-lg bg-orange-500 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none sm:px-4"
               onClick={handleEnroll}
-              disabled={!quality || !quality.passed || enrolling}
+              disabled={!quality || !quality.passed || !videoReady || enrolling}
             >
               {enrolling ? "Enrolling..." : "Enroll"}
             </button>
