@@ -14,17 +14,23 @@ interface User {
     studentId?: string;
     username: string;
     email: string;
-    lastLogin: string;
+    lastLogin?: string;
     courses: string[];
-    semester: string;
+    semester?: number;
+    role?: string;
+    isVerified?: boolean;
+    isActive?: boolean;
+    createdAt?: string;
 }
 
 interface UserTableProps {
     users: User[];
+    onRefresh: () => void;
 }
 
 export default function UserTable({
-    users
+    users,
+    onRefresh
 }: UserTableProps) {
 
     const [selectedUser, setSelectedUser] =
@@ -36,19 +42,28 @@ export default function UserTable({
     const [openEdit, setOpenEdit] =
         useState(false);
     
+    const [deletingId, setDeletingId] =
+        useState<string | null>(null);
+    
     const handleDelete = async (
         id: string
     ) => {
 
         try {
 
+            setDeletingId(id);
+
             await deleteUser(id);
 
-            window.location.reload();
+            await onRefresh();
 
         } catch (error) {
 
             console.log(error);
+
+        } finally {
+
+            setDeletingId(null);
 
         }
 
@@ -74,13 +89,13 @@ export default function UserTable({
                                 Email
                             </th>
 
-                            <th className="text-left px-6 py-4 font-semibold">
+                            {/* <th className="text-left px-6 py-4 font-semibold">
                                 Course
                             </th>
 
                             <th className="text-left px-6 py-4 font-semibold">
                                 Semester
-                            </th>
+                            </th> */}
 
                             <th className="text-left px-6 py-4 font-semibold">
                                 Last Login
@@ -123,13 +138,13 @@ export default function UserTable({
                                         {user.email}
                                     </td>
 
-                                    <td className="px-6 py-4 text-neutral-300">
+                                    {/* <td className="px-6 py-4 text-neutral-300">
                                         {user.courses && user.courses.length > 0 ? user.courses.join(", ") : "N/A"}
                                     </td>
 
                                     <td className="px-6 py-4 text-neutral-300">
                                         {user.semester == null ? "N/A" : user.semester}
-                                    </td>
+                                    </td> */}
 
                                     <td className="px-4 py-4 text-neutral-400">
                                         {
@@ -167,9 +182,20 @@ export default function UserTable({
                                                 onClick={() =>
                                                     handleDelete(user._id)
                                                 }
-                                                className="text-red-400 hover:text-red-300"
+                                                disabled={deletingId === user._id}
+                                                className="text-red-400 hover:text-red-300 disabled:opacity-50"
                                             >
-                                                <Trash2 size={18} />
+                                                {
+                                                    deletingId === user._id
+                                                        ? (
+                                                            <span className="text-sm">
+                                                                Deleting...
+                                                            </span>
+                                                        )
+                                                        : (
+                                                            <Trash2 size={18} />
+                                                        )
+                                                }
                                             </button>
 
                                         </div>
@@ -196,10 +222,10 @@ export default function UserTable({
                 open={openEdit}
                 onClose={() => setOpenEdit(false)}
                 user={selectedUser}
-                onSuccess={() =>
-                    window.location.reload()
-                }
+                onSuccess={async () => {
+                    await onRefresh();
+                }}
             />
         </div>
     );
-}
+}   

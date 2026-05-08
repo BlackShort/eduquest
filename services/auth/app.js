@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 app.use(cors({
     origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE']
+    methods: ['GET', 'POST', 'PUT', 'PATCH','DELETE']
 }));
 
 app.use('/v1', authRouter);

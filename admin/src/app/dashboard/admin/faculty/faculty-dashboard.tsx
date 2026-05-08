@@ -12,7 +12,7 @@ interface Faculty {
     email: string;
     lastLogin: string;
     courses: string[];
-    semester: string;
+    semester?: number;
 }
 
 export default function FacultyDashboard() {
@@ -126,7 +126,10 @@ export default function FacultyDashboard() {
 
                     ) : (
 
-                        <UserTable users={faculty} />
+                                <UserTable
+                                    users={faculty}
+                                    onRefresh={fetchFaculty}
+                                />
 
                     )
                 }

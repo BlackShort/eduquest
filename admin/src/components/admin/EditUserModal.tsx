@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { updateUser } from "@/apis/auth-api";
 
 interface User {
     _id: string;
     email: string;
     courses: string[];
-    semester?: string;
+    semester?: number;
 }
 
 interface EditUserModalProps {
@@ -22,21 +22,36 @@ export default function EditUserModal({
     onSuccess
 }: EditUserModalProps) {
 
-    const [email, setEmail] =
-        useState(user?.email || "");
+    const [email, setEmail] = useState("");
 
     const [coursesInput, setCoursesInput] =
-        useState(
-            user?.courses?.join(", ") || ""
-        );
+        useState("");
 
     const [semester, setSemester] =
-        useState(
-            Number(user?.semester) || 1
-        );
+        useState(1);
 
     const [loading, setLoading] =
         useState(false);
+
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+
+        if (user) {
+
+            setEmail(user.email);
+
+            setCoursesInput(
+                user.courses?.join(", ") || ""
+            );
+
+            setSemester(
+                Number(user.semester) || 1
+            );
+
+        }
+
+    }, [user, open]);
 
     if (!open || !user) return null;
 
@@ -45,6 +60,7 @@ export default function EditUserModal({
     ) => {
 
         e.preventDefault();
+        setError("");
 
         try {
 
@@ -56,8 +72,9 @@ export default function EditUserModal({
                     email,
                     courses: coursesInput
                         .split(",")
-                        .map((c) => c.trim()),
-                    semester
+                        .map((c) => c.trim())
+                        .filter(Boolean),
+                    semester: Number(semester)
                 }
             );
 
@@ -65,9 +82,14 @@ export default function EditUserModal({
 
             onClose();
 
-        } catch (error) {
+        } catch (error: any) {
 
             console.log(error);
+            setError(
+                error?.response?.data?.message ||
+                error?.message ||
+                "Failed to update user"
+            );
 
         } finally {
 
@@ -94,17 +116,19 @@ export default function EditUserModal({
                     <input
                         type="email"
                         value={email}
-                        onChange={(e) =>
-                            setEmail(e.target.value)
-                        }
-                        className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-white outline-none"
+                        disabled
+                        placeholder="Email"
+                        className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-neutral-500 outline-none cursor-not-allowed"
                     />
 
                     <input
                         type="text"
                         value={coursesInput}
+                        placeholder="Enter courses separated by commas"
                         onChange={(e) =>
-                            setCoursesInput(e.target.value)
+                            setCoursesInput(
+                                e.target.value
+                            )
                         }
                         className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-white outline-none"
                     />
@@ -112,11 +136,22 @@ export default function EditUserModal({
                     <input
                         type="number"
                         value={semester}
+                        placeholder="Semester"
                         onChange={(e) =>
-                            setSemester(Number(e.target.value))
+                            setSemester(
+                                Number(e.target.value)
+                            )
                         }
                         className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-white outline-none"
                     />
+
+                    {
+                        error && (
+                            <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm">
+                                {error}
+                            </div>
+                        )
+                    }
 
                     <div className="flex items-center justify-end gap-3 pt-2">
 

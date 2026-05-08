@@ -13,7 +13,7 @@ interface Student {
     email: string;
     lastLogin: string;
     courses: string[];
-    semester: string;
+    semester?: number;
 }
 
 export default function StudentDashboard() {
@@ -89,7 +89,10 @@ export default function StudentDashboard() {
                             </p>
                         </div>
                     ) : (
-                        <UserTable users={students} />
+                                <UserTable
+                                    users={students}
+                                    onRefresh={fetchStudents}
+                                />
                     )
                 }
 

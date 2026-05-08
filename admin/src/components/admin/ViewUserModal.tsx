@@ -5,7 +5,7 @@ interface User {
     email: string;
     role?: string;
     courses: string[];
-    semester?: string;
+    semester?: number;
     lastLogin?: string;
     createdAt?: string;
     isVerified?: boolean;
@@ -116,7 +116,7 @@ export default function ViewUserModal({
                         </p>
                     </div>
 
-                    <div>
+                    {/* <div>
                         <p className="text-neutral-400 text-sm">
                             Verified
                         </p>
@@ -134,7 +134,7 @@ export default function ViewUserModal({
                         <p className="text-white">
                             {user.isActive ? "Yes" : "No"}
                         </p>
-                    </div>
+                    </div> */}
 
                 </div>
 
