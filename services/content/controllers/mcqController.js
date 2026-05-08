@@ -2,6 +2,26 @@ import { v4 as uuidv4 } from "uuid";
 import Mcq from "../models/Mcq.js";
 import parseCSV from "../utils/fileParser.js";
 
+const valueFrom = (row, keys, fallback = "") => {
+  for (const key of keys) {
+    const value = row[key];
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      return String(value).trim();
+    }
+  }
+  return fallback;
+};
+
+const splitList = (value) =>
+  String(value || "")
+    .split("|")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const parseNumber = (value, fallback) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
 
 export const uploadMCQ = async (req, res) => {
   try {
@@ -20,16 +40,39 @@ export const uploadMCQ = async (req, res) => {
       });
     }
 
-    const test_id = rows[0].test_id;
-    const subject_id = rows[0].subject_id;
+    const test_id = valueFrom(rows[0], ["test_id", "testId"], `MCQ-${Date.now()}`);
+    const subject_id = valueFrom(rows[0], ["subject_id", "subjectId", "subject"], "general");
 
-    // Convert CSV rows → MCQ question objects
-    const questions = rows.map((row) => ({
-      question_id: uuidv4(),
-      question_text: row.question_text,
-      options: row.options.split("|"),
-      correct_answer: row.correct_answer
-    }));
+    const questions = rows.map((row, index) => {
+      const questionText = valueFrom(row, ["question_text", "question", "description", "title"]);
+      const options = row.options
+        ? splitList(row.options)
+        : ["optionA", "optionB", "optionC", "optionD"]
+            .map((key) => valueFrom(row, [key, key.toLowerCase()]))
+            .filter(Boolean);
+      const correctAnswer = valueFrom(row, ["correct_answer", "correctAnswer", "answer"]);
+
+      if (!questionText) {
+        throw new Error(`Row ${index + 2}: question text is required`);
+      }
+      if (options.length < 2) {
+        throw new Error(`Row ${index + 2}: at least two options are required`);
+      }
+      if (!correctAnswer) {
+        throw new Error(`Row ${index + 2}: correct answer is required`);
+      }
+
+      return {
+        question_id: valueFrom(row, ["question_id", "questionId"], uuidv4()),
+        question_text: questionText,
+        options,
+        correct_answer: correctAnswer,
+        difficulty: valueFrom(row, ["difficulty"], "medium").toLowerCase(),
+        marks: parseNumber(valueFrom(row, ["marks"]), 1),
+        tags: splitList(valueFrom(row, ["tags"])),
+        explanation: valueFrom(row, ["explanation"])
+      };
+    });
 
     let test = await Mcq.findOne({ test_id });
 
@@ -37,15 +80,17 @@ export const uploadMCQ = async (req, res) => {
       // Append questions
       test.questions.push(...questions);
       test.num_questions = test.questions.length;
+      test.isInProblemBank = true;
       await test.save();
     } else {
       test = await Mcq.create({
-  test_id,
-  subject_id,
-  num_questions: questions.length,
-  questions,
-  createdBy: req.user?.userId || null
-});
+        test_id,
+        subject_id,
+        num_questions: questions.length,
+        questions,
+        createdBy: req.user?.userId || null,
+        isInProblemBank: true
+      });
     }
 
     res.status(201).json({

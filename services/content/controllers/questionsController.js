@@ -31,6 +31,7 @@ export const getQuestions = async (req, res) => {
             difficulty,
             tags,
             isInProblemBank,
+            problemBank,
             subjectId
         } = req.query;
 
@@ -44,8 +45,9 @@ const filter = {
   ]
 };
 
-if (isInProblemBank !== undefined) {
-  filter.isInProblemBank = isInProblemBank === "true";
+const problemBankFilter = isInProblemBank ?? problemBank;
+if (problemBankFilter !== undefined) {
+  filter.isInProblemBank = problemBankFilter === "true" || problemBankFilter === true;
 }
 
 if (subjectId) {

@@ -3,6 +3,32 @@ import { upsertQuestionGroup } from "../utils/upsertQuestionGroup.js";
 import Assignment from "../models/Assignment.js";
 import parseCSV from "../utils/fileParser.js";
 
+const valueFrom = (row, keys, fallback = "") => {
+  for (const key of keys) {
+    const value = row[key];
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      return String(value).trim();
+    }
+  }
+  return fallback;
+};
+
+const splitList = (value) =>
+  String(value || "")
+    .split("|")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const parseNumber = (value, fallback) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const parseBoolean = (value) => {
+  const normalized = String(value || "").trim().toLowerCase();
+  return ["true", "yes", "1", "required"].includes(normalized);
+};
+
 
 
 export const uploadAssignment = async (req, res) => {
@@ -23,13 +49,28 @@ export const uploadAssignment = async (req, res) => {
       });
     }
 
+    const fallbackTestId = `ASSIGNMENT-${Date.now()}`;
+
     for (const row of rows) {
+     const questionText = valueFrom(row, ["question_text", "question", "description", "title"]);
+     if (!questionText) {
+      throw new Error("Every assignment row must include question text");
+     }
+
      await upsertQuestionGroup(Assignment, {
-      test_id: row.test_id,
-      subject_id: row.subject_id,
-      question_text: row.question_text,
-      difficulty: row.difficulty || "easy",
-      createdBy: req.user?.userId || null
+      test_id: valueFrom(row, ["test_id", "testId"], fallbackTestId),
+      subject_id: valueFrom(row, ["subject_id", "subjectId", "subject"], "general"),
+      question_text: questionText,
+      difficulty: valueFrom(row, ["difficulty"], "easy").toLowerCase(),
+      createdBy: req.user?.userId || null,
+      extraFields: {
+        marks: parseNumber(valueFrom(row, ["marks"]), 5),
+        tags: splitList(valueFrom(row, ["tags"])),
+        wordLimit: valueFrom(row, ["wordLimit", "word_limit"])
+          ? parseNumber(valueFrom(row, ["wordLimit", "word_limit"]), null)
+          : null,
+        attachmentRequired: parseBoolean(valueFrom(row, ["attachmentRequired", "attachments"]))
+      }
      });
 }
 

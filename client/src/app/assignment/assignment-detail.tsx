@@ -44,6 +44,7 @@ export const AssignmentDetail = () => {
 
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const hasSubmittedAssignment = Boolean(attempt?.responses?.assignmentFileUrl);
 
     // 🔹 Fetch assignment from backend
     useEffect(() => {
@@ -101,6 +102,11 @@ export const AssignmentDetail = () => {
     }
 
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (hasSubmittedAssignment) {
+            alert('Assignment already uploaded. Only one PDF submission is allowed.');
+            return;
+        }
+
         const file = event.target.files?.[0];
         if (file && file.type === 'application/pdf') {
             setUploadedFile(file);
@@ -117,6 +123,11 @@ export const AssignmentDetail = () => {
     };
 
     const handleSubmit = async () => {
+        if (hasSubmittedAssignment) {
+            alert('Assignment already uploaded. You cannot submit another PDF.');
+            return;
+        }
+
         if (!uploadedFile) {
             alert('Please upload your assignment PDF before submitting');
             return;
@@ -141,7 +152,12 @@ export const AssignmentDetail = () => {
             alert('Assignment submitted successfully!');
         } catch (error) {
             console.error('Failed to submit assignment', error);
-            alert('Failed to submit assignment. Please try again.');
+            const err = error as { response?: { data?: { message?: string; data?: AssignmentAttempt } } };
+            if (err.response?.data?.data) {
+                setAttempt(err.response.data.data);
+                setUploadedFile(null);
+            }
+            alert(err.response?.data?.message || 'Failed to submit assignment. Please try again.');
         } finally {
             setSubmitting(false);
         }
@@ -309,10 +325,18 @@ export const AssignmentDetail = () => {
             </div>
 
             {/* Upload Section */}
-            <div className="bg-neutral-800 rounded-xl border-2 border-dashed border-neutral-600 p-8">
-                <h3 className="text-lg font-semibold text-neutral-100 mb-4">Upload Your Assignment</h3>
+            <div className={`bg-neutral-800 rounded-xl border-2 border-dashed p-8 ${hasSubmittedAssignment ? 'border-green-700' : 'border-neutral-600'}`}>
+                <h3 className="text-lg font-semibold text-neutral-100 mb-4">
+                    {hasSubmittedAssignment ? 'Assignment Uploaded' : 'Upload Your Assignment'}
+                </h3>
 
-                {!uploadedFile ? (
+                {hasSubmittedAssignment ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                        <CheckCircle className="text-green-500 mb-4" size={36} />
+                        <p className="text-neutral-100 font-medium">Your PDF has been uploaded.</p>
+                        <p className="text-sm text-neutral-400 mt-2">Only one submission is allowed for this assignment.</p>
+                    </div>
+                ) : !uploadedFile ? (
                     <div className="flex flex-col items-center justify-center py-8">
                         <Upload className="text-orange-600 mb-4" size={32} />
                         <input
@@ -352,11 +376,11 @@ export const AssignmentDetail = () => {
             <div className="flex justify-end pt-4 pb-8">
                 <button
                     onClick={handleSubmit}
-                    disabled={!uploadedFile || submitting}
-                    className="flex items-center gap-2 px-8 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    disabled={!uploadedFile || submitting || hasSubmittedAssignment}
+                    className={`flex items-center gap-2 px-8 py-3 text-white rounded-lg disabled:opacity-70 disabled:cursor-not-allowed transition-colors ${hasSubmittedAssignment ? 'bg-green-600' : 'bg-orange-500 hover:bg-orange-600'}`}
                 >
-                    <Send size={18} />
-                    {submitting ? 'Submitting...' : 'Submit Assignment'}
+                    {hasSubmittedAssignment ? <CheckCircle size={18} /> : <Send size={18} />}
+                    {hasSubmittedAssignment ? 'Uploaded' : submitting ? 'Submitting...' : 'Submit Assignment'}
                 </button>
             </div>
         </div>

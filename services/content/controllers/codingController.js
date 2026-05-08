@@ -2,6 +2,52 @@ import { v4 as uuidv4 } from "uuid";
 import Coding from "../models/Coding.js";
 import parseCSV from "../utils/fileParser.js";
 
+const valueFrom = (row, keys, fallback = "") => {
+  for (const key of keys) {
+    const value = row[key];
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      return String(value).trim();
+    }
+  }
+  return fallback;
+};
+
+const splitList = (value) =>
+  String(value || "")
+    .split("|")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const parseNumber = (value, fallback) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const parseTestCases = (row, rowNumber) => {
+  const raw = valueFrom(row, ["test_cases", "testCases"]);
+  if (raw) {
+    try {
+      const parsed = raw.trim().startsWith("[")
+        ? JSON.parse(raw)
+        : raw.split("|").map((str) => JSON.parse(str.trim()));
+      return parsed.map((testCase) => ({
+        input: String(testCase.input ?? ""),
+        output: String(testCase.output ?? testCase.expectedOutput ?? ""),
+        isHidden: Boolean(testCase.isHidden)
+      }));
+    } catch (err) {
+      throw new Error(`Row ${rowNumber}: invalid test cases JSON format`);
+    }
+  }
+
+  const input = valueFrom(row, ["sampleInput", "input"]);
+  const output = valueFrom(row, ["sampleOutput", "output", "expectedOutput"]);
+  if (input || output) {
+    return [{ input, output, isHidden: false }];
+  }
+
+  throw new Error(`Row ${rowNumber}: at least one test case is required`);
+};
 
 export const uploadCoding = async (req, res) => {
   try {
@@ -20,24 +66,29 @@ export const uploadCoding = async (req, res) => {
       });
     }
 
-    const test_id = rows[0].test_id;
-    const subject_id = rows[0].subject_id;
+    const test_id = valueFrom(rows[0], ["test_id", "testId"], `CODING-${Date.now()}`);
+    const subject_id = valueFrom(rows[0], ["subject_id", "subjectId", "subject"], "general");
 
-    const questions = rows.map((row) => {
-      let parsedCases = [];
-
-      try {
-        parsedCases = row.test_cases
-          .split("|")
-          .map((str) => JSON.parse(str.trim()));
-      } catch (err) {
-        throw new Error("Invalid test_cases JSON format in CSV");
+    const questions = rows.map((row, index) => {
+      const questionText = valueFrom(row, ["question_text", "description", "question", "title"]);
+      if (!questionText) {
+        throw new Error(`Row ${index + 2}: question description is required`);
       }
 
       return {
-        question_id: uuidv4(),
-        question_text: row.question_text,
-        test_cases: parsedCases
+        question_id: valueFrom(row, ["question_id", "questionId"], uuidv4()),
+        question_text: questionText,
+        difficulty: valueFrom(row, ["difficulty"], "medium").toLowerCase(),
+        marks: parseNumber(valueFrom(row, ["marks"]), 10),
+        tags: splitList(valueFrom(row, ["tags"])),
+        timeLimit: parseNumber(valueFrom(row, ["timeLimit", "time_limit"]), 1),
+        memoryLimit: parseNumber(valueFrom(row, ["memoryLimit", "memory_limit"]), 256),
+        constraints: valueFrom(row, ["constraints"]),
+        inputFormat: valueFrom(row, ["inputFormat", "input_format"]),
+        outputFormat: valueFrom(row, ["outputFormat", "output_format"]),
+        sampleInput: valueFrom(row, ["sampleInput", "sample_input"]),
+        sampleOutput: valueFrom(row, ["sampleOutput", "sample_output"]),
+        test_cases: parseTestCases(row, index + 2)
       };
     });
 
@@ -46,6 +97,7 @@ export const uploadCoding = async (req, res) => {
     if (test) {
       test.questions.push(...questions);
       test.num_questions = test.questions.length;
+      test.isInProblemBank = true;
       await test.save();
     } else {
       test = await Coding.create({

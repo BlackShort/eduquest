@@ -3,6 +3,7 @@ import Test from '../models/Test.js';
 import Mcq from '../models/Mcq.js';
 import Submission from '../models/Submission.js';
 import Coding from '../models/Coding.js';
+import fs from 'fs';
 
 const withStudentSnapshot = (attempt) => {
     const doc = attempt.toObject ? attempt.toObject() : attempt;
@@ -242,6 +243,18 @@ export const submitAssignment = async (req, res) => {
             testId,
             studentId: req.user.userId
         });
+
+        if (attempt?.responses?.assignmentFileUrl) {
+            if (req.file?.path) {
+                fs.unlink(req.file.path, () => {});
+            }
+
+            return res.status(409).json({
+                success: false,
+                message: 'Assignment already submitted. Only one PDF submission is allowed.',
+                data: withStudentSnapshot(attempt)
+            });
+        }
 
         if (!attempt) {
             attempt = new StudentAttempt({

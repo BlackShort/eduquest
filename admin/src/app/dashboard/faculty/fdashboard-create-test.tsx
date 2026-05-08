@@ -177,7 +177,7 @@ const fetchQuestionBank = useCallback(async (
     const response = await getQuestions(type, {
       search: debouncedSearch,
       subjectId: subjectFilter,
-      problemBank: true
+      isInProblemBank: true
     });
 
     const data = response.data || [];
@@ -1183,7 +1183,7 @@ const previewData = buildPreviewData();
         </button>
         <button
           onClick={() => setShowPreview(true)}
-          disabled={loading || !formData.title || !formData.subjectId}
+          disabled={loading || !formData.title || !formData.subjectId || getTotalSelectedCount() === 0}
           className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
         >
           <Plus className="w-4 h-4" />
