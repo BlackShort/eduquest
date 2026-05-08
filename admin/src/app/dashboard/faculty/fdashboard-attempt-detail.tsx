@@ -13,7 +13,7 @@ import {
   Send
 } from 'lucide-react';
 import { getAttemptById, gradeAttempt } from '@/apis/faculty-api';
-import type { StudentAttempt, MCQResponse } from '@/types/types';
+import type { StudentAttempt } from '@/types/types';
 
 export default function AttemptDetailPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
@@ -23,11 +23,6 @@ export default function AttemptDetailPage() {
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [assignmentMarks, setAssignmentMarks] = useState(0);
-  const [mcqGrading, setMcqGrading] = useState<Array<{
-    questionId: string;
-    isCorrect: boolean;
-    marksObtained: number;
-  }>>([]);
 
   useEffect(() => {
     const fetchAttemptData = async () => {
@@ -40,31 +35,24 @@ export default function AttemptDetailPage() {
           responses: {
             mcqResponses: attemptData.responses?.mcqResponses || [],
             codingSubmissionIds: attemptData.responses?.codingSubmissionIds || [],
+            codingResponses: attemptData.responses?.codingResponses || [],
             assignmentFileUrl: attemptData.responses?.assignmentFileUrl || null
           },
           score: {
             obtained: attemptData.score?.obtained || 0,
             total: attemptData.score?.total || 0,
             percentage: attemptData.score?.percentage || 0
+          },
+          scoreBreakdown: {
+            mcq: attemptData.scoreBreakdown?.mcq || { obtained: 0, total: 0 },
+            coding: attemptData.scoreBreakdown?.coding || { obtained: 0, total: 0 },
+            assignment: attemptData.scoreBreakdown?.assignment || { obtained: 0, total: 0 }
           }
         };
 
         setAttempt(normalizedAttempt);
         setFeedback(attemptData.feedback || '');
-        const initialMcqMarks = normalizedAttempt.responses.mcqResponses.reduce(
-          (sum: number, mcq: MCQResponse) => sum + (mcq.marksObtained || 0),
-          0
-        );
-        setAssignmentMarks(Math.max((attemptData.score?.obtained || 0) - initialMcqMarks, 0));
-        
-        // Initialize MCQ grading from responses
-        if (normalizedAttempt.responses.mcqResponses.length > 0) {
-          setMcqGrading(normalizedAttempt.responses.mcqResponses.map((mcq: MCQResponse) => ({
-            questionId: mcq.questionId,
-            isCorrect: mcq.isCorrect || false,
-            marksObtained: mcq.marksObtained || 0
-          })));
-        }
+        setAssignmentMarks(normalizedAttempt.scoreBreakdown.assignment.obtained || 0);
       } catch (error) {
         console.error('Error fetching attempt:', error);
         alert('Failed to load attempt data');
@@ -79,20 +67,20 @@ export default function AttemptDetailPage() {
     }
   }, [attemptId, navigate]);
 
-  const handleSaveGrade = async (submitToStudent = false) => {
+  const handleSaveAssignmentGrade = async (submitToStudent = false) => {
+    if (!attempt) return;
+
     try {
       setSaving(true);
-      const mcqMarks = mcqGrading.reduce((sum, item) => sum + item.marksObtained, 0);
-      const hasAssignmentFile = Boolean(attempt?.responses?.assignmentFileUrl);
-      const totalObtained = hasAssignmentFile ? assignmentMarks + mcqMarks : mcqMarks;
-      
+      const mcqObtained = attempt.scoreBreakdown?.mcq?.obtained || 0;
+      const codingObtained = attempt.scoreBreakdown?.coding?.obtained || 0;
+
       await gradeAttempt(attemptId!, {
         score: {
-          obtained: totalObtained,
-          total: attempt?.score.total || 0
+          obtained: mcqObtained + codingObtained + assignmentMarks,
+          total: attempt.score.total || 0
         },
-        feedback,
-        mcqGrading
+        feedback
       });
 
       alert(submitToStudent ? 'Grade submitted successfully!' : 'Grade saved as draft');
@@ -103,16 +91,6 @@ export default function AttemptDetailPage() {
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleMcqGradeChange = (questionId: string, marksObtained: number, isCorrect: boolean) => {
-    setMcqGrading(prev => 
-      prev.map(item => 
-        item.questionId === questionId 
-          ? { ...item, marksObtained, isCorrect }
-          : item
-      )
-    );
   };
 
   if (loading) {
@@ -134,11 +112,10 @@ export default function AttemptDetailPage() {
   const studentName = typeof attempt.studentId === 'object' ? attempt.studentId.username : 'Unknown';
   const studentEmail = typeof attempt.studentId === 'object' ? attempt.studentId.email : '';
   const testTitle = typeof attempt.testId === 'object' ? attempt.testId.title : 'Unknown Test';
-  const maxMarks = attempt.score.total || 0;
-  const mcqMarksObtained = mcqGrading.reduce((sum, item) => sum + item.marksObtained, 0);
+  const mcqBreakdown = attempt.scoreBreakdown?.mcq || { obtained: 0, total: 0 };
+  const codingBreakdown = attempt.scoreBreakdown?.coding || { obtained: 0, total: 0 };
   const hasAssignmentFile = Boolean(attempt.responses?.assignmentFileUrl);
-  const totalMarksObtained = hasAssignmentFile ? assignmentMarks + mcqMarksObtained : mcqMarksObtained;
-  const scorePercentage = maxMarks > 0 ? (totalMarksObtained / maxMarks) * 100 : 0;
+  const assignmentMaxMarks = attempt.scoreBreakdown?.assignment?.total || attempt.score.total || 0;
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -151,29 +128,31 @@ export default function AttemptDetailPage() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-100">Grade Submission</h1>
+        <div>
+            <h1 className="text-3xl font-bold text-gray-100">Submission Result</h1>
             <p className="text-gray-400 mt-1">{testTitle}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => handleSaveGrade(false)}
-            disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 border border-neutral-600 text-gray-300 rounded-lg hover:bg-neutral-700 disabled:opacity-50 transition-colors"
-          >
-            <Save className="w-4 h-4" />
-            Save Draft
-          </button>
-          <button
-            onClick={() => handleSaveGrade(true)}
-            disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
-          >
-            <Send className="w-4 h-4" />
-            Submit Grade
-          </button>
-        </div>
+        {hasAssignmentFile && (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => handleSaveAssignmentGrade(false)}
+              disabled={saving}
+              className="flex items-center gap-2 px-4 py-2 border border-neutral-600 text-gray-300 rounded-lg hover:bg-neutral-700 disabled:opacity-50 transition-colors"
+            >
+              <Save className="w-4 h-4" />
+              Save Draft
+            </button>
+            <button
+              onClick={() => handleSaveAssignmentGrade(true)}
+              disabled={saving}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
+            >
+              <Send className="w-4 h-4" />
+              Submit Grade
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Student Information */}
@@ -227,14 +206,33 @@ export default function AttemptDetailPage() {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-5">
+          <p className="text-sm text-gray-400">MCQ Marks</p>
+          <p className="mt-2 text-2xl font-bold text-gray-100">
+            {mcqBreakdown.obtained.toFixed(1)} / {mcqBreakdown.total}
+          </p>
+        </div>
+        <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-5">
+          <p className="text-sm text-gray-400">Coding Marks</p>
+          <p className="mt-2 text-2xl font-bold text-gray-100">
+            {codingBreakdown.obtained.toFixed(1)} / {codingBreakdown.total}
+          </p>
+        </div>
+        <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-5">
+          <p className="text-sm text-gray-400">Combined Marks</p>
+          <p className="mt-2 text-2xl font-bold text-gray-100">
+            {attempt.score.obtained.toFixed(1)} / {attempt.score.total}
+          </p>
+        </div>
+      </div>
+
       {/* MCQ Responses */}
       {attempt.responses?.mcqResponses && attempt.responses.mcqResponses.length > 0 && (
         <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6">
           <h2 className="text-xl font-semibold text-gray-100 mb-4">MCQ Responses</h2>
           <div className="space-y-4">
             {attempt.responses.mcqResponses.map((mcq, index) => {
-              const grading = mcqGrading.find(g => g.questionId === mcq.questionId);
-              
               return (
                 <div key={mcq.questionId} className="border border-neutral-700 rounded-lg p-4">
                   <div className="flex items-start justify-between mb-3">
@@ -245,6 +243,9 @@ export default function AttemptDetailPage() {
                       <p className="text-sm text-gray-400 mb-2">
                         <strong>Selected Answer:</strong> {mcq.selectedAnswer || 'No answer'}
                       </p>
+                      <p className="text-sm text-gray-400">
+                        <strong>Marks:</strong> {mcq.marksObtained} / {mcq.maxMarks}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2">
                       {mcq.isCorrect ? (
@@ -252,39 +253,6 @@ export default function AttemptDetailPage() {
                       ) : (
                         <XCircle className="w-5 h-5 text-red-600" />
                       )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 mt-4 pt-4 border-t border-neutral-700">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={grading?.isCorrect || false}
-                        onChange={(e) => handleMcqGradeChange(
-                          mcq.questionId,
-                          e.target.checked ? mcq.maxMarks : 0,
-                          e.target.checked
-                        )}
-                        className="w-4 h-4 text-blue-600"
-                      />
-                      <span className="text-sm text-gray-300">Mark as correct</span>
-                    </label>
-
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm text-gray-300">Marks:</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max={mcq.maxMarks}
-                        value={grading?.marksObtained || 0}
-                        onChange={(e) => handleMcqGradeChange(
-                          mcq.questionId,
-                          parseInt(e.target.value) || 0,
-                          parseInt(e.target.value) === mcq.maxMarks
-                        )}
-                        className="w-20 px-2 py-1 border border-neutral-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <span className="text-sm text-gray-400">/ {mcq.maxMarks}</span>
                     </div>
                   </div>
                 </div>
@@ -295,22 +263,30 @@ export default function AttemptDetailPage() {
       )}
 
       {/* Coding Submissions */}
-      {attempt.responses?.codingSubmissionIds && attempt.responses.codingSubmissionIds.length > 0 && (
+      {attempt.responses?.codingResponses && attempt.responses.codingResponses.length > 0 && (
         <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6">
           <h2 className="text-xl font-semibold text-gray-100 mb-4">Coding Submissions</h2>
           <div className="space-y-3">
-            {attempt.responses.codingSubmissionIds.map((submissionId, index) => (
-              <div key={submissionId} className="flex items-center justify-between p-4 border border-neutral-700 rounded-lg">
+            {attempt.responses.codingResponses.map((submission, index) => (
+              <div key={submission.questionId} className="flex items-center justify-between p-4 border border-neutral-700 rounded-lg">
                 <div className="flex items-center gap-3">
                   <FileText className="w-5 h-5 text-gray-400" />
                   <div>
                     <p className="font-medium text-gray-100">Coding Problem {index + 1}</p>
-                    <p className="text-sm text-gray-400">Submission ID: {submissionId}</p>
+                    <p className="text-sm text-gray-400">
+                      Test cases: {submission.passedTestcases} / {submission.totalTestcases}
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      Submission ID: {submission.submissionId || 'Not submitted'}
+                    </p>
                   </div>
                 </div>
-                <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                  View Code
-                </button>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-gray-100">
+                    {submission.marksObtained.toFixed(1)} / {submission.maxMarks}
+                  </p>
+                  <p className="text-xs text-gray-400">{submission.verdict.replace('_', ' ')}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -336,15 +312,15 @@ export default function AttemptDetailPage() {
                   <input
                     type="number"
                     min="0"
-                    max={maxMarks}
+                    max={assignmentMaxMarks}
                     value={assignmentMarks}
                     onChange={(e) => {
                       const value = Number(e.target.value);
-                      setAssignmentMarks(Math.min(Math.max(value || 0, 0), maxMarks));
+                      setAssignmentMarks(Math.min(Math.max(value || 0, 0), assignmentMaxMarks));
                     }}
                     className="w-28 px-3 py-2 bg-neutral-900 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-400">/ {maxMarks}</span>
+                  <span className="text-sm text-gray-400">/ {assignmentMaxMarks}</span>
                 </div>
               </label>
               <a
@@ -362,14 +338,22 @@ export default function AttemptDetailPage() {
 
       {/* Feedback */}
       <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6">
-        <h2 className="text-xl font-semibold text-gray-100 mb-4">Feedback for Student</h2>
-        <textarea
-          value={feedback}
-          onChange={(e) => setFeedback(e.target.value)}
-          placeholder="Provide detailed feedback to help the student improve..."
-          rows={6}
-          className="w-full px-4 py-2 bg-neutral-900 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+        <h2 className="text-xl font-semibold text-gray-100 mb-4">
+          {hasAssignmentFile ? 'Feedback for Student' : 'Feedback'}
+        </h2>
+        {hasAssignmentFile ? (
+          <textarea
+            value={feedback}
+            onChange={(e) => setFeedback(e.target.value)}
+            placeholder="Provide detailed feedback to help the student improve..."
+            rows={6}
+            className="w-full px-4 py-2 bg-neutral-900 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        ) : (
+          <p className="text-gray-300 whitespace-pre-wrap">
+            {attempt.feedback || 'No feedback provided.'}
+          </p>
+        )}
       </div>
 
       {/* Score Summary */}
@@ -383,13 +367,13 @@ export default function AttemptDetailPage() {
           <div>
             <p className="text-sm text-blue-700">Marks Obtained</p>
             <p className="text-2xl font-bold text-blue-900">
-              {totalMarksObtained}
+              {attempt.score.obtained.toFixed(1)}
             </p>
           </div>
           <div>
             <p className="text-sm text-blue-700">Percentage</p>
             <p className="text-2xl font-bold text-blue-900">
-              {scorePercentage.toFixed(1)}%
+              {attempt.score.percentage.toFixed(1)}%
             </p>
           </div>
         </div>

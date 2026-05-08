@@ -12,6 +12,7 @@ export const AssessmentMain = () => {
         setCurrentQuestionId,
         answers,
         handleAnswerChange,
+        handleCodingResultChange,
         questions,
         getCurrentQuestion,
         showNext,
@@ -183,6 +184,7 @@ export const AssessmentMain = () => {
                 onNext={showNext() ? handleNext : undefined}
                 onPrevious={showPrevious() ? handlePrevious : undefined}
                 onAnswerChange={handleAnswerChange}
+                onCodingResultChange={handleCodingResultChange}
                 savedAnswer={answers[currentQuestionId] ?? null}
             />
         </main>

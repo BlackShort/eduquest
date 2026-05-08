@@ -6,7 +6,7 @@ import {
   X, 
   Calendar, 
   Clock, 
-  FileText, 
+  FileText,   
   Settings as SettingsIcon,
   Plus,
   Pencil,
@@ -925,7 +925,7 @@ const previewData = buildPreviewData();
 </div>
 {editingQuestion && (
   <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-    <div className="bg-neutral-900 border border-neutral-700 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6">
+    <div className="bg-neutral-900 border border-neutral-700 rounded-lg w-full max-w-3xl max-h-[80vh] overflow-y-auto p-6">
       <div className="flex items-center justify-between gap-4 mb-5">
         <div>
           <h2 className="text-xl font-semibold text-white">Edit Question</h2>
@@ -1108,7 +1108,7 @@ const previewData = buildPreviewData();
 )}
 {showPreview && (
   <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-    <div className="bg-neutral-900 p-6 rounded-lg w-[800px] max-h-[90vh] overflow-y-auto">
+    <div className="bg-neutral-900 p-6 rounded-lg w-[800px] max-h-[80vh] overflow-y-auto">
 
       <h2 className="text-xl font-semibold mb-4 text-white">
         Test Preview

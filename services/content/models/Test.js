@@ -202,10 +202,14 @@ const testSchema = new mongoose.Schema({
 
 // Calculate total marks before saving
 testSchema.pre('save', function () {
+    const mcqCount = this.questionRefs?.mcqIds?.length || this.customQuestions?.mcq?.length || 0;
+    const codingCount = this.questionRefs?.codingIds?.length || this.customQuestions?.coding?.length || 0;
+    const assignmentCount = this.questionRefs?.assignmentIds?.length || this.customQuestions?.assignment?.length || 0;
+
     this.totalMarks =
-        (this.marksAllocation?.mcq || 0) +
-        (this.marksAllocation?.coding || 0) +
-        (this.marksAllocation?.assignment || 0);
+        (this.marksAllocation?.mcq || 0) * mcqCount +
+        (this.marksAllocation?.coding || 0) * codingCount +
+        (this.marksAllocation?.assignment || 0) * assignmentCount;
 });
 
 // Indexes for better query performance

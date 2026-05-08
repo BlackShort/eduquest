@@ -7,8 +7,9 @@ import {
 } from "react";
 import { AssessmentContext } from "@/contexts/AssessmentContext";
 import { useProctor } from "@/hooks/useProctor";
-import type { Question, Stage } from "@/types/assessment.types";
-import { getTestById } from "@/apis/test-api";
+import type { CodingSubmissionResult, Question, Stage } from "@/types/assessment.types";
+import { getTestById, submitAssessment } from "@/apis/test-api";
+
 
 export interface CodingQuestionAPI {
   _id?: string;
@@ -88,6 +89,7 @@ export const AssessmentProvider = ({
     null,
   );
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [codingResults, setCodingResults] = useState<Record<string, CodingSubmissionResult>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(initialTime);
 
@@ -165,26 +167,42 @@ export const AssessmentProvider = ({
     [],
   );
 
+  const handleCodingResultChange = useCallback((result: CodingSubmissionResult) => {
+    setCodingResults((prev) => ({ ...prev, [result.questionId]: result }));
+  }, []);
+
   // ── Submission ────────────────────────────────────────────────────────────
   const handleSubmitAssessment = useCallback(() => {
     if (isSubmitted) return;
 
-    void proctor.endSession();
+  void proctor.endSession();
+  const timeSpentMinutes = Math.max(
+    0,
+    Math.round((initialTime - timeRemaining) / 60)
+  );
 
-    console.log("Submitting assessment:", {
-      answers,
-      timestamp: new Date().toISOString(),
-      totalQuestions: questions.length,
-      answeredQuestions: Object.keys(answers).length,
-    });
+  console.log("Submitting assessment:", {
+    answers,
+    timestamp: new Date().toISOString(),
+    totalQuestions: questions.length,
+    answeredQuestions: Object.keys(answers).length,
+  });
+
+  void submitAssessment(examId, {
+    answers,
+    timeSpentMinutes,
+    codingResults: Object.values(codingResults)
+  }).catch((error) => {
+    console.error("Failed to save assessment submission:", error);
+  });
 
     setIsSubmitted(true);
 
-    alert(
-      `Assessment submitted!\n\nTotal: ${questions.length}\n` +
-        `Answered: ${Object.keys(answers).length}\n\nResults will be announced soon.`,
-    );
-  }, [isSubmitted, answers, proctor, questions]);
+  alert(
+    `Assessment submitted!\n\nTotal: ${questions.length}\n` +
+    `Answered: ${Object.keys(answers).length}\n\nResults will be announced soon.`
+  );
+}, [isSubmitted, answers, codingResults, proctor, questions, examId, initialTime, timeRemaining]);
 
   // ── Refs — latest values readable inside the timer tick without deps ──────
   // Keeping these as refs means decrementTimeRemaining stays stable (empty
@@ -300,6 +318,8 @@ export const AssessmentProvider = ({
         // Answers
         answers,
         handleAnswerChange,
+        codingResults,
+        handleCodingResultChange,
 
         // Submission
         isSubmitted,

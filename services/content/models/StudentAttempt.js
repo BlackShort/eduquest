@@ -62,6 +62,37 @@ const studentAttemptSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Submission'
         }],
+        codingResponses: [{
+            questionId: {
+                type: String,
+                required: true
+            },
+            submissionId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Submission',
+                default: null
+            },
+            passedTestcases: {
+                type: Number,
+                default: 0
+            },
+            totalTestcases: {
+                type: Number,
+                default: 0
+            },
+            marksObtained: {
+                type: Number,
+                default: 0
+            },
+            maxMarks: {
+                type: Number,
+                default: 0
+            },
+            verdict: {
+                type: String,
+                default: 'NOT_SUBMITTED'
+            }
+        }],
         assignmentFileUrl: {
             type: String,
             default: null
@@ -83,6 +114,20 @@ const studentAttemptSchema = new mongoose.Schema({
             default: 0,
             min: 0,
             max: 100
+        }
+    },
+    scoreBreakdown: {
+        mcq: {
+            obtained: { type: Number, default: 0 },
+            total: { type: Number, default: 0 }
+        },
+        coding: {
+            obtained: { type: Number, default: 0 },
+            total: { type: Number, default: 0 }
+        },
+        assignment: {
+            obtained: { type: Number, default: 0 },
+            total: { type: Number, default: 0 }
         }
     },
     gradedBy: {

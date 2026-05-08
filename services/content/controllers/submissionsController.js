@@ -1,5 +1,8 @@
 import StudentAttempt from '../models/StudentAttempt.js';
 import Test from '../models/Test.js';
+import Mcq from '../models/Mcq.js';
+import Submission from '../models/Submission.js';
+import Coding from '../models/Coding.js';
 
 const withStudentSnapshot = (attempt) => {
     const doc = attempt.toObject ? attempt.toObject() : attempt;
@@ -14,13 +17,194 @@ const withStudentSnapshot = (attempt) => {
         responses: {
             mcqResponses: doc.responses?.mcqResponses || [],
             codingSubmissionIds: doc.responses?.codingSubmissionIds || [],
+            codingResponses: doc.responses?.codingResponses || [],
             assignmentFileUrl: doc.responses?.assignmentFileUrl || null
         },
         score: {
             obtained: doc.score?.obtained || 0,
             total: doc.score?.total || 0,
             percentage: doc.score?.percentage || 0
+        },
+        scoreBreakdown: {
+            mcq: {
+                obtained: doc.scoreBreakdown?.mcq?.obtained || 0,
+                total: doc.scoreBreakdown?.mcq?.total || 0
+            },
+            coding: {
+                obtained: doc.scoreBreakdown?.coding?.obtained || 0,
+                total: doc.scoreBreakdown?.coding?.total || 0
+            },
+            assignment: {
+                obtained: doc.scoreBreakdown?.assignment?.obtained || 0,
+                total: doc.scoreBreakdown?.assignment?.total || 0
+            }
         }
+    };
+};
+
+const normalizeAnswer = (value) => String(value ?? '').trim().toLowerCase();
+
+const getQuestionId = (question) => question.question_id || question.questionId || String(question._id || '');
+
+const answerMatches = (selectedAnswer, question) => {
+    if (!selectedAnswer) return false;
+
+    const selected = normalizeAnswer(selectedAnswer);
+    const correct = normalizeAnswer(question.correct_answer);
+    if (selected && correct && selected === correct) return true;
+
+    const options = question.options || [];
+    const selectedIndex = selected.length === 1 ? selected.charCodeAt(0) - 97 : -1;
+    const correctIndex = correct.length === 1 ? correct.charCodeAt(0) - 97 : -1;
+    const selectedText = selectedIndex >= 0 ? normalizeAnswer(options[selectedIndex]) : selected;
+    const correctText = correctIndex >= 0 ? normalizeAnswer(options[correctIndex]) : correct;
+
+    return Boolean(selectedText && correctText && selectedText === correctText);
+};
+
+const getCustomOrReferencedMcqs = async (test) => {
+    let mcqQuestions = test.customQuestions?.mcq || [];
+    if (mcqQuestions.length > 0 || !test.questionRefs?.mcqIds?.length) {
+        return mcqQuestions;
+    }
+
+    const mcqIds = test.questionRefs.mcqIds;
+    const mcqDocs = await Mcq.find({
+        $or: [
+            { 'questions.question_id': { $in: mcqIds } },
+            { test_id: { $in: mcqIds } },
+            { _id: { $in: mcqIds.filter((value) => value.match(/^[0-9a-fA-F]{24}$/)) } }
+        ]
+    });
+
+    const selected = new Set(mcqIds);
+    const selectedQuestions = [];
+    mcqDocs.forEach((doc) => {
+        doc.questions?.forEach((question) => {
+            if (selected.has(question.question_id)) {
+                selectedQuestions.push(question.toObject ? question.toObject() : question);
+            }
+        });
+    });
+
+    return selectedQuestions.length > 0
+        ? selectedQuestions
+        : mcqDocs.flatMap((doc) =>
+            doc.questions?.map((question) => question.toObject ? question.toObject() : question) || []
+        );
+};
+
+const getCustomOrReferencedCodingQuestions = async (test) => {
+    let codingQuestions = test.customQuestions?.coding || [];
+    if (codingQuestions.length > 0 || !test.questionRefs?.codingIds?.length) {
+        return codingQuestions;
+    }
+
+    const codingIds = test.questionRefs.codingIds;
+    const codingDocs = await Coding.find({
+        $or: [
+            { 'questions.question_id': { $in: codingIds } },
+            { test_id: { $in: codingIds } },
+            { _id: { $in: codingIds.filter((value) => value.match(/^[0-9a-fA-F]{24}$/)) } }
+        ]
+    });
+
+    const selected = new Set(codingIds);
+    const selectedQuestions = [];
+    codingDocs.forEach((doc) => {
+        doc.questions?.forEach((question) => {
+            if (selected.has(question.question_id)) {
+                selectedQuestions.push(question.toObject ? question.toObject() : question);
+            }
+        });
+    });
+
+    return selectedQuestions.length > 0
+        ? selectedQuestions
+        : codingDocs.flatMap((doc) =>
+            doc.questions?.map((question) => question.toObject ? question.toObject() : question) || []
+        );
+};
+
+const buildMcqScore = (test, answers) => {
+    const marksPerMcq = test.marksAllocation?.mcq || 0;
+
+    return (question) => {
+        const questionId = getQuestionId(question);
+        const maxMarks = marksPerMcq > 0 ? marksPerMcq : Number(question.marks || 0);
+        const selectedAnswer = answers[questionId] || null;
+        const isCorrect = answerMatches(selectedAnswer, question);
+
+        return {
+            questionId,
+            selectedAnswer,
+            isCorrect,
+            marksObtained: isCorrect ? maxMarks : 0,
+            maxMarks
+        };
+    };
+};
+
+const buildCodingScore = async (test, studentId, submittedCodingResults = []) => {
+    const codingQuestions = await getCustomOrReferencedCodingQuestions(test);
+    const marksPerCoding = test.marksAllocation?.coding || 0;
+
+    if (codingQuestions.length === 0) {
+        return { responses: [], submissionIds: [], obtained: 0, total: 0 };
+    }
+
+    const questionIds = codingQuestions.map(getQuestionId).filter(Boolean);
+    const submissions = await Submission.find({
+        studentId: String(studentId),
+        questionId: { $in: questionIds },
+        env_type: 'assessment',
+        mode: 'submit',
+        $or: [
+            { testId: test._id },
+            { testId: String(test._id) }
+        ]
+    }).sort({ createdAt: -1 });
+
+    const latestByQuestion = new Map();
+    submissions.forEach((submission) => {
+        if (!latestByQuestion.has(submission.questionId)) {
+            latestByQuestion.set(submission.questionId, submission);
+        }
+    });
+
+    const submittedResultsByQuestion = new Map();
+    submittedCodingResults.forEach((result) => {
+        const questionId = result?.questionId;
+        if (questionId) {
+            submittedResultsByQuestion.set(questionId, result);
+        }
+    });
+
+    const responses = codingQuestions.map((question) => {
+        const questionId = getQuestionId(question);
+        const maxMarks = marksPerCoding > 0 ? marksPerCoding : Number(question.marks || 0);
+        const submittedResult = submittedResultsByQuestion.get(questionId);
+        const submission = latestByQuestion.get(questionId);
+        const passed = Number(submittedResult?.passedTestcases ?? submission?.passedTestcases ?? 0);
+        const total = Number(submittedResult?.totalTestcases ?? submission?.totalTestcases ?? question.test_cases?.length ?? 0);
+        const marksObtained = total > 0 ? (passed / total) * maxMarks : 0;
+
+        return {
+            questionId,
+            submissionId: submittedResult?.submissionId || submission?._id || null,
+            passedTestcases: passed,
+            totalTestcases: total,
+            marksObtained,
+            maxMarks,
+            verdict: submittedResult?.verdict || submission?.verdict || 'NOT_SUBMITTED'
+        };
+    });
+
+    return {
+        responses,
+        submissionIds: responses.map((response) => response.submissionId).filter(Boolean),
+        obtained: responses.reduce((sum, response) => sum + response.marksObtained, 0),
+        total: responses.reduce((sum, response) => sum + response.maxMarks, 0)
     };
 };
 
@@ -79,6 +263,7 @@ export const submitAssignment = async (req, res) => {
         attempt.responses = attempt.responses || {
             mcqResponses: [],
             codingSubmissionIds: [],
+            codingResponses: [],
             assignmentFileUrl: null
         };
         attempt.responses.assignmentFileUrl = fileUrl;
@@ -141,6 +326,110 @@ export const getMyAttemptForTest = async (req, res) => {
 };
 
 /**
+ * Submit assessment responses (Student view)
+ */
+export const submitAssessment = async (req, res) => {
+    try {
+        const { testId } = req.params;
+        const {
+            answers = {},
+            timeSpentMinutes = 0,
+            codingResults = []
+        } = req.body;
+
+        const test = await Test.findOne({
+            _id: testId,
+            status: 'published',
+            type: { $in: ['assessment', 'contest'] }
+        });
+
+        if (!test) {
+            return res.status(404).json({
+                success: false,
+                message: 'Published assessment not found'
+            });
+        }
+
+        const submittedAt = new Date();
+        const mcqQuestions = await getCustomOrReferencedMcqs(test);
+        const mcqResponses = mcqQuestions.map(buildMcqScore(test, answers));
+        const mcqObtained = mcqResponses.reduce(
+            (sum, response) => sum + response.marksObtained,
+            0
+        );
+        const mcqTotal = mcqResponses.reduce(
+            (sum, response) => sum + response.maxMarks,
+            0
+        );
+
+        const codingScore = await buildCodingScore(test, req.user.userId, codingResults);
+        const obtained = mcqObtained + codingScore.obtained;
+        const computedTotal = mcqTotal + codingScore.total;
+        const total = test.totalMarks || computedTotal;
+
+        let attempt = await StudentAttempt.findOne({
+            testId,
+            studentId: req.user.userId
+        });
+
+        if (!attempt) {
+            attempt = new StudentAttempt({
+                testId,
+                studentId: req.user.userId
+            });
+        }
+
+        attempt.submittedAt = submittedAt;
+        attempt.status = 'graded';
+        attempt.studentName = req.user.username || '';
+        attempt.studentEmail = req.user.email || '';
+        attempt.responses = {
+            mcqResponses,
+            codingSubmissionIds: codingScore.submissionIds,
+            codingResponses: codingScore.responses,
+            assignmentFileUrl: null
+        };
+        attempt.score = {
+            obtained,
+            total
+        };
+        attempt.scoreBreakdown = {
+            mcq: {
+                obtained: mcqObtained,
+                total: mcqTotal
+            },
+            coding: {
+                obtained: codingScore.obtained,
+                total: codingScore.total
+            },
+            assignment: {
+                obtained: 0,
+                total: 0
+            }
+        };
+        attempt.timeSpentMinutes = Math.max(0, Number(timeSpentMinutes) || 0);
+        attempt.gradedAt = submittedAt;
+        attempt.ipAddress = req.ip;
+        attempt.userAgent = req.get('user-agent') || null;
+
+        await attempt.save();
+
+        res.status(201).json({
+            success: true,
+            message: 'Assessment submitted successfully',
+            data: withStudentSnapshot(attempt)
+        });
+    } catch (error) {
+        console.error('Error submitting assessment:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to submit assessment',
+            error: error.message
+        });
+    }
+};
+
+/**
  * Get all attempts for a specific test (Faculty view)
  */
 export const getTestAttempts = async (req, res) => {
@@ -175,7 +464,7 @@ export const getTestAttempts = async (req, res) => {
 
         // Fetch attempts with student details
         const attempts = await StudentAttempt.find(filter)
-            .sort({ submittedAt: -1 })
+            .sort({ 'score.percentage': -1, timeSpentMinutes: 1, submittedAt: 1 })
             .skip(skip)
             .limit(parseInt(limit));
 
@@ -292,6 +581,7 @@ export const gradeAttempt = async (req, res) => {
         attempt.responses = attempt.responses || {
             mcqResponses: [],
             codingSubmissionIds: [],
+            codingResponses: [],
             assignmentFileUrl: null
         };
 
@@ -311,6 +601,18 @@ export const gradeAttempt = async (req, res) => {
         if (score) {
             attempt.score.obtained = score.obtained;
             attempt.score.total = score.total;
+            const mcqObtained = attempt.responses.mcqResponses.reduce((sum, response) => sum + (response.marksObtained || 0), 0);
+            const mcqTotal = attempt.responses.mcqResponses.reduce((sum, response) => sum + (response.maxMarks || 0), 0);
+            const codingObtained = attempt.responses.codingResponses.reduce((sum, response) => sum + (response.marksObtained || 0), 0);
+            const codingTotal = attempt.responses.codingResponses.reduce((sum, response) => sum + (response.maxMarks || 0), 0);
+            attempt.scoreBreakdown = {
+                mcq: { obtained: mcqObtained, total: mcqTotal },
+                coding: { obtained: codingObtained, total: codingTotal },
+                assignment: {
+                    obtained: Math.max((score.obtained || 0) - mcqObtained - codingObtained, 0),
+                    total: Math.max((score.total || 0) - mcqTotal - codingTotal, 0)
+                }
+            };
         }
 
         // Update feedback and status
@@ -505,7 +807,7 @@ export const exportTestResults = async (req, res) => {
 
         // Get all attempts
         const attempts = await StudentAttempt.find({ testId })
-            .sort({ 'score.percentage': -1 });
+            .sort({ 'score.percentage': -1, timeSpentMinutes: 1, submittedAt: 1 });
 
         // Format for export
         const exportData = attempts.map((attempt, index) => ({
@@ -514,6 +816,10 @@ export const exportTestResults = async (req, res) => {
             studentEmail: attempt.studentEmail || 'N/A',
             scoreObtained: attempt.score.obtained,
             totalMarks: attempt.score.total,
+            mcqScore: attempt.scoreBreakdown?.mcq?.obtained || 0,
+            mcqTotal: attempt.scoreBreakdown?.mcq?.total || 0,
+            codingScore: attempt.scoreBreakdown?.coding?.obtained || 0,
+            codingTotal: attempt.scoreBreakdown?.coding?.total || 0,
             percentage: attempt.score.percentage.toFixed(2),
             status: attempt.status,
             submittedAt: attempt.submittedAt,
