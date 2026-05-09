@@ -5,7 +5,7 @@ import { useAssessment } from "@/contexts/AssessmentContext";
 import {
   evaluateEnrollmentQuality,
   initFaceDetector,
-  initObjectDetector,
+  // initObjectDetector,
   initFaceApi,
 } from "@/proctor/proctor.engine";
 import type { IdentityQualityChecks } from "@/types/proctor";
@@ -131,14 +131,14 @@ export const QualityGate = ({ onComplete, onCancel }: Props) => {
           if (mounted) setModelProgress(Math.round(prog));
         }, 200);
 
-        const [a, b, c] = await Promise.all([
+        const [a, c] = await Promise.all([
           initFaceDetector(),
-          initObjectDetector(),
+          // initObjectDetector(),
           initFaceApi(),
         ]);
         clearInterval(ticker);
         if (!a) throw new Error("Face detector failed to load");
-        if (!b) throw new Error("Object detector failed to load");
+        // if (!b) throw new Error("Object detector failed to load");
         if (!c) throw new Error("Face-API models failed — check internet connection");
 
         if (mounted) { setModelProgress(100); setModelsReady(true); }

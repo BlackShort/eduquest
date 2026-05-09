@@ -7,7 +7,7 @@ import {
 } from "@/apis/proctor-api";
 import {
   captureVideoFrameAsBase64,
-  evaluateEnrollmentQuality,
+  // evaluateEnrollmentQuality,
   extractFaceEmbedding,
 } from "@/proctor/proctor.engine";
 import type { ProctorEventType } from "@/types/proctor";
@@ -165,8 +165,8 @@ export function useProctor({ examId }: UseProctorOpts) {
       const baselineEmbedding = await extractFaceEmbedding(video);
       if (!baselineEmbedding) return false;
 
-      const qualityChecks = await evaluateEnrollmentQuality(video);
-      if (!qualityChecks.passed) return false;
+      // const qualityChecks = await evaluateEnrollmentQuality(video);
+      // if (!qualityChecks.passed) return false;
 
       const baselineImageBase64 = captureVideoFrameAsBase64(video);
 
@@ -175,7 +175,7 @@ export function useProctor({ examId }: UseProctorOpts) {
         sessionId,
         baselineEmbedding,
         baselineImageBase64,
-        qualityChecks,
+        // qualityChecks,
       });
 
       setIdentityEnrolled(true);

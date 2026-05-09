@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAssessment } from "@/contexts/AssessmentContext";
 import {
-  initFaceDetector,
+  // initFaceDetector,
   detectFaces,
   initObjectDetector,
   detectPhone,
@@ -154,7 +154,7 @@ export default function ProctorOverlay({
     let isCancelled = false;
 
     async function startDetection() {
-      await initFaceDetector();
+      // await initFaceDetector();
       await initObjectDetector();
 
       detectionInterval.current = setInterval(async () => {

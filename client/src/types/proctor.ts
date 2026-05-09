@@ -47,7 +47,7 @@ export interface EnrollIdentityPayload {
   baselineImageBase64?: string;
   baselineImageS3Key?: string;
   thresholdUsed?: number;
-  qualityChecks: IdentityQualityChecks;
+  // qualityChecks: IdentityQualityChecks;
 }
 
 export interface VerifyIdentityPayload {
