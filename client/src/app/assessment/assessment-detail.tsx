@@ -31,8 +31,6 @@ interface AssessmentDetailProps {
   savedAnswer?: string | null;
 }
 
-
-
 interface MCQOption {
   id: string;
   text: string;
@@ -86,12 +84,13 @@ const MCQQuestion = ({
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-white">{data.title}</h2>
             <span
-              className={`px-3 py-1 rounded-full text-xs font-semibold ${data.difficulty === "Easy"
-                ? "bg-green-500/20 text-green-400"
-                : data.difficulty === "Medium"
-                  ? "bg-orange-500/20 text-orange-400"
-                  : "bg-red-500/20 text-red-400"
-                }`}
+              className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                data.difficulty === "Easy"
+                  ? "bg-green-500/20 text-green-400"
+                  : data.difficulty === "Medium"
+                    ? "bg-orange-500/20 text-orange-400"
+                    : "bg-red-500/20 text-red-400"
+              }`}
             >
               {data.difficulty}
             </span>
@@ -110,15 +109,17 @@ const MCQQuestion = ({
               <button
                 key={option.id}
                 onClick={() => handleOptionSelect(option.id)}
-                className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer ${isSelected
-                  ? "bg-blue-600 border-blue-500 text-white"
-                  : "bg-neutral-800 border-neutral-700 text-neutral-300 hover:bg-neutral-700 hover:border-neutral-600"
-                  }`}
+                className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
+                  isSelected
+                    ? "bg-blue-600 border-blue-500 text-white"
+                    : "bg-neutral-800 border-neutral-700 text-neutral-300 hover:bg-neutral-700 hover:border-neutral-600"
+                }`}
               >
                 <div className="flex items-center gap-4">
                   <div
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isSelected ? "border-white" : "border-neutral-500"
-                      }`}
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                      isSelected ? "border-white" : "border-neutral-500"
+                    }`}
                   >
                     {isSelected && <Circle className="w-3 h-3 fill-current" />}
                   </div>
@@ -169,13 +170,12 @@ export const AssessmentDetail = ({
   savedAnswer,
 }: AssessmentDetailProps) => {
   // Get user ID from context
-  
+
   const { appLoading, userID } = useContextAPI();
   if (appLoading) {
     return <div className="text-white p-4">Loading...</div>;
   }
 
-  
   // --- Isolated State for Coding Questions ---
   const [currentCode, setCurrentCode] = useState(savedAnswer || "");
   const [currentLanguage, setCurrentLanguage] = useState("javascript");
@@ -198,17 +198,6 @@ export const AssessmentDetail = ({
 
       setIsRunning(true);
 
-      // Debug: Log what we're sending
-      console.log("DEBUG: About to send code execution request", {
-        env_type: "assessment",
-        testId,
-        questionId,
-        userID,
-        currentLanguage,
-        codeLength: currentCode.length,
-        testCasesCount: testCases.length,
-      });
-
       // Run public test cases just like regular practice mode
       const result = await codeSubmission(
         "assessment",
@@ -218,12 +207,8 @@ export const AssessmentDetail = ({
         testCases.slice(0, 3),
         "run",
         questionId,
-        userID
+        userID,
       );
-
-      console.log("DEBUG: Response received", result);
-
-
 
       const mapped = (result.executionResult?.testcaseResults ?? []).map(
         (
@@ -249,9 +234,8 @@ export const AssessmentDetail = ({
       );
       setTestResults(mapped);
     } catch (err) {
-      console.error("Error running code:", err);
-      const errorMsg = err instanceof Error ? err.message : JSON.stringify(err);
-      console.error("Full error details:", err);
+      const errorMsg = err instanceof Error ? err.message : "Unknown error";
+      console.error("Error running code:", errorMsg);
       alert("Error running code: " + errorMsg);
     } finally {
       setIsRunning(false);
@@ -275,7 +259,7 @@ export const AssessmentDetail = ({
         testCases,
         "submit",
         questionId,
-        userID
+        userID,
       );
 
       onCodingResultChange?.({
@@ -310,15 +294,13 @@ export const AssessmentDetail = ({
       );
       setTestResults(mapped);
     } catch (err) {
-      console.error("Error submitting code:", err);
-      if (err instanceof Error) {
-        alert("Error submitting code: " + err.message);
-      }
+      const errorMsg = err instanceof Error ? err.message : "Unknown error";
+      console.error("Error submitting code:", errorMsg);
+      alert("Error submitting code: " + errorMsg);
     } finally {
       setIsRunning(false);
     }
   };
-
 
   if (questionType === "coding") {
     if (!question) {
@@ -349,6 +331,7 @@ export const AssessmentDetail = ({
           testResults={testResults}
           sendTestCase={(tc) => setTestCases(tc)}
           actionBarLayout="editor-bottom"
+          hideSubmissionsAndSolutions={true}
         />
       </div>
     );
@@ -357,16 +340,17 @@ export const AssessmentDetail = ({
   // For MCQ questions
   const data = question
     ? {
-      title: question.title,
-      difficulty: question.difficulty
-        ? question.difficulty.charAt(0).toUpperCase() + question.difficulty.slice(1)
-        : "Medium",
-      question: question.description || question.title,
-      options: (question.options || []).map((option, index) => ({
-        id: String.fromCharCode(97 + index),
-        text: option,
-      })),
-    }
+        title: question.title,
+        difficulty: question.difficulty
+          ? question.difficulty.charAt(0).toUpperCase() +
+            question.difficulty.slice(1)
+          : "Medium",
+        question: question.description || question.title,
+        options: (question.options || []).map((option, index) => ({
+          id: String.fromCharCode(97 + index),
+          text: option,
+        })),
+      }
     : undefined;
 
   if (!data) {

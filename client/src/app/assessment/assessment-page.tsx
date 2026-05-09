@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAllTests } from "../../apis/test-api";
@@ -58,9 +58,9 @@ const mapTestToAssessment = (test: TestType) => {
   const totalQuestions = mcqCount + codingCount;
 
   const now = new Date();
-
   let status = "upcoming";
 
+  // Determine assessment status based on schedule
   if (test.scheduledStart && test.scheduledEnd) {
     const start = new Date(test.scheduledStart);
     const end = new Date(test.scheduledEnd);
@@ -68,17 +68,6 @@ const mapTestToAssessment = (test: TestType) => {
     if (now >= start && now <= end) {
       status = "live";
     } else if (now > end) {
-      status = "completed";
-    }
-  }
-
-  if (test.scheduledStart && test.scheduledEnd) {
-    if (
-      now >= new Date(test.scheduledStart) &&
-      now <= new Date(test.scheduledEnd)
-    ) {
-      status = "live";
-    } else if (now > new Date(test.scheduledEnd)) {
       status = "completed";
     }
   }
@@ -108,10 +97,7 @@ type AssessmentType = ReturnType<typeof mapTestToAssessment>;
 const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
   const isLocked = assessment.assessmentAccess?.isBlocked;
   const lockReason = assessment.assessmentAccess?.lockReason;
-  const lockedLabel =
-    lockReason === "time_over"
-      ? "Time Limit Over"
-      : "This assessment is already submitted";
+  const inProgress = assessment.assessmentAccess?.status === "in_progress";
   const totalQuestions =
     assessment.assessmentAccess?.totalQuestions || assessment.num_questions;
   const answeredQuestions = assessment.assessmentAccess?.answeredQuestions || 0;
@@ -178,7 +164,7 @@ const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
   };
 
   return (
-    <div className="bg-white/2 border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-all duration-300">
+    <div className="bg-white/2 border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-all duration-300 relative group">
       {/* Main Content */}
       <div className="p-5">
         {/* Header */}
@@ -323,26 +309,20 @@ const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
       {/* Action Button */}
       <div className="border-t border-white/5 px-5 py-4">
         {isLocked ? (
-          <div className="space-y-3">
-            <div className="rounded-xl border border-white/5 bg-white/3 px-4 py-3">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-500">
-                Result
-              </p>
-              <p className="mt-1 text-sm font-medium text-neutral-100">
-                {answeredQuestions}/{totalQuestions} questions submitted
-              </p>
-              <p className="mt-1 text-xs text-neutral-500">{lockedLabel}</p>
-            </div>
-            <div className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium text-neutral-400 bg-white/3 border border-white/5 cursor-not-allowed">
-              {lockReason === "time_over" ? (
-                <Clock className="w-4 h-4 text-neutral-500" />
-              ) : (
-                <CheckCircle2 className="w-4 h-4 text-neutral-500" />
-              )}
-              {lockReason === "time_over"
-                ? "Time Limit Over"
-                : "Assessment submitted"}
-            </div>
+          <div className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium text-neutral-400 bg-white/3 border border-white/5 cursor-not-allowed">
+            {lockReason === "time_over" ? (
+              <Clock className="w-4 h-4 text-neutral-500" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 text-neutral-500" />
+            )}
+            {lockReason === "time_over"
+              ? "Time Limit Over"
+              : "Assessment submitted"}
+          </div>
+        ) : inProgress ? (
+          <div className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium text-neutral-400 bg-white/3 border border-white/5 cursor-not-allowed">
+            <Pause className="w-4 h-4 text-neutral-400" />
+            Assessment in progress
           </div>
         ) : (
           <Link
@@ -373,31 +353,66 @@ const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
           </Link>
         )}
       </div>
+
+      {/* Hover Overlay for Assessment Status and Results */}
+      {isLocked && (
+        <div className="absolute inset-0 rounded-2xl bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4 z-10 pointer-events-none">
+          <div className="text-center">
+            {lockReason === "time_over" ? (
+              <>
+                <Clock className="w-8 h-8 text-orange-400 mx-auto mb-3" />
+                <h4 className="text-sm font-semibold text-white mb-1">
+                  Assessment Submitted
+                </h4>
+                <p className="text-xs text-neutral-300 mb-3">
+                  Auto-submitted after time limit
+                </p>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-3" />
+                <h4 className="text-sm font-semibold text-white mb-1">
+                  Assessment Submitted
+                </h4>
+              </>
+            )}
+            <div className="text-xs text-neutral-400 border-t border-white/10 pt-3 mt-3">
+              <p>
+                <span className="font-medium text-neutral-300">
+                  {answeredQuestions}
+                </span>
+                /{totalQuestions} questions submitted
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 export const AssessmentHome = () => {
   const [tests, setTests] = useState<TestType[]>([]);
 
-  console.log("TESTS RAW:", tests);
-
-  const fetchTests = useCallback(async () => {
-    try {
-      const res = await getAllTests();
-
-      console.log("API RESPONSE:", res);
-
-      const list = res.data?.data || [];
-
-      setTests(list);
-    } catch (err) {
-      console.error("FETCH ERROR:", err);
-    }
-  }, []);
-
   useEffect(() => {
+    let mounted = true;
+
+    const fetchTests = async () => {
+      try {
+        const res = await getAllTests();
+        const list = res.data?.data || [];
+        if (mounted) {
+          setTests(list);
+        }
+      } catch (err) {
+        console.error("Failed to fetch assessments:", err);
+      }
+    };
+
     fetchTests();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const assessments = tests
@@ -410,10 +425,21 @@ export const AssessmentHome = () => {
     .map(mapTestToAssessment);
 
   const currentAssessments = assessments.filter((a) => a.status === "live");
-  const upcomingAssessments = assessments.filter(
-    (a) => a.status === "upcoming",
-  );
-  const completedAssessments = assessments.filter(
+  // upcoming assessments removed from UI per requirements
+
+  // Submitted: assessments that have been attempted and submitted or time-over
+  const submittedAssessments = assessments.filter((a) => {
+    const access = a.assessmentAccess;
+    // Must be attempted (has a start time) and blocked (submitted or time-over)
+    if (!access || !access.startedAt) return false;
+    return (
+      access.isBlocked &&
+      (access.status === "submitted" || access.status === "time_over")
+    );
+  });
+
+  // History: all assessments past their deadline, regardless of attempt status
+  const historyAssessments = assessments.filter(
     (a) => a.status === "completed",
   );
   return (
@@ -435,7 +461,7 @@ export const AssessmentHome = () => {
           <div className="flex items-center gap-3 bg-white/3 border border-white/10 backdrop-blur-xl px-5 py-2.5 rounded-full shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)]">
             <Users className="w-5 h-5 text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.8)]" />
             <span className="font-semibold text-purple-50 tracking-wide">
-              {completedAssessments.length} Completed
+              {submittedAssessments.length} Completed
             </span>
           </div>
         </div>
@@ -459,16 +485,18 @@ export const AssessmentHome = () => {
           </div>
         </div>
 
+        {/* Upcoming section intentionally removed */}
+
         <div className="flex-1 p-6 group hover:bg-white/1 transition-colors relative">
           <div className="flex justify-between items-start mb-3">
             <p className="text-neutral-400 font-medium tracking-wide text-sm uppercase">
-              Upcoming
+              Submitted
             </p>
-            <Calendar className="w-5 h-5 text-purple-400/50 group-hover:text-purple-400 transition-colors" />
+            <CheckCircle2 className="w-5 h-5 text-emerald-400/50 group-hover:text-emerald-400 transition-colors" />
           </div>
           <div className="flex items-baseline gap-2">
             <h3 className="text-4xl font-light text-white tracking-tighter">
-              {upcomingAssessments.length}
+              {submittedAssessments.length}
             </h3>
           </div>
         </div>
@@ -476,13 +504,13 @@ export const AssessmentHome = () => {
         <div className="flex-1 p-6 group hover:bg-white/1 transition-colors relative">
           <div className="flex justify-between items-start mb-3">
             <p className="text-neutral-400 font-medium tracking-wide text-sm uppercase">
-              Completed
+              History
             </p>
-            <CheckCircle2 className="w-5 h-5 text-emerald-400/50 group-hover:text-emerald-400 transition-colors" />
+            <FileText className="w-5 h-5 text-orange-400/50 group-hover:text-orange-400 transition-colors" />
           </div>
           <div className="flex items-baseline gap-2">
             <h3 className="text-4xl font-light text-white tracking-tighter">
-              {completedAssessments.length}
+              {historyAssessments.length}
             </h3>
           </div>
         </div>
@@ -498,19 +526,20 @@ export const AssessmentHome = () => {
             <PlayCircle className="w-4 h-4 mr-2" />
             Current ({currentAssessments.length})
           </TabsTrigger>
+          {/* Upcoming tab removed */}
           <TabsTrigger
-            value="upcoming"
+            value="submitted"
             className="cursor-pointer h-full rounded-full data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-neutral-400 hover:text-neutral-300 transition-all font-normal tracking-wide"
           >
-            <Calendar className="w-4 h-4 mr-2" />
-            Upcoming ({upcomingAssessments.length})
+            <CheckCircle2 className="w-4 h-4 mr-2" />
+            Submitted ({submittedAssessments.length})
           </TabsTrigger>
           <TabsTrigger
             value="history"
             className="cursor-pointer h-full rounded-full data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-neutral-400 hover:text-neutral-300 transition-all font-normal tracking-wide"
           >
-            <CheckCircle2 className="w-4 h-4 mr-2" />
-            History ({completedAssessments.length})
+            <FileText className="w-4 h-4 mr-2" />
+            History ({historyAssessments.length})
           </TabsTrigger>
         </TabsList>
 
@@ -541,28 +570,29 @@ export const AssessmentHome = () => {
           )}
         </TabsContent>
 
-        {/* Upcoming Tab */}
+        {/* Upcoming content removed */}
+
+        {/* Submitted Tab */}
         <TabsContent
-          value="upcoming"
+          value="submitted"
           className="mt-4 animate-in fade-in-50 slide-in-from-bottom-4 duration-500"
         >
-          {upcomingAssessments.length > 0 ? (
+          {submittedAssessments.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {upcomingAssessments.map((assessment) => (
+              {submittedAssessments.map((assessment) => (
                 <AssessmentCard key={assessment._id} assessment={assessment} />
               ))}
             </div>
           ) : (
             <div className="bg-white/2 rounded-3xl p-16 border border-white/5 text-center relative overflow-hidden">
               <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 relative z-10 backdrop-blur-xl">
-                <Calendar className="w-10 h-10 text-neutral-400" />
+                <CheckCircle2 className="w-10 h-10 text-neutral-400" />
               </div>
               <h3 className="text-2xl font-semibold text-white mb-3 tracking-tight relative z-10">
-                No Upcoming Assessments
+                No Submitted Assessments
               </h3>
               <p className="text-neutral-400 max-w-md mx-auto relative z-10">
-                You're all caught up! Check back later for new tests and
-                assignments.
+                Assessments you submit or time-limit expires will appear here.
               </p>
             </div>
           )}
@@ -573,22 +603,22 @@ export const AssessmentHome = () => {
           value="history"
           className="mt-4 animate-in fade-in-50 slide-in-from-bottom-4 duration-500"
         >
-          {completedAssessments.length > 0 ? (
+          {historyAssessments.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {completedAssessments.map((assessment) => (
+              {historyAssessments.map((assessment) => (
                 <AssessmentCard key={assessment._id} assessment={assessment} />
               ))}
             </div>
           ) : (
             <div className="bg-white/2 rounded-3xl p-16 border border-white/5 text-center relative overflow-hidden">
               <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 relative z-10 backdrop-blur-xl">
-                <CheckCircle2 className="w-10 h-10 text-neutral-400" />
+                <FileText className="w-10 h-10 text-neutral-400" />
               </div>
               <h3 className="text-2xl font-semibold text-white mb-3 tracking-tight relative z-10">
-                No Completed Assessments
+                No History
               </h3>
               <p className="text-neutral-400 max-w-md mx-auto relative z-10">
-                Your completed assessments and test history will appear here.
+                Assessments past their deadline will appear here.
               </p>
             </div>
           )}

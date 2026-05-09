@@ -89,6 +89,7 @@ interface ProblemDetailProps {
   testResults?: TestResult[];
   sendTestCase?: (testCases: Testcase[]) => void;
   actionBarLayout?: "global-header" | "editor-top" | "editor-bottom";
+  hideSubmissionsAndSolutions?: boolean;
 }
 
 export const ProblemDetail = ({
@@ -102,6 +103,7 @@ export const ProblemDetail = ({
   testResults: externalTestResults = [],
   sendTestCase,
   actionBarLayout = "global-header",
+  hideSubmissionsAndSolutions = false,
 }: ProblemDetailProps) => {
   const [language, setLanguage] = useState("java");
   const [code, setCode] = useState(
@@ -115,6 +117,8 @@ export const ProblemDetail = ({
     lineNumber: 1,
     column: 1,
   });
+  const [activeProblemTab, setActiveProblemTab] = useState("description");
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const PROBLEM_TABS = [
     {
@@ -127,16 +131,20 @@ export const ProblemDetail = ({
       icon: <BookOpen className="w-4 h-4 text-purple-500" />,
       label: "Test Cases",
     },
-    {
-      value: "solutions",
-      icon: <FlaskConical className="w-4 h-4 text-green-500" />,
-      label: "Solutions",
-    },
-    {
-      value: "submissions",
-      icon: <History className="w-4 h-4 text-yellow-500" />,
-      label: "Submissions",
-    },
+    ...(hideSubmissionsAndSolutions
+      ? []
+      : [
+          {
+            value: "solutions",
+            icon: <FlaskConical className="w-4 h-4 text-green-500" />,
+            label: "Solutions",
+          },
+          {
+            value: "submissions",
+            icon: <History className="w-4 h-4 text-yellow-500" />,
+            label: "Submissions",
+          },
+        ]),
   ];
 
   const LANGUAGES = [
@@ -163,6 +171,13 @@ export const ProblemDetail = ({
       setActiveResultTab("result");
     }
   }, [isRunning]);
+
+  // Auto-switch to test-cases tab after submission
+  useEffect(() => {
+    if (hasSubmitted && !isRunning && externalTestResults.length > 0) {
+      setActiveProblemTab("test-cases");
+    }
+  }, [externalTestResults, hasSubmitted, isRunning]);
 
   useEffect(() => {
     if (problem) {
@@ -216,14 +231,6 @@ export const ProblemDetail = ({
       </div>
     );
   }
-
-  const [activeProblemTab, setActiveProblemTab] = useState("description");
-  const [hasSubmitted, setHasSubmitted] = useState(false);
-  useEffect(() => {
-    if (hasSubmitted && !isRunning && externalTestResults.length > 0) {
-      setActiveProblemTab("test-cases");
-    }
-  }, [externalTestResults, hasSubmitted, isRunning]);
 
   const handleLanguageChange = (newLang: string) => {
     setLanguage(newLang);
