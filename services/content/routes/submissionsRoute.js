@@ -38,6 +38,8 @@ router.get("/analytics/overview", submissionsController.getFacultyAnalytics);
 router.get("/test/:testId", submissionsController.getTestAttempts);
 router.get("/test/:testId/analytics", submissionsController.getTestAnalytics);
 router.get("/test/:testId/export", submissionsController.exportTestResults);
+router.get("/export/performance", submissionsController.exportStudentPerformance);
+router.get("/export/analytics", submissionsController.exportAnalyticsReport);
 
 // Individual attempt operations
 router.get("/:attemptId", submissionsController.getAttemptById);

@@ -102,18 +102,23 @@ export default function ReportsPage() {
             alert('Please select a test to export results');
             return;
           }
-          blob = await exportTestResults(selectedTestId);
-          filename = `test-results-${selectedTestId}-${new Date().getTime()}.xlsx`;
+          blob = await exportTestResults(
+            selectedTestId,
+            'excel',
+            dateRange.startDate,
+            dateRange.endDate,
+          );
+          filename = `test-results-${selectedTestId}-${new Date().getTime()}.csv`;
           break;
 
         case 'student-performance':
           blob = await exportStudentPerformance(dateRange.startDate, dateRange.endDate);
-          filename = `student-performance-${new Date().getTime()}.xlsx`;
+          filename = `student-performance-${new Date().getTime()}.csv`;
           break;
 
         case 'analytics-summary':
           blob = await exportAnalyticsReport(dateRange.startDate, dateRange.endDate);
-          filename = `analytics-summary-${new Date().getTime()}.xlsx`;
+          filename = `analytics-summary-${new Date().getTime()}.csv`;
           break;
 
         default:
@@ -331,10 +336,10 @@ export default function ReportsPage() {
           <div className="text-sm text-gray-400">
             <p className="font-medium text-gray-100 mb-1">About Reports</p>
             <ul className="space-y-1">
-              <li>• All reports are exported in Excel format (.xlsx)</li>
-              <li>• Reports include data based on the selected date range</li>
-              <li>• Test results reports require selecting a specific test</li>
-              <li>• Exported files are downloaded directly to your device</li>
+              <li>- All reports are exported in CSV format and open in Excel</li>
+              <li>- Reports include data based on the selected date range</li>
+              <li>- Test results reports require selecting a specific test</li>
+              <li>- Exported files are downloaded directly to your device</li>
             </ul>
           </div>
         </div>

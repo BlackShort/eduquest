@@ -51,7 +51,7 @@ export default function FacultyAnalyticsPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `test-results-${selectedTest}.xlsx`;
+      a.download = `test-results-${selectedTest}.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

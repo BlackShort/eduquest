@@ -269,11 +269,13 @@ export const getFacultyAnalytics = async (
 export const exportTestResults = async (
   testId: string,
   format: "excel" | "pdf" = "excel",
+  startDate?: string,
+  endDate?: string,
 ) => {
   const response = await facultyApi.get(
     `/v1/faculty/submissions/test/${testId}/export`,
     {
-      params: { format },
+      params: { format, startDate, endDate },
       responseType: "blob",
     },
   );

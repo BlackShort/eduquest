@@ -31,6 +31,68 @@ const buildAssignmentFileSnapshot = (doc) => {
   };
 };
 
+const getDateRangeFilter = (startDate, endDate) => {
+  const submittedAt = {};
+
+  if (startDate) {
+    const start = new Date(startDate);
+    if (!Number.isNaN(start.getTime())) {
+      start.setHours(0, 0, 0, 0);
+      submittedAt.$gte = start;
+    }
+  }
+
+  if (endDate) {
+    const end = new Date(endDate);
+    if (!Number.isNaN(end.getTime())) {
+      end.setHours(23, 59, 59, 999);
+      submittedAt.$lte = end;
+    }
+  }
+
+  return Object.keys(submittedAt).length > 0 ? { submittedAt } : {};
+};
+
+const getScorePercentage = (attempt) => {
+  if (Number.isFinite(attempt?.score?.percentage)) {
+    return attempt.score.percentage;
+  }
+
+  const obtained = Number(attempt?.score?.obtained || 0);
+  const total = Number(attempt?.score?.total || 0);
+  return total > 0 ? Number(((obtained / total) * 100).toFixed(2)) : 0;
+};
+
+const escapeCsvValue = (value) => {
+  if (value === null || value === undefined) return "";
+  const text =
+    value instanceof Date ? value.toISOString() : String(value);
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+};
+
+const toCsv = (rows) => {
+  if (!rows.length) return "";
+
+  const headers = Object.keys(rows[0]);
+  const lines = [
+    headers.map(escapeCsvValue).join(","),
+    ...rows.map((row) =>
+      headers.map((header) => escapeCsvValue(row[header])).join(","),
+    ),
+  ];
+
+  return lines.join("\n");
+};
+
+const sendCsv = (res, filename, rows) => {
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="${filename}"`,
+  );
+  res.status(200).send(`\uFEFF${toCsv(rows.length ? rows : [{ message: "No data available" }])}`);
+};
+
 const resolveAssignmentFileUrl = async (doc) => {
   const assignmentFile = doc?.responses?.assignmentFile;
 
@@ -964,41 +1026,123 @@ export const getTestAnalytics = async (req, res) => {
 export const getFacultyAnalytics = async (req, res) => {
   try {
     const facultyId = req.user.userId;
+    const { startDate, endDate } = req.query;
+    const dateFilter = getDateRangeFilter(startDate, endDate);
 
     // Get all tests by faculty
-    const tests = await Test.find({ creatorId: facultyId });
+    const tests = await Test.find({ creatorId: facultyId }).sort({
+      createdAt: -1,
+    });
     const testIds = tests.map((t) => t._id);
 
     // Get all attempts for faculty's tests
     const attempts = await StudentAttempt.find({
       testId: { $in: testIds },
+      ...dateFilter,
     });
+
+    const gradedAttempts = attempts.filter((a) => a.status === "graded");
+    const submittedAttempts = attempts.filter((a) => a.submittedAt);
+    const scoreDistribution = {
+      "0-20": 0,
+      "21-40": 0,
+      "41-60": 0,
+      "61-80": 0,
+      "81-100": 0,
+    };
+
+    gradedAttempts.forEach((attempt) => {
+      const percentage = getScorePercentage(attempt);
+      if (percentage <= 20) scoreDistribution["0-20"]++;
+      else if (percentage <= 40) scoreDistribution["21-40"]++;
+      else if (percentage <= 60) scoreDistribution["41-60"]++;
+      else if (percentage <= 80) scoreDistribution["61-80"]++;
+      else scoreDistribution["81-100"]++;
+    });
+
+    const averageScore =
+      gradedAttempts.length > 0
+        ? gradedAttempts.reduce(
+            (sum, attempt) => sum + getScorePercentage(attempt),
+            0,
+          ) / gradedAttempts.length
+        : 0;
+
+    const averageCompletionTime =
+      submittedAttempts.length > 0
+        ? submittedAttempts.reduce(
+            (sum, attempt) => sum + (attempt.timeSpentMinutes || 0),
+            0,
+          ) / submittedAttempts.length
+        : 0;
+
+    const uniqueStudents = new Set(
+      attempts.map((attempt) => String(attempt.studentId)).filter(Boolean),
+    );
+
+    const testsById = new Map(tests.map((test) => [String(test._id), test]));
+    const attemptsByTest = new Map();
+    attempts.forEach((attempt) => {
+      const key = String(attempt.testId);
+      const list = attemptsByTest.get(key) || [];
+      list.push(attempt);
+      attemptsByTest.set(key, list);
+    });
+
+    const testPerformance = Array.from(attemptsByTest.entries())
+      .map(([testId, testAttempts]) => {
+        const graded = testAttempts.filter((attempt) => attempt.status === "graded");
+        return {
+          testId,
+          testTitle: testsById.get(testId)?.title || "Untitled Test",
+          averageScore:
+            graded.length > 0
+              ? graded.reduce(
+                  (sum, attempt) => sum + getScorePercentage(attempt),
+                  0,
+                ) / graded.length
+              : 0,
+          attempts: testAttempts.length,
+        };
+      })
+      .sort((a, b) => b.averageScore - a.averageScore);
 
     const stats = {
       totalTests: tests.length,
+      activeTests: tests.filter((t) => t.status === "published").length,
+      totalStudents: uniqueStudents.size,
+      averageScore,
+      averageCompletionTime,
+      scoreDistribution,
+      testPerformance,
+      completionRate:
+        attempts.length > 0 ? (submittedAttempts.length / attempts.length) * 100 : 0,
+      passRate:
+        gradedAttempts.length > 0
+          ? (gradedAttempts.filter((a) => getScorePercentage(a) >= 50).length /
+              gradedAttempts.length) *
+            100
+          : 0,
+      recentTests: tests.slice(0, 50).map((test) => ({
+        _id: test._id,
+        title: test.title,
+        type: test.type,
+        status: test.status,
+      })),
       publishedTests: tests.filter((t) => t.status === "published").length,
       totalStudentAttempts: attempts.length,
-      gradedAttempts: attempts.filter((a) => a.status === "graded").length,
+      gradedAttempts: gradedAttempts.length,
       pendingGrading: attempts.filter(
         (a) => a.status === "submitted" && a.status !== "graded",
       ).length,
-      averageTestScore: 0,
+      averageTestScore: averageScore,
       recentActivity: [],
     };
-
-    // Calculate average score across all graded attempts
-    const gradedAttempts = attempts.filter((a) => a.status === "graded");
-    if (gradedAttempts.length > 0) {
-      const totalPercentage = gradedAttempts.reduce(
-        (sum, a) => sum + a.score.percentage,
-        0,
-      );
-      stats.averageTestScore = totalPercentage / gradedAttempts.length;
-    }
 
     // Recent activity (last 10 submissions)
     const recentAttempts = await StudentAttempt.find({
       testId: { $in: testIds },
+      ...dateFilter,
     })
       .populate("testId", "title")
       .sort({ submittedAt: -1 })
@@ -1009,16 +1153,7 @@ export const getFacultyAnalytics = async (req, res) => {
   testTitle: a.testId?.title,
   score: a.score?.obtained || 0,
   totalMarks: a.score?.total || 0,
-  percentage:
-  a.score?.percentage && a.score.percentage > 0
-    ? a.score.percentage
-    : (
-        a.score?.total > 0
-          ? Number(
-              ((a.score.obtained / a.score.total) * 100).toFixed(2)
-            )
-          : 0
-      ),
+  percentage: getScorePercentage(a),
   submittedAt: a.submittedAt,
   status: a.status,
 }));
@@ -1043,6 +1178,8 @@ export const getFacultyAnalytics = async (req, res) => {
 export const exportTestResults = async (req, res) => {
   try {
     const { testId } = req.params;
+    const { startDate, endDate } = req.query;
+    const dateFilter = getDateRangeFilter(startDate, endDate);
 
     // Verify test belongs to faculty
     const test = await Test.findOne({
@@ -1058,7 +1195,7 @@ export const exportTestResults = async (req, res) => {
     }
 
     // Get all attempts
-    const attempts = await StudentAttempt.find({ testId }).sort({
+    const attempts = await StudentAttempt.find({ testId, ...dateFilter }).sort({
       "score.percentage": -1,
       timeSpentMinutes: 1,
       submittedAt: 1,
@@ -1081,20 +1218,153 @@ export const exportTestResults = async (req, res) => {
       timeSpent: attempt.timeSpentMinutes,
     }));
 
-    res.status(200).json({
-      success: true,
-      testDetails: {
-        title: test.title,
-        type: test.type,
-        totalMarks: test.totalMarks,
-      },
-      data: exportData,
-    });
+    sendCsv(
+      res,
+      `test-results-${test.title.replace(/[^a-z0-9-]+/gi, "-").toLowerCase()}.csv`,
+      exportData,
+    );
   } catch (error) {
     console.error("Error exporting test results:", error);
     res.status(500).json({
       success: false,
       message: "Failed to export test results",
+      error: error.message,
+    });
+  }
+};
+
+export const exportStudentPerformance = async (req, res) => {
+  try {
+    const facultyId = req.user.userId;
+    const { startDate, endDate } = req.query;
+    const dateFilter = getDateRangeFilter(startDate, endDate);
+    const tests = await Test.find({ creatorId: facultyId });
+    const testsById = new Map(tests.map((test) => [String(test._id), test]));
+    const attempts = await StudentAttempt.find({
+      testId: { $in: tests.map((test) => test._id) },
+      ...dateFilter,
+    }).sort({ studentName: 1, submittedAt: -1 });
+
+    const rows = attempts.map((attempt) => {
+      const test = testsById.get(String(attempt.testId));
+
+      return {
+        studentName: attempt.studentName || "N/A",
+        studentEmail: attempt.studentEmail || "N/A",
+        testTitle: test?.title || "Untitled Test",
+        testType: test?.type || "N/A",
+        scoreObtained: attempt.score?.obtained || 0,
+        totalMarks: attempt.score?.total || 0,
+        percentage: getScorePercentage(attempt).toFixed(2),
+        status: attempt.status,
+        submittedAt: attempt.submittedAt || "",
+        timeSpentMinutes: attempt.timeSpentMinutes || 0,
+        feedback: attempt.feedback || "",
+      };
+    });
+
+    sendCsv(res, "student-performance.csv", rows);
+  } catch (error) {
+    console.error("Error exporting student performance:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to export student performance",
+      error: error.message,
+    });
+  }
+};
+
+export const exportAnalyticsReport = async (req, res) => {
+  try {
+    const facultyId = req.user.userId;
+    const { startDate, endDate } = req.query;
+    const dateFilter = getDateRangeFilter(startDate, endDate);
+    const tests = await Test.find({ creatorId: facultyId });
+    const testIds = tests.map((test) => test._id);
+    const attempts = await StudentAttempt.find({
+      testId: { $in: testIds },
+      ...dateFilter,
+    });
+    const gradedAttempts = attempts.filter((attempt) => attempt.status === "graded");
+    const submittedAttempts = attempts.filter((attempt) => attempt.submittedAt);
+    const uniqueStudents = new Set(
+      attempts.map((attempt) => String(attempt.studentId)).filter(Boolean),
+    );
+    const averageScore =
+      gradedAttempts.length > 0
+        ? gradedAttempts.reduce(
+            (sum, attempt) => sum + getScorePercentage(attempt),
+            0,
+          ) / gradedAttempts.length
+        : 0;
+    const averageCompletionTime =
+      submittedAttempts.length > 0
+        ? submittedAttempts.reduce(
+            (sum, attempt) => sum + (attempt.timeSpentMinutes || 0),
+            0,
+          ) / submittedAttempts.length
+        : 0;
+
+    const rows = [
+      {
+        metric: "Total Tests",
+        value: tests.length,
+      },
+      {
+        metric: "Active Tests",
+        value: tests.filter((test) => test.status === "published").length,
+      },
+      {
+        metric: "Total Students",
+        value: uniqueStudents.size,
+      },
+      {
+        metric: "Total Attempts",
+        value: attempts.length,
+      },
+      {
+        metric: "Graded Attempts",
+        value: gradedAttempts.length,
+      },
+      {
+        metric: "Pending Grading",
+        value: attempts.filter((attempt) => attempt.status === "submitted").length,
+      },
+      {
+        metric: "Average Score",
+        value: `${averageScore.toFixed(2)}%`,
+      },
+      {
+        metric: "Average Completion Time",
+        value: `${averageCompletionTime.toFixed(2)} min`,
+      },
+      {
+        metric: "Completion Rate",
+        value:
+          attempts.length > 0
+            ? `${((submittedAttempts.length / attempts.length) * 100).toFixed(2)}%`
+            : "0.00%",
+      },
+      {
+        metric: "Pass Rate",
+        value:
+          gradedAttempts.length > 0
+            ? `${(
+                (gradedAttempts.filter((attempt) => getScorePercentage(attempt) >= 50)
+                  .length /
+                  gradedAttempts.length) *
+                100
+              ).toFixed(2)}%`
+            : "0.00%",
+      },
+    ];
+
+    sendCsv(res, "analytics-summary.csv", rows);
+  } catch (error) {
+    console.error("Error exporting analytics report:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to export analytics report",
       error: error.message,
     });
   }
