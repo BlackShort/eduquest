@@ -41,7 +41,7 @@ const EVENT_LIMITS = {
   PHONE_DETECTED: {
     minDetections: 2,
     maxCount: 2,
-    description: "Phone detections (2 calls max)",
+    description: "Phone detections after confirmation",
   },
   MULTIPLE_FACES: {
     maxCount: 2,
@@ -86,7 +86,7 @@ export function useProctor({ examId }: UseProctorOpts) {
 
       switch (type) {
         case "TAB_SWITCH":
-          return tracker.count < EVENT_LIMITS.TAB_SWITCH.maxCount;
+          return tracker.count <= EVENT_LIMITS.TAB_SWITCH.maxCount;
 
         case "PHONE_DETECTED":
           // Ignore the first hit to reduce false positives.
@@ -99,7 +99,6 @@ export function useProctor({ examId }: UseProctorOpts) {
           return tracker.count <= EVENT_LIMITS.MULTIPLE_FACES.maxCount;
 
         case "NO_FACE":
-          // Handled by delayed timers below.
           return false;
 
         default:

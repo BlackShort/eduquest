@@ -34,7 +34,14 @@ async function recordEvent({
 }) {
   const session = await ensureSession({ studentId, examId, sessionId });
 
-  if (session.status !== "ACTIVE" || session.endedAt) {
+  // Reject events only for sessions that have ended or are completed/cleared.
+  if (session.endedAt) {
+    const err = new Error("Session has ended");
+    err.status = 409;
+    throw err;
+  }
+
+  if (session.status === "COMPLETED" || session.status === "CLEARED") {
     const err = new Error("Session is not active");
     err.status = 409;
     throw err;

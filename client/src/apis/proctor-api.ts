@@ -9,6 +9,19 @@ import type {
 
 const proctorApi = createApi(`${proctorUrl}/v1`);
 
+proctorApi.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
+);
+
 export const sendProctorEvent = async (payload: ProctorEventPayload) => {
   const { data } = await proctorApi.post("/events", payload);
   return data;

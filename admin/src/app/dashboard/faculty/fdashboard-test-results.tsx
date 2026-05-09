@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router';
-import { 
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router";
+import {
   ArrowLeft,
   Download,
   Search,
@@ -10,10 +10,16 @@ import {
   User,
   Award,
   TrendingUp,
-  Filter
-} from 'lucide-react';
-import { getTestById, getTestAttempts, getTestAnalytics, exportTestResults } from '@/apis/faculty-api';
-import type { Test, StudentAttempt, TestAnalytics } from '@/types/types';
+  Filter,
+} from "lucide-react";
+import {
+  getTestById,
+  getTestAttempts,
+  getTestAnalytics,
+  exportTestResults,
+} from "@/apis/faculty-api";
+import { getStudentExamSessions } from "@/apis/proctor-api";
+import type { Test, StudentAttempt, TestAnalytics } from "@/types/types";
 
 export default function TestResultsPage() {
   const { testId } = useParams<{ testId: string }>();
@@ -22,24 +28,27 @@ export default function TestResultsPage() {
   const [attempts, setAttempts] = useState<StudentAttempt[]>([]);
   const [analytics, setAnalytics] = useState<TestAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [testResponse, attemptsResponse, analyticsResponse] = await Promise.all([
-          getTestById(testId!),
-          getTestAttempts(testId!, { status: statusFilter !== 'all' ? statusFilter : undefined }),
-          getTestAnalytics(testId!)
-        ]);
-        
+        const [testResponse, attemptsResponse, analyticsResponse] =
+          await Promise.all([
+            getTestById(testId!),
+            getTestAttempts(testId!, {
+              status: statusFilter !== "all" ? statusFilter : undefined,
+            }),
+            getTestAnalytics(testId!),
+          ]);
+
         setTest(testResponse.data);
         setAttempts(attemptsResponse.data);
         setAnalytics(analyticsResponse.data);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
@@ -50,43 +59,49 @@ export default function TestResultsPage() {
     }
   }, [testId, statusFilter]);
 
-
-
   const handleExport = async () => {
     try {
-      const blob = await exportTestResults(testId!, 'excel');
+      const blob = await exportTestResults(testId!, "excel");
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `${test?.title || 'test'}-results.xlsx`;
+      a.download = `${test?.title || "test"}-results.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Error exporting results:', error);
+      console.error("Error exporting results:", error);
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'graded': return 'bg-green-100 text-green-800';
-      case 'submitted': return 'bg-blue-100 text-blue-800';
-      case 'in_progress': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-neutral-700 text-gray-800';
+      case "graded":
+        return "bg-green-100 text-green-800";
+      case "submitted":
+        return "bg-blue-100 text-blue-800";
+      case "in_progress":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-neutral-700 text-gray-800";
     }
   };
 
-  const filteredAttempts = attempts.filter(attempt => {
-    if (!searchQuery) return true;
-    const studentName = typeof attempt.studentId === 'object' ? 
-      (attempt.studentId.username || '') : '';
-    return studentName.toLowerCase().includes(searchQuery.toLowerCase());
-  }).sort((a, b) => {
-    const scoreDiff = (b.score?.percentage || 0) - (a.score?.percentage || 0);
-    if (scoreDiff !== 0) return scoreDiff;
-    return (a.timeSpentMinutes || 0) - (b.timeSpentMinutes || 0);
-  });
+  const filteredAttempts = attempts
+    .filter((attempt) => {
+      if (!searchQuery) return true;
+      const studentName =
+        typeof attempt.studentId === "object"
+          ? attempt.studentId.username || ""
+          : "";
+      return studentName.toLowerCase().includes(searchQuery.toLowerCase());
+    })
+    .sort((a, b) => {
+      const scoreDiff = (b.score?.percentage || 0) - (a.score?.percentage || 0);
+      if (scoreDiff !== 0) return scoreDiff;
+      return (a.timeSpentMinutes || 0) - (b.timeSpentMinutes || 0);
+    });
 
   if (loading) {
     return (
@@ -102,7 +117,7 @@ export default function TestResultsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate('/faculty-dashboard/assessment')}
+            onClick={() => navigate("/faculty-dashboard/assessment")}
             className="p-2 hover:bg-neutral-700 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -157,12 +172,16 @@ export default function TestResultsPage() {
             Score Distribution
           </h3>
           <div className="grid grid-cols-5 gap-4">
-            {Object.entries(analytics.scoreDistribution).map(([range, count]) => (
-              <div key={range} className="text-center">
-                <div className="text-2xl font-bold text-gray-100">{count}</div>
-                <div className="text-sm text-gray-400">{range}%</div>
-              </div>
-            ))}
+            {Object.entries(analytics.scoreDistribution).map(
+              ([range, count]) => (
+                <div key={range} className="text-center">
+                  <div className="text-2xl font-bold text-gray-100">
+                    {count}
+                  </div>
+                  <div className="text-sm text-gray-400">{range}%</div>
+                </div>
+              ),
+            )}
           </div>
         </div>
       )}
@@ -231,7 +250,10 @@ export default function TestResultsPage() {
             <tbody className="bg-neutral-800 divide-y divide-neutral-700">
               {filteredAttempts.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-gray-400">
+                  <td
+                    colSpan={8}
+                    className="px-6 py-12 text-center text-gray-400"
+                  >
                     No attempts found
                   </td>
                 </tr>
@@ -240,30 +262,47 @@ export default function TestResultsPage() {
                   <tr key={attempt._id} className="hover:bg-neutral-700">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-100">
-                        {typeof attempt.studentId === 'object' ? attempt.studentId.username : 'Unknown'}
+                        {typeof attempt.studentId === "object"
+                          ? attempt.studentId.username
+                          : "Unknown"}
                       </div>
                       <div className="text-sm text-gray-400">
-                        {typeof attempt.studentId === 'object' ? attempt.studentId.email : ''}
+                        {typeof attempt.studentId === "object"
+                          ? attempt.studentId.email
+                          : ""}
                       </div>
+                      <ProctorBadge
+                        student={attempt.studentId}
+                        examId={testId}
+                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(attempt.status)}`}>
-                        {attempt.status.replace('_', ' ')}
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(attempt.status)}`}
+                      >
+                        {attempt.status.replace("_", " ")}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-gray-100">
-                        {(attempt.scoreBreakdown?.mcq?.obtained || 0).toFixed(1)}/{attempt.scoreBreakdown?.mcq?.total || 0}
+                        {(attempt.scoreBreakdown?.mcq?.obtained || 0).toFixed(
+                          1,
+                        )}
+                        /{attempt.scoreBreakdown?.mcq?.total || 0}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-gray-100">
-                        {(attempt.scoreBreakdown?.coding?.obtained || 0).toFixed(1)}/{attempt.scoreBreakdown?.coding?.total || 0}
+                        {(
+                          attempt.scoreBreakdown?.coding?.obtained || 0
+                        ).toFixed(1)}
+                        /{attempt.scoreBreakdown?.coding?.total || 0}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-gray-100">
-                        {attempt.score.obtained.toFixed(1)}/{attempt.score.total}
+                        {attempt.score.obtained.toFixed(1)}/
+                        {attempt.score.total}
                       </div>
                       <div className="text-xs text-gray-400">
                         {attempt.score.percentage.toFixed(1)}%
@@ -273,11 +312,15 @@ export default function TestResultsPage() {
                       {attempt.timeSpentMinutes} min
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                      {attempt.submittedAt ? new Date(attempt.submittedAt).toLocaleString() : '-'}
+                      {attempt.submittedAt
+                        ? new Date(attempt.submittedAt).toLocaleString()
+                        : "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
-                        onClick={() => navigate(`/faculty-dashboard/attempt/${attempt._id}`)}
+                        onClick={() =>
+                          navigate(`/faculty-dashboard/attempt/${attempt._id}`)
+                        }
                         className="text-blue-600 hover:text-blue-900 flex items-center gap-1 ml-auto"
                       >
                         <Eye className="w-4 h-4" />
@@ -295,14 +338,18 @@ export default function TestResultsPage() {
       {/* Performance Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-linear-to-br from-green-50 to-green-100 rounded-lg border border-green-200 p-6">
-          <h4 className="text-sm font-medium text-green-900 mb-2">Highest Score</h4>
+          <h4 className="text-sm font-medium text-green-900 mb-2">
+            Highest Score
+          </h4>
           <p className="text-2xl font-bold text-green-700">
             {analytics?.highestScore?.toFixed(1) || 0}%
           </p>
         </div>
 
         <div className="bg-linear-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200 p-6">
-          <h4 className="text-sm font-medium text-blue-900 mb-2">Lowest Score</h4>
+          <h4 className="text-sm font-medium text-blue-900 mb-2">
+            Lowest Score
+          </h4>
           <p className="text-2xl font-bold text-blue-700">
             {analytics?.lowestScore?.toFixed(1) || 0}%
           </p>
@@ -324,15 +371,88 @@ interface StatCardProps {
   title: string;
   value: string | number;
   icon: React.ReactNode;
-  color: 'blue' | 'green' | 'purple' | 'orange';
+  color: "blue" | "green" | "purple" | "orange";
+}
+
+// Compact Proctor Badge (shows risk + total suspicion score)
+function ProctorBadge({
+  student,
+  examId,
+}: {
+  student: any;
+  examId?: string | null;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [score, setScore] = useState<number | null>(null);
+  const [risk, setRisk] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetch = async () => {
+      if (!examId || !student) return;
+      let studentId: string | undefined;
+      if (typeof student === "object") {
+        studentId = student._id || student.id || student.username;
+      } else {
+        studentId = student as string;
+      }
+      if (!studentId) return;
+
+      try {
+        setLoading(true);
+        const res = await getStudentExamSessions(studentId, examId!);
+        const sessions = res?.sessions || res || [];
+        const total = (sessions || []).reduce(
+          (acc: number, s: any) => acc + Number(s.suspicionScore || 0),
+          0,
+        );
+        setScore(total);
+        let r = "Clean";
+        if (total === 0) r = "Clean";
+        else if (total >= 1 && total <= 10) r = "Low";
+        else if (total >= 11 && total <= 30) r = "Medium";
+        else r = "High";
+        setRisk(r);
+      } catch (e) {
+        // fail silently
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
+  }, [student, examId]);
+
+  if (!examId) return null;
+
+  const bg =
+    risk === "High"
+      ? "bg-red-600"
+      : risk === "Medium"
+        ? "bg-yellow-600"
+        : risk === "Low"
+          ? "bg-blue-600"
+          : "bg-neutral-700";
+
+  return (
+    <div className="mt-2 flex items-center gap-2">
+      {loading ? (
+        <div className="text-xs text-gray-400">Checking proctor...</div>
+      ) : score === null ? (
+        <div className="text-xs text-gray-400">No proctor data</div>
+      ) : (
+        <div className={`px-2 py-1 text-xs rounded-full text-white ${bg}`}>
+          {risk} • {score}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function StatCard({ title, value, icon, color }: StatCardProps) {
   const colorClasses = {
-    blue: 'bg-blue-900/20 text-blue-600',
-    green: 'bg-green-900/20 text-green-600',
-    purple: 'bg-purple-900/20 text-purple-600',
-    orange: 'bg-orange-900/20 text-orange-600'
+    blue: "bg-blue-900/20 text-blue-600",
+    green: "bg-green-900/20 text-green-600",
+    purple: "bg-purple-900/20 text-purple-600",
+    orange: "bg-orange-900/20 text-orange-600",
   };
 
   return (
@@ -342,15 +462,8 @@ function StatCard({ title, value, icon, color }: StatCardProps) {
           <p className="text-sm font-medium text-gray-400">{title}</p>
           <p className="text-2xl font-bold text-gray-100 mt-2">{value}</p>
         </div>
-        <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
-          {icon}
-        </div>
+        <div className={`p-3 rounded-lg ${colorClasses[color]}`}>{icon}</div>
       </div>
     </div>
   );
 }
-
-
-
-
-

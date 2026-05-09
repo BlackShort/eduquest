@@ -17,6 +17,10 @@ import {
   getAttemptById,
   gradeAttempt,
 } from "@/apis/faculty-api";
+import {
+  getStudentExamSessions,
+  getEnrollmentImageUrl,
+} from "@/apis/proctor-api";
 import type { StudentAttempt } from "@/types/types";
 
 export default function AttemptDetailPage() {
@@ -28,6 +32,30 @@ export default function AttemptDetailPage() {
   const [openingPdf, setOpeningPdf] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [assignmentMarks, setAssignmentMarks] = useState(0);
+  // Proctoring states
+  const [proctorLoading, setProctorLoading] = useState<boolean>(false);
+  const [proctorError, setProctorError] = useState<string | null>(null);
+  type ProctorSession = {
+    sessionId?: string;
+    suspicionScore?: number;
+    violationCounts?: Record<string, number>;
+    status?: string;
+    startedAt?: string;
+    completedAt?: string;
+    updatedAt?: string;
+    id?: string;
+    _id?: string;
+  };
+  const [proctorSessions, setProctorSessions] = useState<
+    ProctorSession[] | null
+  >(null);
+  const [proctorAggregate, setProctorAggregate] = useState<Record<
+    string,
+    any
+  > | null>(null);
+  const [enrollmentImageUrl, setEnrollmentImageUrl] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     const fetchAttemptData = async () => {
@@ -82,6 +110,112 @@ export default function AttemptDetailPage() {
     }
   }, [attemptId, navigate]);
 
+  // Aggregation helper moved above effect to keep dependencies simple
+  const aggregateProctorSessions = (sessions: ProctorSession[]) => {
+    const agg: any = {
+      sessionCount: sessions.length,
+      totalSuspicionScore: 0,
+      mergedViolationCounts: {} as Record<string, number>,
+      totalViolations: 0,
+      latestSessionStatus: null,
+    };
+
+    sessions.forEach((s) => {
+      const score = Number(s.suspicionScore || 0);
+      agg.totalSuspicionScore += score;
+
+      const violationCounts = s.violationCounts || {};
+      Object.keys(violationCounts).forEach((k) => {
+        const v = Number(violationCounts[k] || 0);
+        agg.mergedViolationCounts[k] = (agg.mergedViolationCounts[k] || 0) + v;
+        agg.totalViolations += v;
+      });
+
+      if (s.updatedAt || s.completedAt || s.startedAt) {
+        agg.latestSessionStatus = s.status || agg.latestSessionStatus;
+      }
+    });
+
+    // risk level
+    const score = agg.totalSuspicionScore;
+    let risk = "Clean";
+    if (score === 0) risk = "Clean";
+    else if (score >= 1 && score <= 10) risk = "Low";
+    else if (score >= 11 && score <= 20) risk = "Medium";
+    else risk = "High";
+
+    agg.riskLevel = risk;
+    return agg;
+  };
+
+  // Fetch proctor sessions once attempt is loaded
+  useEffect(() => {
+    const fetchProctor = async () => {
+      if (!attempt) return;
+
+      // resolve ids
+      let studentId: string | undefined;
+      if (typeof attempt.studentId === "object") {
+        const st = attempt.studentId as any;
+        studentId = st._id || st.id || st.username;
+      } else {
+        studentId = attempt.studentId as unknown as string;
+      }
+
+      let examId: string | undefined;
+      if (typeof attempt.testId === "object") {
+        const t = attempt.testId as any;
+        examId = t._id || t.id;
+      } else {
+        examId = attempt.testId as unknown as string;
+      }
+
+      if (!studentId || !examId) return;
+
+      try {
+        setProctorLoading(true);
+        setProctorError(null);
+        const res = await getStudentExamSessions(studentId, examId);
+        const sessions: ProctorSession[] = res?.sessions || res || [];
+        setProctorSessions(sessions);
+
+        // aggregate
+        const aggregate = aggregateProctorSessions(sessions || []);
+        setProctorAggregate(aggregate);
+
+        // fetch first enrollment image available using session.sessionId and passing examId
+        let img: string | null = null;
+        for (const s of sessions || []) {
+          const sessionId = s.sessionId || s.id || s._id;
+          if (!sessionId) continue;
+          // prefer session.sessionId route param
+          try {
+            const r = await getEnrollmentImageUrl(sessionId, examId);
+            if (r?.signedUrl) {
+              img = r.signedUrl;
+              break;
+            }
+            if (r?.url) {
+              img = r.url;
+              break;
+            }
+          } catch (e) {
+            // image for this session not available - try next session
+            continue;
+          }
+        }
+        setEnrollmentImageUrl(img);
+      } catch (error: any) {
+        console.error("Failed to load proctor sessions:", error);
+        setProctorError(error?.message || "Failed to load proctor data");
+      } finally {
+        setProctorLoading(false);
+      }
+    };
+
+    fetchProctor();
+  }, [attempt]);
+
   const handleSaveAssignmentGrade = async (submitToStudent = false) => {
     if (!attempt) return;
 
@@ -132,8 +266,12 @@ export default function AttemptDetailPage() {
     typeof attempt.studentId === "object"
       ? attempt.studentId.username
       : "Unknown";
-  const studentEmail =
-    typeof attempt.studentId === "object" ? attempt.studentId.email : "";
+  const studentRecord =
+    typeof attempt.studentId === "object" ? attempt.studentId : null;
+  const studentReadableId =
+    studentRecord?.studentId ||
+    studentRecord?.email?.match(/\.([^.@]+)@gehu\.ac\.in$/i)?.[1] ||
+    "N/A";
   const testTitle =
     typeof attempt.testId === "object" ? attempt.testId.title : "Unknown Test";
   const mcqBreakdown = attempt.scoreBreakdown?.mcq || { obtained: 0, total: 0 };
@@ -228,9 +366,7 @@ export default function AttemptDetailPage() {
             <div>
               <p className="text-sm text-gray-400">Student Name</p>
               <p className="font-semibold text-gray-100">{studentName}</p>
-              {studentEmail && (
-                <p className="text-xs text-gray-400">{studentEmail}</p>
-              )}
+              <p className="text-sm text-gray-400">{studentReadableId}</p>
             </div>
           </div>
 
@@ -273,6 +409,132 @@ export default function AttemptDetailPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Proctoring Summary */}
+      <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6">
+        <h2 className="text-xl font-semibold text-gray-100 mb-4">
+          Proctoring Summary
+        </h2>
+
+        {proctorLoading ? (
+          <div className="text-gray-400">Loading proctor data...</div>
+        ) : proctorError ? (
+          <div className="text-sm text-red-400">{proctorError}</div>
+        ) : !proctorSessions || proctorSessions.length === 0 ? (
+          <div className="text-sm text-gray-400">
+            No proctoring sessions found for this attempt.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="p-4 bg-neutral-900 rounded-lg">
+                <p className="text-sm text-gray-400">Risk Level</p>
+                <p className="mt-1 font-semibold text-gray-100">
+                  {proctorAggregate?.riskLevel}
+                </p>
+              </div>
+              <div className="p-4 bg-neutral-900 rounded-lg">
+                <p className="text-sm text-gray-400">Total Suspicion Score</p>
+                <p className="mt-1 font-semibold text-gray-100">
+                  {proctorAggregate?.totalSuspicionScore || 0}
+                </p>
+              </div>
+              <div className="p-4 bg-neutral-900 rounded-lg">
+                <p className="text-sm text-gray-400">Total Violations</p>
+                <p className="mt-1 font-semibold text-gray-100">
+                  {proctorAggregate?.totalViolations || 0}
+                </p>
+              </div>
+              <div className="p-4 bg-neutral-900 rounded-lg">
+                <p className="text-sm text-gray-400">Sessions</p>
+                <p className="mt-1 font-semibold text-gray-100">
+                  {proctorAggregate?.sessionCount || 0}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2 bg-neutral-900 p-4 rounded-lg">
+                <p className="text-sm text-gray-400 mb-2">
+                  Violation Breakdown
+                </p>
+                <div className="space-y-2">
+                  {Object.keys(proctorAggregate?.mergedViolationCounts || {})
+                    .length === 0 && (
+                    <p className="text-sm text-gray-400">
+                      No violations recorded.
+                    </p>
+                  )}
+                  {Object.entries(
+                    proctorAggregate?.mergedViolationCounts || {},
+                  ).map(([k, v]) => (
+                    <div key={k} className="flex items-center justify-between">
+                      <p className="text-sm text-gray-200">
+                        {k.replace("_", " ")}
+                      </p>
+                      <p className="text-sm font-semibold text-gray-100">
+                        {Number(v)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-neutral-900 p-4 rounded-lg flex flex-col items-center">
+                <p className="text-sm text-gray-400 mb-2">Identity Snapshot</p>
+                {enrollmentImageUrl ? (
+                  <div className="w-40 h-40 bg-neutral-800 rounded-md overflow-hidden flex items-center justify-center">
+                    <img
+                      src={enrollmentImageUrl}
+                      alt="Enrollment Snapshot"
+                      className="w-full h-full object-cover object-center"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-40 h-40 bg-neutral-800 rounded-md flex items-center justify-center text-sm text-gray-500">
+                    Not available
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-400 mb-2">Sessions</p>
+              <div className="space-y-2">
+                {proctorSessions.map((s: ProctorSession) => (
+                  <div
+                    key={s._id || s.sessionId || s.id}
+                    className="p-3 bg-neutral-900 rounded-lg border border-neutral-700"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-300">
+                          Session: {s._id || s.sessionId || s.id}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Status: {s.status || "UNKNOWN"}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Score: {s.suspicionScore || 0}
+                        </p>
+                      </div>
+                      <div className="text-sm text-gray-200">
+                        Violations:{" "}
+                        {s.violationCounts
+                          ? Object.values(s.violationCounts).reduce(
+                              (a, b) => a + Number(b || 0),
+                              0,
+                            )
+                          : 0}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

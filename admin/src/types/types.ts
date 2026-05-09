@@ -1,6 +1,7 @@
 export interface User {
   id: string;
   username: string;
+  studentId?: string;
   email: string;
   role: "user" | "admin" | "faculty";
   isVerified: boolean;

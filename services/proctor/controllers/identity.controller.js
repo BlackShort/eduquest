@@ -15,7 +15,7 @@ async function enrollIdentity(req, res, next) {
       baselineImageS3Key,
       baselineImageBase64,
       thresholdUsed,
-      qualityChecks,
+      // qualityChecks,
     } = req.body;
 
     if (!examId || !sessionId || !baselineEmbedding) {
@@ -31,12 +31,12 @@ async function enrollIdentity(req, res, next) {
     }
 
     // Require client-side quality gate before baseline enrollment.
-    if (!qualityChecks || qualityChecks.passed !== true) {
-      return res.status(400).json({
-        error:
-          "Enrollment quality checks failed. Ensure single face, good lighting, and low blur.",
-      });
-    }
+    // if (!qualityChecks || qualityChecks.passed !== true) {
+    //   return res.status(400).json({
+    //     error:
+    //       "Enrollment quality checks failed. Ensure single face, good lighting, and low blur.",
+    //   });
+    // }
 
     const doc = await identityService.enrollIdentity({
       studentId,

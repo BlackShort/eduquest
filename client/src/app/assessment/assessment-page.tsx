@@ -356,7 +356,7 @@ const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
 
       {/* Hover Overlay for Assessment Status and Results */}
       {isLocked && (
-        <div className="absolute inset-0 rounded-2xl bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4 z-10 pointer-events-none">
+        <div className="absolute inset-0 rounded-2xl bg-black/95 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4 z-10 pointer-events-none">
           <div className="text-center">
             {lockReason === "time_over" ? (
               <>

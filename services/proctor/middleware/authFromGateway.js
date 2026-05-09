@@ -1,39 +1,52 @@
-// function authFromGateway(req, res, next) {
-//   const studentId = req.headers["student-id"];
-//   const userRole = req.headers["user-role"];
-
-//   if (!studentId && !userRole) {
-//     return res
-//       .status(401)
-//       .json({ error: "Unauthorised: missing gateway identity headers" });
-//   }
-
-//   req.studentId = studentId || null;
-//   req.userRole = userRole || null;
-//   next();
-// }
+import jwt from "jsonwebtoken";
 
 function authFromGateway(req, res, next) {
-  const studentId = req.headers["x-student-id"];
-  const role = req.headers["x-user-role"];
-  const allowDevFallback = process.env.ALLOW_DEV_AUTH_FALLBACK === "true";
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith("Bearer ")
+    ? authHeader.split(" ")[1]
+    : req.cookies?.accessToken;
 
-  // ✅ normal gateway path
-  if (studentId && role) {
-    req.studentId = studentId;
-    req.role = role;
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      req.studentId = decoded.userId;
+      req.role = decoded.role;
+      req.user = {
+        userId: decoded.userId,
+        role: decoded.role,
+        username: decoded.username,
+        email: decoded.email,
+      };
+
+      return next();
+    } catch {
+      return res.status(401).json({
+        error: "Invalid authentication token",
+      });
+    }
+  }
+
+  const gatewayStudentId = req.headers["x-student-id"];
+  const gatewayRole = req.headers["x-user-role"];
+
+  if (gatewayStudentId && gatewayRole) {
+    req.studentId = gatewayStudentId;
+    req.role = gatewayRole;
     return next();
   }
 
-  // ✅ DEV fallback — explicitly opt-in for local testing only.
-  if (process.env.NODE_ENV !== "production" && allowDevFallback) {
+  if (
+    process.env.NODE_ENV !== "production" &&
+    process.env.ALLOW_DEV_AUTH_FALLBACK === "true"
+  ) {
     req.studentId = "dev_student";
     req.role = "student";
     return next();
   }
 
   return res.status(401).json({
-    error: "Unauthorised: missing gateway identity headers",
+    error: "Unauthorised: missing authentication",
   });
 }
 
