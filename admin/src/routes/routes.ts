@@ -7,6 +7,8 @@ import { DashboardLayout } from "@/layouts/dashboard-layout";
 import { RootLayout } from "@/layouts/root-layout";
 import { createBrowserRouter } from "react-router";
 import { lazy } from "react";
+import { DashboardSettings } from "@/app/dashboard";
+import { AdminHome } from "@/app/dashboard/admin/AdminHome";
 
 // Faculty pages (default exports)
 const FDashboardHome = lazy(
@@ -96,9 +98,10 @@ export const router = createBrowserRouter([
                 path: "admin-dashboard",
                 Component: DashboardLayout,
                 children: [
-                  { index: true, Component: FDashboardHome },
+                  { index: true, Component: AdminHome },
                   { path: "students", Component: StudentDashboard },
                   { path: "faculty", Component: FacultyDashboard },
+                  { path: "settings", Component: DashboardSettings }
                 ]
               }
             ]

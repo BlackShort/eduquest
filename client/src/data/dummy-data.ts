@@ -1,38 +1,4 @@
-import type { Assignment, Coding, Mcq, Question, User } from "@/types/types";
-
-// ========== USER DUMMY DATA ==========
-export const dummyUsers: User[] = [
-    {
-        id: "usr_001",
-        username: "john_doe",
-        email: "john.doe@example.com",
-        role: "user",
-        isVerified: true,
-        isActive: true,
-        createdAt: "2024-01-15T08:30:00.000Z",
-        updatedAt: "2024-01-15T08:30:00.000Z"
-    },
-    {
-        id: "usr_002",
-        username: "jane_smith",
-        email: "jane.smith@example.com",
-        role: "user",
-        isVerified: true,
-        isActive: true,
-        createdAt: "2024-01-16T10:45:00.000Z",
-        updatedAt: "2024-01-16T10:45:00.000Z"
-    },
-    {
-        id: "usr_003",
-        username: "admin_user",
-        email: "admin@eduquest.com",
-        role: "admin",
-        isVerified: true,
-        isActive: true,
-        createdAt: "2024-01-10T09:00:00.000Z",
-        updatedAt: "2024-01-10T09:00:00.000Z"
-    }
-];
+import type { Assignment, Coding, Mcq, Question } from "@/types/types";
 
 // ========== ASSIGNMENT DUMMY DATA ==========
 export const dummyAssignments: Assignment[] = [
@@ -784,7 +750,6 @@ export const dummyQuestions: Question[] = [
 
 // ========== EXPORT ALL DUMMY DATA ==========
 export const dummyData = {
-    users: dummyUsers,
     assignments: dummyAssignments,
     coding: dummyCoding,
     mcqs: dummyMcqs,

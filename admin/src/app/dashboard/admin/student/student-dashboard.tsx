@@ -42,7 +42,7 @@ export default function StudentDashboard() {
 
 
     return (
-        <div className="min-h-screen bg-neutral-950 text-white p-6">
+        <div className="text-neutral-100">
             <div className="max-w-6xl mx-auto">
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold">
@@ -89,10 +89,10 @@ export default function StudentDashboard() {
                             </p>
                         </div>
                     ) : (
-                                <UserTable
-                                    users={students}
-                                    onRefresh={fetchStudents}
-                                />
+                        <UserTable
+                            users={students}
+                            onRefresh={fetchStudents}
+                        />
                     )
                 }
 
