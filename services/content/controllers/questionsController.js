@@ -18,6 +18,17 @@ const getModelByType = (type) => {
     }
 };
 
+const getScopedTestId = async (Model, testId, userId) => {
+    const existingQuestionSet = await Model.findOne({ test_id: testId }).select("createdBy");
+    if (
+        existingQuestionSet &&
+        String(existingQuestionSet.createdBy) !== String(userId)
+    ) {
+        return `${testId}-${String(userId).slice(-6)}`;
+    }
+    return testId;
+};
+
 /**
  * Get all questions by type (question bank or test-specific)
  */
@@ -37,13 +48,8 @@ export const getQuestions = async (req, res) => {
 
         const Model = getModelByType(type);
 
-        // Build filter
-const filter = {
-  $or: [
-    { createdBy: req.user?.userId },
-    { createdBy: null }
-  ]
-};
+const ownerFilter = { createdBy: req.user.userId };
+const filter = { ...ownerFilter };
 
 const problemBankFilter = isInProblemBank ?? problemBank;
 if (problemBankFilter !== undefined) {
@@ -58,11 +64,17 @@ if (subjectId) {
 }
 
 if (search) {
-  filter.$or = [
+  filter.$and = [
+    ownerFilter,
+    {
+      $or: [
     { subject_id: { $regex: search, $options: 'i' } },
     { test_id: { $regex: search, $options: 'i' } },
     { 'questions.question_text': { $regex: search, $options: 'i' } }
+      ]
+    }
   ];
+  delete filter.createdBy;
 }
 
 
@@ -223,7 +235,8 @@ export const deleteQuestion = async (req, res) => {
         const Model = getModelByType(type);
 
         const question = await Model.findOneAndDelete({
-    test_id: id
+    test_id: id,
+    createdBy: req.user.userId
 });
 
         if (!question) {
@@ -338,7 +351,7 @@ export const bulkImportQuestions = async (req, res) => {
     try {
         const { type } = req.params;
         const Model = getModelByType(type);
-        const { test_id, questions } = req.body;
+        let { test_id, questions } = req.body;
 
         if (!test_id || !questions || !Array.isArray(questions)) {
             return res.status(400).json({
@@ -347,8 +360,13 @@ export const bulkImportQuestions = async (req, res) => {
             });
         }
 
-        // Check if test_id already exists
-        let questionSet = await Model.findOne({ test_id });
+        test_id = await getScopedTestId(Model, test_id, req.user.userId);
+
+        // Check if test_id already exists for this faculty member only
+        let questionSet = await Model.findOne({
+            test_id,
+            createdBy: req.user.userId
+        });
 
         if (questionSet) {
             // Append to existing

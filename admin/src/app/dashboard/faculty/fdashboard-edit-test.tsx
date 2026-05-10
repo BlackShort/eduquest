@@ -726,10 +726,10 @@ export default function EditTestPage() {
     return new Set(allIds).size;
   };
 
-  const toLocalDatetimeString = (dateStr) => {
+  const toLocalDatetimeString = (dateStr: string | Date) => {
     const date = new Date(dateStr);
     const offset = date.getTimezoneOffset() * 60000;
-    return new Date(date - offset).toISOString().slice(0, 16);
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
   };
 
   const buildPreviewData = () => {

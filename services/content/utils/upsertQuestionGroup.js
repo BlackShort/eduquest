@@ -11,7 +11,8 @@ export const upsertQuestionGroup = async (
     extraFields = {}
   }
 ) => {
-  let group = await Model.findOne({ test_id });
+  const groupFilter = createdBy ? { test_id, createdBy } : { test_id, createdBy: null };
+  let group = await Model.findOne(groupFilter);
 
   const newQuestion = {
     question_id: uuidv4(),

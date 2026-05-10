@@ -4,9 +4,10 @@ import { getMcqByIds } from "../controllers/mcqController.js";
 
 import uploadCSV from "../middlewares/uploadCSV.js";
 import * as mcqController from "../controllers/mcqController.js";
+import { verifyToken, verifyFaculty } from "../middlewares/auth.js";
 
 // Upload MCQ CSV
-router.post("/upload", uploadCSV.single("file"), mcqController.uploadMCQ);
+router.post("/upload", verifyToken, verifyFaculty, uploadCSV.single("file"), mcqController.uploadMCQ);
 
 router.get("/", mcqController.getAllMCQs);
 

@@ -127,8 +127,14 @@ export default function FDashboardHome() {
                     <div className="text-gray-400 text-sm">{activity.testTitle}</div>
                   </div>
                 </div>
-                <div className="text-right text-gray-200 font-semibold">
-                  {new Date(activity.submittedAt).toLocaleString()}
+                <div className="text-right">
+                  <div className={`capitalize text-sm ${activity.status === 'graded' ? 'text-green-400' : 'text-yellow-400'
+                    }`}>
+                    {activity.status}
+                  </div>
+                  <div className="text-sm text-right text-gray-200">
+                    {new Date(activity.submittedAt).toLocaleString()}
+                  </div>
                 </div>
               </div>
             ))}

@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { CodeXml, FileCodeCorner, ListTodo, LayoutDashboard, ChartColumnDecreasing, Upload, FileText } from "lucide-react";
+import { FileCodeCorner, ListTodo, LayoutDashboard, ChartColumnDecreasing, Upload, FileText } from "lucide-react";
 
 export interface NavigationItem {
     featured?: boolean;

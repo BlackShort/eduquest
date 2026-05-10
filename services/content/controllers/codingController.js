@@ -23,6 +23,8 @@ const parseNumber = (value, fallback) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const scopedTestId = (testId, userId) => `${testId}-${String(userId).slice(-6)}`;
+
 const parseTestCases = (row, rowNumber) => {
   const raw = valueFrom(row, ["test_cases", "testCases"]);
   if (raw) {
@@ -66,7 +68,7 @@ export const uploadCoding = async (req, res) => {
       });
     }
 
-    const test_id = valueFrom(rows[0], ["test_id", "testId"], `CODING-${Date.now()}`);
+    let test_id = valueFrom(rows[0], ["test_id", "testId"], `CODING-${Date.now()}`);
     const subject_id = valueFrom(rows[0], ["subject_id", "subjectId", "subject"], "general");
 
     const questions = rows.map((row, index) => {
@@ -92,7 +94,21 @@ export const uploadCoding = async (req, res) => {
       };
     });
 
-    let test = await Coding.findOne({ test_id });
+    let test = await Coding.findOne({
+      test_id,
+      createdBy: req.user.userId
+    });
+
+    if (!test) {
+      const existingOwnerTest = await Coding.findOne({ test_id }).select("createdBy");
+      if (existingOwnerTest && String(existingOwnerTest.createdBy) !== String(req.user.userId)) {
+        test_id = scopedTestId(test_id, req.user.userId);
+        test = await Coding.findOne({
+          test_id,
+          createdBy: req.user.userId
+        });
+      }
+    }
 
     if (test) {
       test.questions.push(...questions);
@@ -105,7 +121,7 @@ export const uploadCoding = async (req, res) => {
   subject_id,
   num_questions: questions.length,
   questions,
-  createdBy: req.user?.userId || null,
+  createdBy: req.user.userId,
   isInProblemBank: true
   
 });

@@ -4,6 +4,7 @@ import { getAssignmentByIds } from "../controllers/assignmentController.js";
 
 import uploadCSV from "../middlewares/uploadCSV.js";
 import * as assignmentController from "../controllers/assignmentController.js";
+import { verifyToken, verifyFaculty } from "../middlewares/auth.js";
 
 // Get ALL assignments
 router.get("/", assignmentController.getAllAssignments);
@@ -11,6 +12,8 @@ router.get("/", assignmentController.getAllAssignments);
 // Upload Assignment CSV
 router.post(
   "/upload",
+  verifyToken,
+  verifyFaculty,
   uploadCSV.single("file"),
   assignmentController.uploadAssignment
 );
