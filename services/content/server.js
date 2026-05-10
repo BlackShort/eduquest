@@ -7,7 +7,7 @@ import assignmentRoutes from "./routes/assignmentRoute.js";
 import { app } from './app.js';
 import { connectDB } from './config/db-config.js';
 
-const PORT = process.env.PORT || 5002;
+const PORT = process.env.CONTENT_PORT || 5002;
 
 const startServer = async () => {
   try {

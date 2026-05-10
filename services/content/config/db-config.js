@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 export const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
+    await mongoose.connect(process.env.CONTENT_MONGO_URI, {
       dbName: "content_db",
       maxPoolSize: 10,           // Maximum number of connections in the pool
       minPoolSize: 2,            // Minimum number of connections in the pool
