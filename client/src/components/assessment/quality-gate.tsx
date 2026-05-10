@@ -274,7 +274,7 @@ export const QualityGate = ({ onComplete, onCancel }: Props) => {
                     style={{ width: `${modelProgress}%` }} />
                 </div>
                 <p className="mt-1.5 text-center font-mono text-[10px] text-zinc-600">
-                  {modelProgress}% — loading ML models
+                  {modelProgress}%
                 </p>
               </div>
             )}
@@ -286,7 +286,6 @@ export const QualityGate = ({ onComplete, onCancel }: Props) => {
             {!modelsReady && (
               <div className="flex items-center gap-2 rounded-xl border border-orange-500/20 bg-orange-500/[0.07] px-3.5 py-2.5 font-mono text-[11px] text-orange-400">
                 <Spinner />
-                Loading ML models — please wait
               </div>
             )}
 
