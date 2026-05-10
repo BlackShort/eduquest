@@ -23,6 +23,11 @@ export default function AddManyUsersModal({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     // const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
+    const [failedUsers, setFailedUsers] =
+        useState<any[]>([]);
+
+    const [successCount, setSuccessCount] =
+        useState(0);
 
     if (!open) return null;
 
@@ -50,17 +55,19 @@ export default function AddManyUsersModal({
                                 if (role === "faculty") {
                                     return {
                                         email: user.email,
-                                        courses: user.courses
+                                        courses: (user.courses || user.course || "")
                                             .split(",")
-                                            .map((c: string) => c.trim()),
+                                            .map((c: string) => c.trim())
+                                            .filter(Boolean),
                                         semester: Number(user.semester)
                                     };
                                 }
                                 return {
                                     email: user.email,
-                                    courses: user.courses
+                                    courses: (user.courses || user.course || "")
                                         .split(",")
-                                        .map((c: string) => c.trim()),
+                                        .map((c: string) => c.trim())
+                                        .filter(Boolean),
                                     semester: Number(user.semester)
                                 };
 
@@ -72,10 +79,25 @@ export default function AddManyUsersModal({
                             role
                         );
                         console.log(result);
+                        setFailedUsers(
+                            result.failedUsers || []
+                        );
+
+                        setSuccessCount(
+                            result.successCount || 0
+                        );
                         // Set registered users to show in the UI
 
                         await onSuccess();
-                        handleClose();
+
+                        if (
+                            !result.failedUsers ||
+                            result.failedUsers.length === 0
+                        ) {
+
+                            handleClose();
+
+                        }
 
                     } catch (error: any) {
 
@@ -110,13 +132,16 @@ export default function AddManyUsersModal({
 
     const handleClose = () => {
         setFile(null);
+        setFailedUsers([]);
+        setSuccessCount(0);
+        setError("");
         onClose();
     };
 
     return (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 ">
 
-            <div className="w-full max-w-xl bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl overflow-hidden">
+            <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl">
 
                 <div className="border-b border-neutral-800 px-6 py-5">
 
@@ -240,6 +265,63 @@ export default function AddManyUsersModal({
                         <div className="mx-6 mb-4 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm">
                             {error}
                         </div>
+                    )
+                }
+                {
+                    successCount > 0 && (
+
+                        <div className="mx-6 mb-4 bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 rounded-xl text-sm">
+
+                            Successfully uploaded
+                            {" "}
+                            <span className="font-semibold">
+                                {successCount}
+                            </span>
+                            {" "}
+                            users
+
+                        </div>
+
+                    )
+                }
+                {
+                    failedUsers.length > 0 && (
+
+                        <div className="mx-6 mb-4 bg-red-500/10 border border-red-500/30 rounded-2xl p-4">
+
+                            <h3 className="text-red-400 font-semibold mb-3">
+                                Failed Uploads
+                            </h3>
+
+                            <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
+
+                                {
+                                    failedUsers.map(
+                                        (user, index) => (
+
+                                            <div
+                                                key={index}
+                                                className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3"
+                                            >
+
+                                                <p className="text-white text-sm break-all">
+                                                    {user.email}
+                                                </p>
+
+                                                <p className="text-red-400 text-xs mt-1">
+                                                    {user.reason}
+                                                </p>
+
+                                            </div>
+
+                                        )
+                                    )
+                                }
+
+                            </div>
+
+                        </div>
+
                     )
                 }
 

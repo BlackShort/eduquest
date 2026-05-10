@@ -8,6 +8,15 @@ interface AddUserModalProps {
     onSuccess: () => void;
 }
 
+const COURSES = [
+    "B.Tech CSE",
+    "B.Tech",
+    "B.C.A",
+    "M.C.A",
+    "M.B.A",
+    "B.B.A"
+];
+
 export default function AddUserModal({
     open,
     onClose,
@@ -16,17 +25,50 @@ export default function AddUserModal({
 }: AddUserModalProps) {
 
     const [email, setEmail] = useState("");
-    const [coursesInput, setCoursesInput] = useState("");
-    const [semester, setSemester] = useState(1);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+
+    const [selectedCourse, setSelectedCourse] =
+        useState("");
+
+    const [selectedCourses, setSelectedCourses] =
+        useState<string[]>([]);
+
+    const [semester, setSemester] =
+        useState(1);
+
+    const [loading, setLoading] =
+        useState(false);
+
+    const [error, setError] =
+        useState("");
 
     if (!open) return null;
+
+    const handleCourseToggle = (
+        course: string
+    ) => {
+
+        setSelectedCourses((prev) => {
+
+            if (prev.includes(course)) {
+
+                return prev.filter(
+                    (c) => c !== course
+                );
+
+            }
+
+            return [...prev, course];
+
+        });
+
+    };
 
     const handleSubmit = async (
         e: React.FormEvent
     ) => {
+
         setError("");
+
         e.preventDefault();
 
         try {
@@ -34,18 +76,19 @@ export default function AddUserModal({
             setLoading(true);
 
             const username =
-                email.split("@")[0].split(".")[0];
+                email
+                    .split("@")[0]
+                    .split(".")[0];
 
             const password =
                 `${username}@123`;
 
             const formattedCourses =
                 role === "faculty"
-                    ? coursesInput
-                        .split(",")
-                        .map((c) => c.trim())
-                        .filter(Boolean)
-                    : coursesInput ? [coursesInput] : [];
+                    ? selectedCourses
+                    : selectedCourse
+                        ? [selectedCourse]
+                        : [];
 
             await register(
                 email,
@@ -56,6 +99,7 @@ export default function AddUserModal({
             );
 
             await onSuccess();
+
             handleClose();
 
         } catch (error: any) {
@@ -67,9 +111,6 @@ export default function AddUserModal({
                 error?.message ||
                 "Something went wrong"
             );
-            setEmail("");
-            setCoursesInput("")
-            setSemester(1);
 
         } finally {
 
@@ -78,11 +119,17 @@ export default function AddUserModal({
         }
 
     };
+
     const handleClose = () => {
 
         setEmail("");
-        setCoursesInput("")
+
+        setSelectedCourse("");
+
+        setSelectedCourses([]);
+
         setSemester(1);
+
         setError("");
 
         onClose();
@@ -90,9 +137,9 @@ export default function AddUserModal({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
 
-            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md p-6">
+            <div className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-md p-6">
 
                 <h2 className="text-2xl font-bold text-white mb-6">
                     Add User
@@ -100,7 +147,7 @@ export default function AddUserModal({
 
                 <form
                     onSubmit={handleSubmit}
-                    className="space-y-4"
+                    className="space-y-5"
                 >
 
                     <input
@@ -114,40 +161,171 @@ export default function AddUserModal({
                         required
                     />
 
-                    {(role == "user" || role == "faculty") &&
-                        <input
-                            type="text"
-                            placeholder={
-                                role === "faculty"
-                                    ? "Enter courses separated by commas (optional)"
-                                    : "Enter course"
-                            }
-                            value={coursesInput}
-                            onChange={(e) =>
-                                setCoursesInput(e.target.value)
-                            }
-                            className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-white outline-none"
-                            required={role === "user"}
-                        />}
+                    {
+                        role === "user" && (
 
-                    {(role == "user" || role == "faculty") &&
-                        <input
-                            type="number"
-                            placeholder="Semester"
-                            value={semester}
-                            onChange={(e) =>
-                                setSemester(Number(e.target.value))
-                            }
-                            className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-white outline-none"
-                            required
-                        />
+                            <div>
+
+                                <label className="block text-sm text-neutral-400 mb-2">
+                                    Select Course
+                                </label>
+
+                                <div className="relative">
+
+                                    <select
+                                        value={selectedCourse}
+                                        onChange={(e) =>
+                                            setSelectedCourse(
+                                                e.target.value
+                                            )
+                                        }
+                                        className="
+                w-full
+                appearance-none
+                bg-neutral-800
+                border border-neutral-700
+                rounded-xl
+                px-4 py-3
+                pr-12
+                text-white
+                outline-none
+                focus:border-neutral-500
+                transition-all
+            "
+                                        required
+                                    >
+
+                                        <option value="">
+                                            Select course
+                                        </option>
+
+                                        {
+                                            COURSES.map(
+                                                (course) => (
+
+                                                    <option
+                                                        key={course}
+                                                        value={course}
+                                                        className="bg-neutral-900"
+                                                    >
+                                                        {course}
+                                                    </option>
+
+                                                )
+                                            )
+                                        }
+
+                                    </select>
+
+                                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            strokeWidth={1.8}
+                                            stroke="currentColor"
+                                            className="w-5 h-5 text-neutral-400"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                                            />
+                                        </svg>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        )
+                    }
+
+                    {
+                        role === "faculty" && (
+
+                            <div>
+
+                                <label className="block text-sm text-neutral-400 mb-3">
+                                    Select Courses
+                                </label>
+
+                                <div className="grid grid-cols-2 gap-3">
+
+                                    {
+                                        COURSES.map(
+                                            (course) => (
+
+                                                <label
+                                                    key={course}
+                                                    className="flex items-center gap-2 bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-3 cursor-pointer hover:bg-neutral-700 transition-all"
+                                                >
+
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={
+                                                            selectedCourses.includes(
+                                                                course
+                                                            )
+                                                        }
+                                                        onChange={() =>
+                                                            handleCourseToggle(
+                                                                course
+                                                            )
+                                                        }
+                                                        className="accent-white"
+                                                    />
+
+                                                    <span className="text-sm text-white">
+                                                        {course}
+                                                    </span>
+
+                                                </label>
+
+                                            )
+                                        )
+                                    }
+
+                                </div>
+
+                            </div>
+
+                        )
+                    }
+
+                    {
+                        (role === "user" ||
+                            role === "faculty") && (
+
+                            <input
+                                type="number"
+                                placeholder="Semester"
+                                value={semester}
+                                onChange={(e) =>
+                                    setSemester(
+                                        Number(
+                                            e.target.value
+                                        )
+                                    )
+                                }
+                                className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-white outline-none"
+                                required
+                            />
+
+                        )
                     }
 
                     {
                         error && (
+
                             <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm">
+
                                 {error}
+
                             </div>
+
                         )
                     }
 
@@ -156,7 +334,7 @@ export default function AddUserModal({
                         <button
                             type="button"
                             onClick={handleClose}
-                            className="px-4 py-2 rounded-xl bg-neutral-800 text-white"
+                            className="px-4 py-2 rounded-xl bg-neutral-800 text-white hover:bg-neutral-700 transition-all"
                         >
                             Cancel
                         </button>
@@ -164,7 +342,7 @@ export default function AddUserModal({
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-4 py-2 rounded-xl bg-white text-black font-medium"
+                            className="px-4 py-2 rounded-xl bg-white text-black font-medium hover:opacity-90 transition-all disabled:opacity-50"
                         >
                             {
                                 loading
@@ -181,4 +359,4 @@ export default function AddUserModal({
 
         </div>
     );
-}
+}   

@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import userModel from '../models/user-model.js';
 import sessionModel from '../models/session-model.js';
 import { generateAccessToken, generateRefreshToken, getTokenExpiry, verifyAccessToken } from '../utils/token-utils.js';
-
+import { normalizeCourses } from '../utils/normalizeCourse.js';
 const GEHU_EMAIL_REGEX = /^([a-z0-9._%+-]+)\.(\d+)@gehu\.ac\.in$/;
 
 const parseGehuEmail = (email) => {
@@ -76,13 +76,16 @@ export const register = async (req, res) => {
             10
         );
 
+        const normalizedCourses =
+            normalizeCourses(courses);
+
         const newUser = new userModel({
             username,
             studentId,
             email: normalizedEmail,
             password: hashedPassword,
             role,
-            courses: courses || [],
+            courses: normalizedCourses,
             semester,
             isVerified: true,
             isActive: true
@@ -206,14 +209,32 @@ export const bulkRegisterUsers = async (req, res) => {
                         generatedPassword,
                         10
                     );
+                
+                const normalizedCourses =
+                    normalizeCourses(courses);
+                
+                if (
+                    role === "user" &&
+                    normalizedCourses.length > 1
+                ) {
 
+                    failedUsers.push({
+                        email,
+                        reason:
+                            "Student cannot have more than one course"
+                    });
+
+                    continue;
+
+                    }
+                
                 const newUser = await userModel.create({
                     username,
                     studentId,
                     email: normalizedEmail,
                     password: hashedPassword,
                     role,
-                    courses: courses || [],
+                    courses:normalizedCourses,
                     semester,
                     isVerified: true,
                     isActive: true
@@ -938,12 +959,15 @@ export const updateUser = async (req, res) => {
             semester
         } = req.body;
 
+        const normalizedCourses =
+            normalizeCourses(courses);
+
         const updatedUser =
             await userModel.findByIdAndUpdate(
                 id,
                 {
                     email,
-                    courses,
+                    courses: normalizedCourses,
                     semester
                 },
                 { new: true }
