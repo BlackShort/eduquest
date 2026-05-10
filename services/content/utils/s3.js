@@ -64,9 +64,10 @@ async function uploadAssignmentPdfToS3({
     throw new Error("Assignment PDF buffer is required");
   }
 
-  const bucket = getAssignmentBucket();
   const timestamp = uploadedAt.getTime();
   const key = `assignments/${testId}/${studentId}/${timestamp}-${safeFileName(originalName)}.pdf`;
+
+  const bucket = getAssignmentBucket();
 
   const client = getS3Client();
   await client.send(
@@ -89,11 +90,11 @@ async function uploadAssignmentPdfToS3({
 }
 
 async function createSignedAssignmentDownloadUrl({ key, expiresIn = 300 }) {
-  const bucket = getAssignmentBucket();
-
   if (!key) {
     throw new Error("S3 object key is required");
   }
+
+  const bucket = getAssignmentBucket();
 
   const client = getS3Client();
   const command = new GetObjectCommand({

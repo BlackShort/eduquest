@@ -102,6 +102,7 @@ export default function TestResultsPage() {
       if (scoreDiff !== 0) return scoreDiff;
       return (a.timeSpentMinutes || 0) - (b.timeSpentMinutes || 0);
     });
+  const isAssignmentTest = test?.type === "assignment";
 
   if (loading) {
     return (
@@ -227,15 +228,23 @@ export default function TestResultsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  MCQ
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Coding
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Combined Score
-                </th>
+                {isAssignmentTest ? (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    Assignment Score
+                  </th>
+                ) : (
+                  <>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      MCQ
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Coding
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Combined Score
+                    </th>
+                  </>
+                )}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Time Spent
                 </th>
@@ -251,7 +260,7 @@ export default function TestResultsPage() {
               {filteredAttempts.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={isAssignmentTest ? 6 : 8}
                     className="px-6 py-12 text-center text-gray-400"
                   >
                     No attempts found
@@ -283,31 +292,52 @@ export default function TestResultsPage() {
                         {attempt.status.replace("_", " ")}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-gray-100">
-                        {(attempt.scoreBreakdown?.mcq?.obtained || 0).toFixed(
-                          1,
-                        )}
-                        /{attempt.scoreBreakdown?.mcq?.total || 0}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-gray-100">
-                        {(
-                          attempt.scoreBreakdown?.coding?.obtained || 0
-                        ).toFixed(1)}
-                        /{attempt.scoreBreakdown?.coding?.total || 0}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-gray-100">
-                        {attempt.score.obtained.toFixed(1)}/
-                        {attempt.score.total}
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        {attempt.score.percentage.toFixed(1)}%
-                      </div>
-                    </td>
+                    {isAssignmentTest ? (
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-gray-100">
+                          {(
+                            attempt.scoreBreakdown?.assignment?.obtained ??
+                            attempt.score.obtained ??
+                            0
+                          ).toFixed(1)}
+                          /
+                          {attempt.scoreBreakdown?.assignment?.total ||
+                            attempt.score.total ||
+                            0}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {attempt.score.percentage.toFixed(1)}%
+                        </div>
+                      </td>
+                    ) : (
+                      <>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-semibold text-gray-100">
+                            {(
+                              attempt.scoreBreakdown?.mcq?.obtained || 0
+                            ).toFixed(1)}
+                            /{attempt.scoreBreakdown?.mcq?.total || 0}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-semibold text-gray-100">
+                            {(
+                              attempt.scoreBreakdown?.coding?.obtained || 0
+                            ).toFixed(1)}
+                            /{attempt.scoreBreakdown?.coding?.total || 0}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-semibold text-gray-100">
+                            {attempt.score.obtained.toFixed(1)}/
+                            {attempt.score.total}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {attempt.score.percentage.toFixed(1)}%
+                          </div>
+                        </td>
+                      </>
+                    )}
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
                       {attempt.timeSpentMinutes} min
                     </td>

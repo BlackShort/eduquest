@@ -1,6 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig, type AxiosInstance } from "axios";
 import type { ApiError, RefreshQueueItem, TokenRefreshResponse } from "@/types/error";
 import { TokenRefreshError, SessionExpiredError } from "@/types/error";
+import { authUrl } from "@/apis/server-api";
 
 // Extended request config with retry flag
 interface RetryableConfig extends InternalAxiosRequestConfig {
@@ -127,7 +128,7 @@ export const createApi = (baseURL: string): AxiosInstance => {
 
                     // Attempt to refresh token
                     const response = await axios.post<TokenRefreshResponse>(
-                    `${baseURL}/v1/refresh-token`,
+                    `${authUrl}/v1/refresh-token`,
                         {},
                         { withCredentials: true }
                     );
