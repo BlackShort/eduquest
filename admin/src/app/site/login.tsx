@@ -34,6 +34,10 @@ export const Login = () => {
         try {
             const data = await login(loginData.email, loginData.password);
 
+            if (data.accessToken) {
+                localStorage.setItem("accessToken", data.accessToken);
+            }
+
             setUser(data.user);
             setIsLoggedIn(true);
             toast.success(data.message);

@@ -14,6 +14,7 @@ import {
     logoutAllSessions,
     verifyUserToken,
     getUsersByRole,
+    getUserById,
     bulkRegisterUsers,
     deleteUser,
     updateUser
@@ -40,6 +41,7 @@ authRouter.post('/me/verify-email', verifyToken, verifyEmailCode);
 authRouter.get('/sessions', verifyToken, getUserSessions);
 authRouter.get('/users', verifyToken, getUsersByRole);
 authRouter.post('/users/bulk-register', verifyToken, bulkRegisterUsers);
+authRouter.get('/users/:id', verifyToken, getUserById);
 authRouter.delete('/users/:id', verifyToken, deleteUser);
 authRouter.patch('/users/:id', verifyToken, updateUser);
 // Token verification endpoint (for microservices)

@@ -33,6 +33,7 @@ export const Sidebar = ({ navigation }: SidebarProps) => {
             console.error('Logout error:', error);
             toast.error('Failed to logout, but clearing local session');
         } finally {
+            localStorage.removeItem('accessToken');
             setSidebarOpen(false);
             setIsMenuOpen(false);
             navigate('/', { replace: true });

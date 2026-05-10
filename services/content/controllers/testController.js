@@ -3,6 +3,13 @@ import Mcq from "../models/Mcq.js";
 import Coding from "../models/Coding.js";
 import Assignment from "../models/Assignment.js";
 import AssessmentSession from "../models/AssessmentSession.js";
+import {
+  audienceMatches,
+  getAudienceFacultyMap,
+  getCurrentAudienceUser,
+  isStudentRole,
+  studentCanAccessTest,
+} from "../utils/audience.js";
 
 const buildAssessmentAccess = async (test, studentId) => {
   const durationMinutes = test.durationMinutes || 0;
@@ -235,15 +242,26 @@ export const getTestById = async (req, res) => {
 
 export const getPublicTests = async (req, res) => {
   try {
-    const now = new Date();
-
     const tests = await Test.find({
       status: "published",
-      scheduledEnd: { $gte: now }, // remove expired
     }).sort({ scheduledStart: 1 });
 
+    let audienceFilteredTests = tests;
+
+    if (isStudentRole(req.user?.role)) {
+      const student = await getCurrentAudienceUser(req);
+      const facultyMap = await getAudienceFacultyMap(
+        tests.map((test) => test.creatorId),
+        req,
+      );
+
+      audienceFilteredTests = tests.filter((test) =>
+        audienceMatches(student, facultyMap.get(String(test.creatorId))),
+      );
+    }
+
     const testsWithAccess = await Promise.all(
-      tests.map(async (test) => {
+      audienceFilteredTests.map(async (test) => {
         const testData = test.toObject();
 
         if (testData.type === "assessment") {
@@ -309,6 +327,13 @@ export const getPublicTestById = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Published test not found",
+      });
+    }
+
+    if (!(await studentCanAccessTest(test, req))) {
+      return res.status(403).json({
+        success: false,
+        message: "This test is not available for your course and semester",
       });
     }
 
@@ -425,6 +450,13 @@ export const startPublicAssessmentSession = async (req, res) => {
       });
     }
 
+    if (!(await studentCanAccessTest(test, req))) {
+      return res.status(403).json({
+        success: false,
+        message: "This assessment is not available for your course and semester",
+      });
+    }
+
     const access = await buildAssessmentAccess(test, req.user.userId);
 
     if (access.isBlocked) {
@@ -495,6 +527,13 @@ export const completePublicAssessmentSession = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Published assessment not found",
+      });
+    }
+
+    if (!(await studentCanAccessTest(test, req))) {
+      return res.status(403).json({
+        success: false,
+        message: "This assessment is not available for your course and semester",
       });
     }
 

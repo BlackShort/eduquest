@@ -308,7 +308,9 @@ export const login = async (req, res) => {
             user._id,
             user.username,
             user.email,
-            user.role
+            user.role,
+            user.courses || [],
+            user.semester ?? null
         );
         const refreshToken = generateRefreshToken(user._id);
 
@@ -358,9 +360,12 @@ export const login = async (req, res) => {
                 studentId: user.studentId,
                 email: user.email,
                 role: user.role,
+                courses: user.courses || [],
+                semester: user.semester ?? null,
                 isVerified: user.isVerified,
                 isActive: user.isActive
             },
+            accessToken,
         });
 
     } catch (error) {
@@ -418,7 +423,9 @@ export const refreshAccessToken = async (req, res) => {
             user._id,
             user.username,
             user.email,
-            user.role
+            user.role,
+            user.courses || [],
+            user.semester ?? null
         );
 
         // Update session
@@ -608,6 +615,8 @@ export const verifyUserToken = async (req, res) => {
         res.set('X-User-Id', String(req.user.userId));
         res.set('X-User-Role', req.user.role);
         res.set('X-Username', req.user.username);
+        res.set('X-User-Courses', encodeURIComponent(JSON.stringify(req.user.courses || [])));
+        res.set('X-User-Semester', String(req.user.semester ?? ''));
 
         return res.status(200).json({
             success: true,
@@ -954,4 +963,29 @@ export const updateUser = async (req, res) => {
 
     }
 
+};
+
+export const getUserById = async (req, res) => {
+    try {
+        const user = await userModel
+            .findById(req.params.id)
+            .select('username studentId email role courses semester isActive');
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            user
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
 };

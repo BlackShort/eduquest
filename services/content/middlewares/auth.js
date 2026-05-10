@@ -19,12 +19,16 @@ export const verifyToken = async (req, res, next) => {
         // Verify JWT signature (should match auth service secret)
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+        req.authToken = token;
+
         // Attach user info to request
         req.user = {
             userId: decoded.userId,
             username: decoded.username,
             email: decoded.email,
-            role: decoded.role
+            role: decoded.role,
+            courses: decoded.courses || [],
+            semester: decoded.semester ?? null
         };
 
         next();

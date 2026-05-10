@@ -158,6 +158,7 @@ export const createApi = (baseURL: string): AxiosInstance => {
                     }
 
                     // Token refresh successful
+                    localStorage.setItem('accessToken', refreshData.accessToken);
                     refreshQueue.processSuccess(refreshData.accessToken);
 
                     // Retry original request with new token
@@ -173,6 +174,7 @@ export const createApi = (baseURL: string): AxiosInstance => {
                     );
 
                     refreshQueue.processError(refreshTokenError);
+                    localStorage.removeItem('accessToken');
 
                     // Redirect to login page
                     window.location.href = '/auth/login';

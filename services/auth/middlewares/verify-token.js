@@ -50,6 +50,8 @@ export const verifyToken = async (req, res, next) => {
             username: user.username,
             email: user.email,
             role: user.role,
+            courses: user.courses || [],
+            semester: user.semester ?? null,
             sessionId: session._id
         };
 

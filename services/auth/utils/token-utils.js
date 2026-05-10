@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { randomUUID } from 'crypto';
 
 // Read secrets lazily (at call time) so dotenv.config() in server.js has already run
 const getSecret = () => process.env.JWT_SECRET;
@@ -6,13 +7,23 @@ const getExpiry = () => process.env.JWT_EXPIRY || '24h';
 const getRefreshExpiry = () => process.env.REFRESH_TOKEN_EXPIRY || '7d';
 
 // Generate JWT access token
-export const generateAccessToken = (userId, username, email, role) => {
+export const generateAccessToken = (
+    userId,
+    username,
+    email,
+    role,
+    courses = [],
+    semester = null
+) => {
     return jwt.sign(
         {
             userId,
             username,
             email,
             role,
+            courses,
+            semester,
+            jti: randomUUID(),
             type: 'access'
         },
         getSecret(),

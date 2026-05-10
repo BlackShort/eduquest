@@ -7,6 +7,7 @@ import {
   createSignedAssignmentDownloadUrl,
   uploadAssignmentPdfToS3,
 } from "../utils/s3.js";
+import { studentCanAccessTest } from "../utils/audience.js";
 
 const createEmptyResponses = () => ({
   mcqResponses: [],
@@ -385,6 +386,13 @@ export const submitAssignment = async (req, res) => {
       });
     }
 
+    if (!(await studentCanAccessTest(test, req))) {
+      return res.status(403).json({
+        success: false,
+        message: "This assignment is not available for your course and semester",
+      });
+    }
+
     let attempt = await StudentAttempt.findOne({
       testId,
       studentId: req.user.userId,
@@ -478,6 +486,14 @@ export const getMyAttemptForTest = async (req, res) => {
       });
     }
 
+    const test = await Test.findById(testId);
+    if (!test || !(await studentCanAccessTest(test, req))) {
+      return res.status(403).json({
+        success: false,
+        message: "This assignment is not available for your course and semester",
+      });
+    }
+
     res.status(200).json({
       success: true,
       data: await withStudentSnapshot(attempt),
@@ -510,6 +526,13 @@ export const submitAssessment = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Published assessment not found",
+      });
+    }
+
+    if (!(await studentCanAccessTest(test, req))) {
+      return res.status(403).json({
+        success: false,
+        message: "This assessment is not available for your course and semester",
       });
     }
 
@@ -832,6 +855,14 @@ export const getMyAssignmentDownloadUrl = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "No submission found for this assignment",
+      });
+    }
+
+    const test = await Test.findById(testId);
+    if (!test || !(await studentCanAccessTest(test, req))) {
+      return res.status(403).json({
+        success: false,
+        message: "This assignment is not available for your course and semester",
       });
     }
 
