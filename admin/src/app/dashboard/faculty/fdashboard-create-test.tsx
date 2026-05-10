@@ -130,6 +130,16 @@ const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
     instructions: ''
   });
 
+  const toUtcIsoString = (value?: string | Date | null) => {
+    if (!value) return undefined;
+
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return undefined;
+
+    return date.toISOString();
+  };
+
+
   const handleChange = (field: string, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -461,10 +471,10 @@ const normalizedInstructions = selectedTestType === 'assignment' ? '' : formData
       instructions: normalizedInstructions,
       status,
       ...(formData.scheduledStart
-        ? { scheduledStart: formData.scheduledStart }
+        ? { scheduledStart: toUtcIsoString(formData.scheduledStart) }
         : {}),
       ...(formData.scheduledEnd
-        ? { scheduledEnd: formData.scheduledEnd }
+        ? { scheduledEnd: toUtcIsoString(formData.scheduledEnd) }
         : {})
     };
 

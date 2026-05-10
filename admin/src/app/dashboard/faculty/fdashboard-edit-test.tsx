@@ -313,6 +313,16 @@ export default function EditTestPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  const toUtcIsoString = (value?: string | Date | null) => {
+  if (!value) return undefined;
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return undefined;
+
+  return date.toISOString();
+};
+
+
   const handleChange = (field: string, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -632,6 +642,8 @@ export default function EditTestPage() {
 
       const updatedData = {
         ...formData,
+        scheduledStart: toUtcIsoString(formData.scheduledStart),
+        scheduledEnd: toUtcIsoString(formData.scheduledEnd),
         questionRefs: {
           mcqIds: formData.type === "assignment" ? [] : mcqIds,
           codingIds: formData.type === "assignment" ? [] : codingIds,
