@@ -13,8 +13,4 @@ submissionRoutes.get('/:submissionId', getSubmissionById);
 submissionRoutes.get('/student/:studentId', getSubmissionsByStudent);
 submissionRoutes.get('/question/:questionId', getSubmissionsByQuestion);
 
-// Optional: re-check plagiarism for a submission
-// submissionRoutes.post(
-//     '/:submissionId/recheck-plagiarism',
-//     submissionController.recheckPlagiarismForSubmission
-// );
+
