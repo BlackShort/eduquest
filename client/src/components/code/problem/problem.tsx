@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Editor from "@monaco-editor/react";
 import type { editor, IPosition } from "monaco-editor";
 import { dummyCoding } from "@/data/dummy-data";
@@ -61,13 +61,6 @@ interface DisplayProblem {
   test_cases: Testcase[];
 }
 
-const languageTemplates = {
-  javascript: `function solution(input) {\n    // Write your code here\n    return 0;\n}\n`,
-  python: `def solution(input):\n    # Write your code here\n    return 0\n`,
-  cpp: `#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your code here\n    return 0;\n}\n`,
-  java: `public class Solution {\n    public int solution(int n) {\n        // Write your code here\n        return 0;\n    }\n}`,
-};
-
 interface ProblemDetailProps {
   problemId?: string;
   problem?: AssessmentQuestion;
@@ -106,9 +99,7 @@ export const ProblemDetail = ({
   hideSubmissionsAndSolutions = false,
 }: ProblemDetailProps) => {
   const [language, setLanguage] = useState("java");
-  const [code, setCode] = useState(
-    languageTemplates[language as keyof typeof languageTemplates],
-  );
+  const [code, setCode] = useState("");
   const [activeResultTab, setActiveResultTab] = useState("testcase");
   const [isEditorSettingsOpen, setIsEditorSettingsOpen] = useState(false);
   const [fontSize, setFontSize] = useState(14);
@@ -119,6 +110,36 @@ export const ProblemDetail = ({
   });
   const [activeProblemTab, setActiveProblemTab] = useState("description");
   const [hasSubmitted, setHasSubmitted] = useState(false);
+
+  //  localStorage key generator
+  const getStorageKey = useCallback((lang: string) => {
+    return `code-${problemId}-${lang}`;
+  }, [problemId]);
+
+  //  Save code to localStorage
+  const saveCodeToStorage = useCallback((codeToSave: string, lang: string) => {
+    try {
+      const key = getStorageKey(lang);
+      if (codeToSave) {
+        localStorage.setItem(key, codeToSave);
+      } else {
+        localStorage.removeItem(key);
+      }
+    } catch (err) {
+      console.warn("Failed to save code to localStorage:", err);
+    }
+  }, [getStorageKey]);
+
+  //  Retrieve code from localStorage
+  const getCodeFromStorage = useCallback((lang: string): string => {
+    try {
+      const key = getStorageKey(lang);
+      return localStorage.getItem(key) || "";
+    } catch (err) {
+      console.warn("Failed to retrieve code from localStorage:", err);
+      return "";
+    }
+  }, [getStorageKey]);
 
   const PROBLEM_TABS = [
     {
@@ -134,36 +155,54 @@ export const ProblemDetail = ({
     ...(hideSubmissionsAndSolutions
       ? []
       : [
-          {
-            value: "solutions",
-            icon: <FlaskConical className="w-4 h-4 text-green-500" />,
-            label: "Solutions",
-          },
-          {
-            value: "submissions",
-            icon: <History className="w-4 h-4 text-yellow-500" />,
-            label: "Submissions",
-          },
-        ]),
+        {
+          value: "solutions",
+          icon: <FlaskConical className="w-4 h-4 text-green-500" />,
+          label: "Solutions",
+        },
+        {
+          value: "submissions",
+          icon: <History className="w-4 h-4 text-yellow-500" />,
+          label: "Submissions",
+        },
+      ]),
   ];
 
   const LANGUAGES = [
     { label: "Java", value: "java" },
     { label: "JavaScript", value: "javascript" },
-    { label: "TypeScript ", value: "typescript" },
     { label: "C++", value: "cpp" },
     { label: "Python", value: "python" },
   ];
 
-  const problem: DisplayProblem | undefined = externalProblem
-    ? {
+  const problem: DisplayProblem | undefined = useMemo(() => {
+    if (externalProblem) {
+      return {
         question_id: externalProblem.question_id || externalProblem.id,
         question_text: externalProblem.question_text || externalProblem.title,
         difficulty: externalProblem.difficulty || "medium",
         test_cases: externalProblem.test_cases || [],
-      }
-    : dummyCoding[0]?.questions.find((q) => q.question_id === problemId) ||
-      dummyCoding[0]?.questions[0];
+      };
+    }
+    return (
+      dummyCoding[0]?.questions.find((q) => q.question_id === problemId) ||
+      dummyCoding[0]?.questions[0]
+    );
+  }, [externalProblem, problemId]);
+
+  //  Load code from localStorage when problem or language changes
+  useEffect(() => {
+    if (problemId) {
+      const savedCode = getCodeFromStorage(language);
+      setCode(savedCode);
+      onCodeChange?.(savedCode);
+    }
+  }, [problemId, language]);
+
+  // Auto-save code to localStorage whenever it changes
+  useEffect(() => {
+    saveCodeToStorage(code, language);
+  }, [code, language]);
 
   // Auto-switch to result tab when running starts
   useEffect(() => {
@@ -233,9 +272,13 @@ export const ProblemDetail = ({
   }
 
   const handleLanguageChange = (newLang: string) => {
+    //  Save current code before switching language
+    saveCodeToStorage(code, language);
+
+    //  Retrieve code for new language
+    const newCode = getCodeFromStorage(newLang);
+
     setLanguage(newLang);
-    const newCode =
-      languageTemplates[newLang as keyof typeof languageTemplates];
     setCode(newCode);
     onCodeChange?.(newCode);
     onLanguageChange?.(newLang);
@@ -334,7 +377,7 @@ export const ProblemDetail = ({
           <TabsList className="relative w-full bg-neutral-700/50 rounded-t-lg rounded-b-none p-0 m-0">
             <div className="w-full gap-1 px-1 flex items-center justify-start no-scrollbar overflow-x-auto">
               {PROBLEM_TABS.map((tab, index) => (
-                <>
+                <div key={index} className="flex items-center">
                   <TabsTrigger
                     key={index}
                     value={tab.value}
@@ -349,7 +392,7 @@ export const ProblemDetail = ({
                       className="w-px h-4 bg-neutral-700 mx-1"
                     ></div>
                   )}
-                </>
+                </div>
               ))}
             </div>
           </TabsList>
@@ -440,16 +483,14 @@ export const ProblemDetail = ({
                     <>
                       {/* Verdict Summary */}
                       <div
-                        className={`p-4 rounded-lg border ${
-                          allPassed
+                        className={`p-4 rounded-lg border ${allPassed
                             ? "border-green-500/30 bg-green-500/5"
                             : "border-red-500/30 bg-red-500/5"
-                        }`}
+                          }`}
                       >
                         <h2
-                          className={`text-lg font-semibold mb-2 ${
-                            allPassed ? "text-green-400" : "text-red-400"
-                          }`}
+                          className={`text-lg font-semibold mb-2 ${allPassed ? "text-green-400" : "text-red-400"
+                            }`}
                         >
                           {allPassed ? "Accepted" : "Wrong Answer"}
                         </h2>
@@ -608,12 +649,8 @@ export const ProblemDetail = ({
                 <RotateCcw
                   className="h-4 w-4 cursor-pointer hover:text-neural-100"
                   onClick={() => {
-                    const resetCode =
-                      languageTemplates[
-                        language as keyof typeof languageTemplates
-                      ];
-                    setCode(resetCode);
-                    onCodeChange?.(resetCode);
+                    setCode("");
+                    onCodeChange?.("");
                   }}
                 />
                 <Settings
@@ -805,30 +842,29 @@ export const ProblemDetail = ({
                                 "TIME_LIMIT",
                               ].includes(r.status),
                             ) && (
-                              <TabsList className="p-1 w-full bg-neutral-800 rounded-md flex items-center justify-start gap-2">
-                                {externalTestResults
-                                  .slice(0, 3)
-                                  .map((result, index) => (
-                                    <TabsTrigger
-                                      key={index}
-                                      value={`res-${index}`}
-                                      className={`max-w-18 px-3 py-1.5 text-xs rounded-sm border bg-transparent shadow-none hover:bg-neutral-700/50 data-[state=active]:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:ring-offset-0 group-data-[variant=default]/tabs-list:data-[state=active]:shadow-none
-          ${
-            result.passed
-              ? "text-neutral-400 data-[state=active]:bg-neutral-700 data-[state=active]:text-neutral-100 hover:text-neutral-200 cursor-pointer"
-              : "text-neutral-400 data-[state=active]:bg-red-500/10 data-[state=active]:text-red-400 hover:text-red-100 cursor-pointer"
-          }`}
-                                    >
-                                      {result.passed ? (
-                                        <CheckCircle2 className="w-3 h-3 text-green-500" />
-                                      ) : (
-                                        <XCircle className="w-3 h-3 text-red-500" />
-                                      )}
-                                      Case {index + 1}
-                                    </TabsTrigger>
-                                  ))}
-                              </TabsList>
-                            )}
+                                <TabsList className="p-1 w-full bg-neutral-800 rounded-md flex items-center justify-start gap-2">
+                                  {externalTestResults
+                                    .slice(0, 3)
+                                    .map((result, index) => (
+                                      <TabsTrigger
+                                        key={index}
+                                        value={`res-${index}`}
+                                        className={`max-w-18 px-3 py-1.5 text-xs rounded-sm border bg-transparent shadow-none hover:bg-neutral-700/50 data-[state=active]:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:ring-offset-0 group-data-[variant=default]/tabs-list:data-[state=active]:shadow-none
+          ${result.passed
+                                            ? "text-neutral-400 data-[state=active]:bg-neutral-700 data-[state=active]:text-neutral-100 hover:text-neutral-200 cursor-pointer"
+                                            : "text-neutral-400 data-[state=active]:bg-red-500/10 data-[state=active]:text-red-400 hover:text-red-100 cursor-pointer"
+                                          }`}
+                                      >
+                                        {result.passed ? (
+                                          <CheckCircle2 className="w-3 h-3 text-green-500" />
+                                        ) : (
+                                          <XCircle className="w-3 h-3 text-red-500" />
+                                        )}
+                                        Case {index + 1}
+                                      </TabsTrigger>
+                                    ))}
+                                </TabsList>
+                              )}
 
                             {externalTestResults
                               .slice(0, 3)
@@ -868,11 +904,10 @@ export const ProblemDetail = ({
                                         </div>
 
                                         <div
-                                          className={`text-sm p-2.5 rounded-md font-mono ${
-                                            result.passed
+                                          className={`text-sm p-2.5 rounded-md font-mono ${result.passed
                                               ? "text-neutral-100 bg-neutral-700/50"
                                               : "text-red-400 bg-red-500/5"
-                                          }`}
+                                            }`}
                                         >
                                           {result.actualOutput}
                                         </div>

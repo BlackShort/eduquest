@@ -16,7 +16,7 @@ export default function FDashboardHome() {
           getTestStats(),
           getFacultyAnalytics()
         ]);
-        
+
         if (statsRes.success) setStats(statsRes.data);
         if (analyticsRes.success) setAnalytics(analyticsRes.data);
       } catch (error) {
@@ -127,13 +127,8 @@ export default function FDashboardHome() {
                     <div className="text-gray-400 text-sm">{activity.testTitle}</div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-gray-200 font-semibold">{activity.score.toFixed(1)}%</div>
-                  <div className={`text-sm ${
-                    activity.status === 'graded' ? 'text-green-400' : 'text-yellow-400'
-                  }`}>
-                    {activity.status}
-                  </div>
+                <div className="text-right text-gray-200 font-semibold">
+                  {new Date(activity.submittedAt).toLocaleString()}
                 </div>
               </div>
             ))}

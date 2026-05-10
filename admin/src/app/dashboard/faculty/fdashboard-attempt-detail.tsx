@@ -320,7 +320,7 @@ export default function AttemptDetailPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-neutral-700 rounded-lg transition-colors"
+            className="p-2 bg-neutral-400 hover:bg-neutral-300 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -462,10 +462,10 @@ export default function AttemptDetailPage() {
                 <div className="space-y-2">
                   {Object.keys(proctorAggregate?.mergedViolationCounts || {})
                     .length === 0 && (
-                    <p className="text-sm text-gray-400">
-                      No violations recorded.
-                    </p>
-                  )}
+                      <p className="text-sm text-gray-400">
+                        No violations recorded.
+                      </p>
+                    )}
                   {Object.entries(
                     proctorAggregate?.mergedViolationCounts || {},
                   ).map(([k, v]) => (
@@ -523,9 +523,9 @@ export default function AttemptDetailPage() {
                         Violations:{" "}
                         {s.violationCounts
                           ? Object.values(s.violationCounts).reduce(
-                              (a, b) => a + Number(b || 0),
-                              0,
-                            )
+                            (a, b) => a + Number(b || 0),
+                            0,
+                          )
                           : 0}
                       </div>
                     </div>
@@ -699,24 +699,26 @@ export default function AttemptDetailPage() {
       )}
 
       {/* Feedback */}
-      <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6">
-        <h2 className="text-xl font-semibold text-gray-100 mb-4">
-          {hasAssignmentFile ? "Feedback for Student" : "Feedback"}
-        </h2>
-        {hasAssignmentFile ? (
-          <textarea
-            value={feedback}
-            onChange={(e) => setFeedback(e.target.value)}
-            placeholder="Provide detailed feedback to help the student improve..."
-            rows={6}
-            className="w-full px-4 py-2 bg-neutral-900 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        ) : (
-          <p className="text-gray-300 whitespace-pre-wrap">
-            {attempt.feedback || "No feedback provided."}
-          </p>
-        )}
-      </div>
+      {attempt.feedback && (
+        <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6">
+          <h2 className="text-xl font-semibold text-gray-100 mb-4">
+            {hasAssignmentFile ? "Feedback for Student" : "Feedback"}
+          </h2>
+          {hasAssignmentFile ? (
+            <textarea
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Provide detailed feedback to help the student improve..."
+              rows={6}
+              className="w-full px-4 py-2 bg-neutral-900 text-gray-100 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          ) : (
+            <p className="text-gray-300 whitespace-pre-wrap">
+              {attempt.feedback || "No feedback provided."}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Score Summary */}
       <div className="bg-linear-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200 p-6">

@@ -340,11 +340,6 @@ const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
                   <Play className="w-4 h-4 text-neutral-400" /> Start Assessment
                 </>
               )
-            ) : assessment.status === "upcoming" ? (
-              <>
-                <Clock className="w-4 h-4 text-neutral-400" /> Starts{" "}
-                {formatDate(assessment.startTime)}
-              </>
             ) : (
               <>
                 <Eye className="w-4 h-4 text-neutral-400" /> View Results
@@ -415,6 +410,8 @@ export const AssessmentHome = () => {
     };
   }, []);
 
+  console.log("Fetched Assessments:" ,  tests);
+
   const assessments = tests
     .filter((test) => {
       const mcqCount = test.questionRefs?.mcqIds?.length ?? 0;
@@ -425,9 +422,6 @@ export const AssessmentHome = () => {
     .map(mapTestToAssessment);
 
   const currentAssessments = assessments.filter((a) => a.status === "live");
-  // upcoming assessments removed from UI per requirements
-
-  // Submitted: assessments that have been attempted and submitted or time-over
   const submittedAssessments = assessments.filter((a) => {
     const access = a.assessmentAccess;
     // Must be attempted (has a start time) and blocked (submitted or time-over)
@@ -438,10 +432,14 @@ export const AssessmentHome = () => {
     );
   });
 
-  // History: all assessments past their deadline, regardless of attempt status
   const historyAssessments = assessments.filter(
     (a) => a.status === "completed",
   );
+
+  console.log("Current Assessments:", currentAssessments);
+  console.log("Submitted Assessments:", submittedAssessments);
+  console.log("History Assessments:", historyAssessments);
+
   return (
     <div className="space-y-8 p-2 lg:p-4 max-w-7xl mx-auto">
       {/* Header */}
@@ -485,8 +483,6 @@ export const AssessmentHome = () => {
           </div>
         </div>
 
-        {/* Upcoming section intentionally removed */}
-
         <div className="flex-1 p-6 group hover:bg-white/1 transition-colors relative">
           <div className="flex justify-between items-start mb-3">
             <p className="text-neutral-400 font-medium tracking-wide text-sm uppercase">
@@ -526,7 +522,6 @@ export const AssessmentHome = () => {
             <PlayCircle className="w-4 h-4 mr-2" />
             Current ({currentAssessments.length})
           </TabsTrigger>
-          {/* Upcoming tab removed */}
           <TabsTrigger
             value="submitted"
             className="cursor-pointer h-full rounded-full data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-neutral-400 hover:text-neutral-300 transition-all font-normal tracking-wide"
