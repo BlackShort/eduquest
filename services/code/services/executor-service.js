@@ -24,7 +24,7 @@ async function submitToJudge0({ languageId, code, stdin }) {
 
         return response.data.token;
     } catch (err) {
-        console.error("❌ FULL ERROR:", {
+        console.error("FULL ERROR:", {
             message: err.message,
             code: err.code,
             response: err.response?.data,
@@ -73,7 +73,7 @@ async function pollJudge0(token) {
                 memoryKb: data.memory || 0,
             };
         } catch (err) {
-            console.error("❌ Polling error:", err.response?.data || err.message);
+            console.error("Polling error:", err.response?.data || err.message);
             throw err;
         }
     }
@@ -115,7 +115,7 @@ async function executeWithJudge0({ language, code, stdin }) {
         const token = await submitToJudge0({ languageId, code, stdin });
         const result = await pollJudge0(token);
 
-        console.log("🧪 Judge0 Result:", result);
+        console.log("Judge0 Result:", result);
 
         const status = mapJudge0Status(result.statusId);
 
@@ -126,7 +126,7 @@ async function executeWithJudge0({ language, code, stdin }) {
             status,
         };
     } catch (err) {
-        console.error('❌ Judge0 execution error:', err.response?.data || err.message);
+        console.error('Judge0 execution error:', err.response?.data || err.message);
 
         return {
             stdout: '',
@@ -188,7 +188,7 @@ export async function runCodeForQuestion({ code, language, testcases }) {
                     timeTakenMs: result.timeMs,
                 };
             } catch (err) {
-                console.error("❌ Testcase error:", err);
+                console.error("Testcase error:", err);
 
                 return {
                     testcaseId,
@@ -229,7 +229,7 @@ export async function runCodeForQuestion({ code, language, testcases }) {
             testcaseResults,
         };
     } catch (err) {
-        console.error("❌ runCodeForQuestion error:", err);
+        console.error("runCodeForQuestion error:", err);
 
         return {
             totalTestcases: 0,

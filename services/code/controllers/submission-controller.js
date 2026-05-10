@@ -22,7 +22,7 @@ export const executeSubmission = async (req, res) => {
             mode,
         });
 
-        // ✅ Better validation
+        
         const missingFields = [];
 
         if (!studentId) missingFields.push("studentId");
@@ -33,20 +33,20 @@ export const executeSubmission = async (req, res) => {
         if (!mode) missingFields.push("mode");
 
         if (missingFields.length > 0) {
-            console.log("❌ Missing fields:", missingFields);
+            console.log(" Missing fields:", missingFields);
 
             return res.status(400).json({
                 message: `Missing fields: ${missingFields.join(", ")}`
             });
         }
 
-        // ⚠️ Special validation for assessment/assignment
+        // Special validation for assessment/assignment
         if (
             (env_type === SUBMISSION_ENV_TYPES.ASSESSMENT ||
                 env_type === SUBMISSION_ENV_TYPES.ASSIGNMENT) &&
             !testId
         ) {
-            console.log("❌ Missing testId for env_type:", env_type);
+            console.log("Missing testId for env_type:", env_type);
 
             return res.status(400).json({
                 message: `testId is required for ${env_type}`,
@@ -84,7 +84,7 @@ export const executeSubmission = async (req, res) => {
             await savedSubmission.save();
         }
 
-        console.log("✅ Request processed successfully:", {
+        console.log("Request processed successfully:", {
             message: 'Execution completed',
             executionResult,
             submissionId: savedSubmission ? savedSubmission._id : null,
@@ -99,7 +99,7 @@ export const executeSubmission = async (req, res) => {
         });
 
     } catch (err) {
-        console.error('❌ executeSubmission error:', {
+        console.error('executeSubmission error:', {
             message: err.message,
             name: err.name,
             stack: err.stack,
