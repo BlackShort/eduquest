@@ -3,17 +3,6 @@ import { createApi } from "./api-client";
 
 const proctorApi = createApi(`${proctorUrl}/v1`);
 
-proctorApi.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
-
 export const getStudentExamSessions = async (
   studentId: string,
   examId: string,
