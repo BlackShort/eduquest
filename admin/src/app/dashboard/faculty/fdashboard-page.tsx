@@ -128,7 +128,6 @@ export default function FDashboardHome() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-gray-200 font-semibold">{activity.score.toFixed(1)}%</div>
                   <div className={`text-sm ${
                     activity.status === 'graded' ? 'text-green-400' : 'text-yellow-400'
                   }`}>

@@ -29,6 +29,19 @@ const parseBoolean = (value) => {
   return ["true", "yes", "1", "required"].includes(normalized);
 };
 
+const scopedTestId = (testId, userId) => `${testId}-${String(userId).slice(-6)}`;
+
+const getFacultyScopedTestId = async (testId, userId) => {
+  const existingOwnerAssignment = await Assignment.findOne({ test_id: testId }).select("createdBy");
+  if (
+    existingOwnerAssignment &&
+    String(existingOwnerAssignment.createdBy) !== String(userId)
+  ) {
+    return scopedTestId(testId, userId);
+  }
+  return testId;
+};
+
 
 
 export const uploadAssignment = async (req, res) => {
@@ -57,12 +70,17 @@ export const uploadAssignment = async (req, res) => {
       throw new Error("Every assignment row must include question text");
      }
 
+     const test_id = await getFacultyScopedTestId(
+      valueFrom(row, ["test_id", "testId"], fallbackTestId),
+      req.user.userId
+     );
+
      await upsertQuestionGroup(Assignment, {
-      test_id: valueFrom(row, ["test_id", "testId"], fallbackTestId),
+      test_id,
       subject_id: valueFrom(row, ["subject_id", "subjectId", "subject"], "general"),
       question_text: questionText,
       difficulty: valueFrom(row, ["difficulty"], "easy").toLowerCase(),
-      createdBy: req.user?.userId || null,
+      createdBy: req.user.userId,
       extraFields: {
         marks: parseNumber(valueFrom(row, ["marks"]), 5),
         tags: splitList(valueFrom(row, ["tags"])),
