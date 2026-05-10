@@ -1,29 +1,9 @@
-import axios from "axios";
 import type { Test } from "@/types/types";
 import { contentUrl } from "./server-api";
+import { createApi } from "./api-client";
 
 // Create axios instance with default config
-const facultyApi = axios.create({
-  baseURL: contentUrl,
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-// Add auth token to requests
-facultyApi.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  },
-);
+const facultyApi = createApi(contentUrl);
 
 // ============= TEST MANAGEMENT APIs =============
 
@@ -107,10 +87,6 @@ export const getQuestions = async (
     params: {
       ...params,
       _t: Date.now(),
-    },
-    headers: {
-      "Cache-Control": "no-cache",
-      Pragma: "no-cache",
     },
   });
 
