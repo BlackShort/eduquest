@@ -274,36 +274,6 @@ const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
               </span>
             </div>
           ))}
-
-        {assessment.status === "completed" &&
-          assessment.score !== undefined && (
-            <div className="flex items-center justify-between px-4 py-3 bg-white/3 rounded-xl">
-              <div>
-                <p className="text-[10px] text-neutral-500 mb-1">Your Score</p>
-                <p className="text-xl font-semibold text-white leading-none">
-                  {assessment.score}
-                  <span className="text-sm font-normal text-neutral-500 ml-1">
-                    / {assessment.totalMarks}
-                  </span>
-                </p>
-              </div>
-              <div className="w-px h-8 bg-white/5" />
-              <div className="text-right">
-                <p className="text-[10px] text-neutral-500 mb-1">Percentage</p>
-                <p
-                  className={`text-xl font-semibold leading-none ${
-                    assessment.percentage! >= 80
-                      ? "text-emerald-400"
-                      : assessment.percentage! >= 60
-                        ? "text-blue-400"
-                        : "text-red-400"
-                  }`}
-                >
-                  {assessment.percentage}%
-                </p>
-              </div>
-            </div>
-          )}
       </div>
 
       {/* Action Button */}
@@ -324,6 +294,13 @@ const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
             <Pause className="w-4 h-4 text-neutral-400" />
             Assessment in progress
           </div>
+        ) : assessment.status === "completed" ? (
+          <button
+            disabled
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium text-neutral-400 bg-white/3 border border-white/5 cursor-not-allowed opacity-60"
+          >
+            <Eye className="w-4 h-4 text-neutral-500" /> Assessment is Over
+          </button>
         ) : (
           <Link
             to={`/assessment/${assessment._id}`}
@@ -345,11 +322,7 @@ const AssessmentCard = ({ assessment }: AssessmentCardProps) => {
                 <Clock className="w-4 h-4 text-neutral-400" /> Starts{" "}
                 {formatDate(assessment.startTime)}
               </>
-            ) : (
-              <>
-                <Eye className="w-4 h-4 text-neutral-400" /> View Results
-              </>
-            )}
+            ) : null}
           </Link>
         )}
       </div>
