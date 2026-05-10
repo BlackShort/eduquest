@@ -34,7 +34,6 @@ export const facultyNavigation: Navigation = {
 
     management: [
         { featured: false, path: `assignments`, icon: FileCodeCorner, title: 'Question Bank' },
-        { featured: false, path: `problems`, icon: CodeXml, title: 'Problems' },
         { featured: false, path: `bulk-import`, icon: Upload, title: 'Bulk Import' },
         { featured: false, path: `reports`, icon: FileText, title: 'Reports' },
     ],

@@ -1400,3 +1400,116 @@ export const exportAnalyticsReport = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get user statistics (Student dashboard)
+ */
+export const getUserStats = async (req, res) => {
+  try {
+    const studentId = req.user.userId;
+
+    // Get all attempts by the student
+    const attempts = await StudentAttempt.find({ studentId });
+
+    if (!attempts || attempts.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          testsAvailable: 0,
+          assignmentsSubmitted: 0,
+          assessmentsCompleted: 0,
+          codingPassRate: 0,
+          totalTimeSpentMinutes: 0,
+          averageScore: 0,
+          streakDays: 0,
+          allAttempts: [],
+        },
+      });
+    }
+
+    // Get test details for all attempts
+    const testIds = attempts.map((a) => a.testId);
+    const tests = await Test.find({ _id: { $in: testIds } });
+    const testMap = new Map(tests.map((t) => [String(t._id), t]));
+
+    let assignmentsSubmitted = 0;
+    let assessmentsCompleted = 0;
+    let totalCodingPassed = 0;
+    let totalCodingTests = 0;
+    let totalTimeSpent = 0;
+    let scoreSum = 0;
+    let completedCount = 0;
+
+    attempts.forEach((attempt) => {
+      const test = testMap.get(String(attempt.testId));
+
+      // Count submitted assignments
+      if (test?.type === "assignment" && attempt.status === "submitted") {
+        assignmentsSubmitted++;
+      }
+
+      // Count completed assessments
+      if (
+        test?.type === "assessment" &&
+        (attempt.status === "submitted" || attempt.status === "graded")
+      ) {
+        assessmentsCompleted++;
+      }
+
+      // Calculate coding stats
+      if (
+        attempt.responses?.codingResponses &&
+        Array.isArray(attempt.responses.codingResponses)
+      ) {
+        attempt.responses.codingResponses.forEach((result) => {
+          totalCodingPassed += result.passedTestcases || 0;
+          totalCodingTests += result.totalTestcases || 0;
+        });
+      }
+
+      // Track time spent
+      if (attempt.timeSpentMinutes) {
+        totalTimeSpent += attempt.timeSpentMinutes;
+      }
+
+      // Calculate average score
+      if (attempt.score) {
+        scoreSum += attempt.score.percentage || 0;
+        completedCount++;
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        testsAvailable: tests.length,
+        assignmentsSubmitted,
+        assessmentsCompleted,
+        codingPassRate:
+          totalCodingTests > 0
+            ? Math.round((totalCodingPassed / totalCodingTests) * 100)
+            : 0,
+        totalTimeSpentMinutes: totalTimeSpent,
+        averageScore:
+          completedCount > 0 ? Math.round(scoreSum / completedCount) : 0,
+        streakDays: 0, // TODO: Calculate based on attempt dates
+        allAttempts: attempts.map((a) => ({
+          _id: a._id,
+          testId: a.testId,
+          status: a.status,
+          score: a.score,
+          submittedAt: a.submittedAt,
+          timeSpentMinutes: a.timeSpentMinutes,
+          testType: testMap.get(String(a.testId))?.type,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching user stats:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch user statistics",
+      error: error.message,
+    });
+  }
+};

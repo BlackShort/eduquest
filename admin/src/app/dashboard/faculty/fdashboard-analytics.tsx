@@ -98,7 +98,7 @@ export default function FacultyAnalyticsPage() {
           <select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
-            className="px-3 py-2 border border-neutral-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="text-neutral-100 bg-neutral-600 px-3 py-2 border border-neutral-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="7">Last 7 days</option>
             <option value="30">Last 30 days</option>
@@ -245,36 +245,36 @@ export default function FacultyAnalyticsPage() {
 
       {/* Performance Insights */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-linear-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200 p-6">
-          <h4 className="text-sm font-medium text-blue-900 mb-2">Top Performing Test</h4>
+        <div className="bg-neutral-500/50 rounded-lg border border-neutral-600 p-6">
+          <h4 className="text-sm font-medium text-neutral-100 mb-2">Top Performing Test</h4>
           {analytics?.testPerformance && analytics.testPerformance.length > 0 && (
             <>
-              <p className="text-2xl font-bold text-blue-700">
+              <p className="text-2xl font-bold text-neutral-300">
                 {analytics.testPerformance[0].testTitle}
               </p>
-              <p className="text-sm text-blue-600 mt-2">
+              <p className="text-sm text-blue-400 mt-2">
                 Avg Score: {analytics.testPerformance[0].averageScore.toFixed(2)}%
               </p>
             </>
           )}
         </div>
 
-        <div className="bg-linear-to-br from-green-50 to-green-100 rounded-lg border border-green-200 p-6">
-          <h4 className="text-sm font-medium text-green-900 mb-2">Completion Rate</h4>
-          <p className="text-2xl font-bold text-green-700">
+        <div className="bg-neutral-500/50 rounded-lg border border-neutral-600 p-6">
+          <h4 className="text-sm font-medium text-green-100 mb-2">Completion Rate</h4>
+          <p className="text-2xl font-bold text-green-300">
             {(analytics?.completionRate ?? 0).toFixed(2)}%
           </p>
-          <p className="text-sm text-green-600 mt-2">
+          <p className="text-sm text-green-400 mt-2">
             {analytics?.totalStudents || 0} students enrolled
           </p>
         </div>
 
-        <div className="bg-linear-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200 p-6">
-          <h4 className="text-sm font-medium text-purple-900 mb-2">Pass Rate</h4>
-          <p className="text-2xl font-bold text-purple-700">
+        <div className="bg-neutral-500/50 rounded-lg border border-neutral-600 p-6">
+          <h4 className="text-sm font-medium text-purple-100 mb-2">Pass Rate</h4>
+          <p className="text-2xl font-bold text-purple-300">
             {(analytics?.passRate ?? 0).toFixed(2)}%
           </p>
-          <p className="text-sm text-purple-600 mt-2">
+          <p className="text-sm text-purple-400 mt-2">
             Based on 50% passing criteria
           </p>
         </div>

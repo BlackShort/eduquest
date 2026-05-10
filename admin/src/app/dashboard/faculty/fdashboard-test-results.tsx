@@ -119,7 +119,7 @@ export default function TestResultsPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/faculty-dashboard/assessment")}
-            className="p-2 hover:bg-neutral-700 rounded-lg transition-colors"
+            className="p-2 bg-neutral-400 hover:bg-neutral-300 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -166,7 +166,7 @@ export default function TestResultsPage() {
       </div>
 
       {/* Score Distribution */}
-      {analytics?.scoreDistribution && (
+      {(test?.type === "assessment" && analytics?.scoreDistribution) && (
         <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6">
           <h3 className="text-lg font-semibold text-gray-100 mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-blue-600" />
@@ -197,7 +197,7 @@ export default function TestResultsPage() {
               placeholder="Search by student name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="placeholder:text-gray-400 w-full pl-10 pr-4 py-2 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -470,7 +470,7 @@ function ProctorBadge({
         <div className="text-xs text-gray-400">No proctor data</div>
       ) : (
         <div className={`px-2 py-1 text-xs rounded-full text-white ${bg}`}>
-          {risk} • {score}
+          {risk} • {(score || 0).toFixed(1)}
         </div>
       )}
     </div>

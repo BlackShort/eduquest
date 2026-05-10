@@ -1,12 +1,9 @@
 import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import { MailCheck, Save, ShieldCheck, UserRound } from 'lucide-react';
+import { Save, ShieldCheck, UserRound } from 'lucide-react';
 import {
   changePassword,
-  getCurrentUser,
-  requestEmailVerification,
   updateUsername,
-  verifyEmailCode,
 } from '@/apis/auth-api';
 import { useContextAPI } from '@/hooks/useContext';
 
@@ -15,9 +12,6 @@ export const DashboardSettings = () => {
 
   const [username, setUsername] = useState(user?.username ?? '');
   const [usernameLoading, setUsernameLoading] = useState(false);
-
-  const [verificationCode, setVerificationCode] = useState('');
-  const [verificationLoading, setVerificationLoading] = useState(false);
 
   const [securityData, setSecurityData] = useState({
     currentPassword: '',
@@ -64,46 +58,6 @@ export const DashboardSettings = () => {
     }
   };
 
-  const handleSendVerificationCode = async () => {
-    try {
-      setVerificationLoading(true);
-      const data = await requestEmailVerification();
-      toast.success(data.message || 'Verification code generated');
-
-      if (data.code) {
-        toast.success(`Dev code: ${data.code}`);
-      }
-    } catch (error: unknown) {
-      const message = (error as { message?: string })?.message || 'Failed to request verification code';
-      toast.error(message);
-    } finally {
-      setVerificationLoading(false);
-    }
-  };
-
-  const handleVerifyEmail = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (!/^\d{6}$/.test(verificationCode)) {
-      toast.error('Enter a valid 6-digit verification code');
-      return;
-    }
-
-    try {
-      setVerificationLoading(true);
-      const data = await verifyEmailCode(verificationCode);
-      toast.success(data.message || 'Email verified');
-      setVerificationCode('');
-
-      const userData = await getCurrentUser();
-      setUser(userData.user);
-    } catch (error: unknown) {
-      const message = (error as { message?: string })?.message || 'Failed to verify email';
-      toast.error(message);
-    } finally {
-      setVerificationLoading(false);
-    }
-  };
 
   const handleChangePassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -172,62 +126,6 @@ export const DashboardSettings = () => {
             {usernameLoading ? 'Saving...' : 'Save Username'}
           </button>
         </form>
-      </section>
-
-      <section className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">
-        <div className="flex items-center gap-2">
-          <MailCheck size={18} className="text-neutral-300" />
-          <h2 className="text-lg font-semibold">Email Verification</h2>
-        </div>
-
-        <div className="rounded-lg bg-neutral-900 border border-neutral-700 p-3 text-sm">
-          <p><span className="text-neutral-400">Email:</span> {user?.email || '-'}</p>
-          <p className="mt-1">
-            <span className="text-neutral-400">Status:</span>{' '}
-            {user?.isVerified ? (
-              <span className="text-emerald-400">Verified</span>
-            ) : (
-              <span className="text-amber-400">Not verified</span>
-            )}
-          </p>
-        </div>
-
-        {!user?.isVerified ? (
-          <>
-            <button
-              type="button"
-              onClick={handleSendVerificationCode}
-              disabled={verificationLoading}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-neutral-700 hover:bg-neutral-600 disabled:opacity-60 text-sm font-medium"
-            >
-              {verificationLoading ? 'Sending...' : 'Send Verification Code'}
-            </button>
-
-            <form onSubmit={handleVerifyEmail} className="space-y-3">
-              <div className="space-y-1.5">
-                <label htmlFor="verificationCode" className="text-sm text-neutral-300">6-digit verification code</label>
-                <input
-                  id="verificationCode"
-                  type="text"
-                  maxLength={6}
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
-                  disabled={verificationLoading}
-                  className="w-full h-11 px-3 rounded-lg bg-neutral-900 border border-neutral-700 text-sm outline-none focus:border-neutral-500 disabled:opacity-60"
-                  placeholder="Enter code"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={verificationLoading}
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-sm font-medium"
-              >
-                <ShieldCheck size={16} />
-                {verificationLoading ? 'Verifying...' : 'Verify Email'}
-              </button>
-            </form>
-          </>
-        ) : null}
       </section>
 
       <section className="bg-neutral-800 border border-neutral-700 rounded-xl p-5 space-y-4">

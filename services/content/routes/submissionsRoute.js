@@ -22,6 +22,10 @@ router.get(
   "/assignment/:testId/download-url",
   submissionsController.getMyAssignmentDownloadUrl,
 );
+
+// Get user statistics
+router.get("/user/stats", submissionsController.getUserStats);
+
 router.post("/assessment/:testId", submissionsController.submitAssessment);
 
 router.use(verifyFaculty);

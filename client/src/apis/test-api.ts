@@ -62,3 +62,7 @@ export const submitAssessment = async (
 ) => {
   return api.post(`/v1/faculty/submissions/assessment/${testId}`, payload);
 };
+
+export const getUserStats = async () => {
+  return api.get("/v1/faculty/submissions/user/stats");
+};

@@ -23,6 +23,18 @@ import {
 } from "@/apis/proctor-api";
 import type { StudentAttempt } from "@/types/types";
 
+type ProctorSession = {
+  sessionId?: string;
+  suspicionScore?: number;
+  violationCounts?: Record<string, number>;
+  status?: string;
+  startedAt?: string;
+  completedAt?: string;
+  updatedAt?: string;
+  id?: string;
+  _id?: string;
+};
+
 export default function AttemptDetailPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
   const navigate = useNavigate();
@@ -35,27 +47,9 @@ export default function AttemptDetailPage() {
   // Proctoring states
   const [proctorLoading, setProctorLoading] = useState<boolean>(false);
   const [proctorError, setProctorError] = useState<string | null>(null);
-  type ProctorSession = {
-    sessionId?: string;
-    suspicionScore?: number;
-    violationCounts?: Record<string, number>;
-    status?: string;
-    startedAt?: string;
-    completedAt?: string;
-    updatedAt?: string;
-    id?: string;
-    _id?: string;
-  };
-  const [proctorSessions, setProctorSessions] = useState<
-    ProctorSession[] | null
-  >(null);
-  const [proctorAggregate, setProctorAggregate] = useState<Record<
-    string,
-    any
-  > | null>(null);
-  const [enrollmentImageUrl, setEnrollmentImageUrl] = useState<string | null>(
-    null,
-  );
+  const [proctorSessions, setProctorSessions] = useState<ProctorSession[] | null>(null);
+  const [proctorAggregate, setProctorAggregate] = useState<Record<string, any> | null>(null);
+  const [enrollmentImageUrl, setEnrollmentImageUrl] = useState<string | null>(null,);
 
   useEffect(() => {
     const fetchAttemptData = async () => {
@@ -412,151 +406,150 @@ export default function AttemptDetailPage() {
       </div>
 
       {/* Proctoring Summary */}
-      <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6">
-        <h2 className="text-xl font-semibold text-gray-100 mb-4">
-          Proctoring Summary
-        </h2>
+      {(proctorSessions && proctorSessions.length > 0) && (
+        <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6">
+          <h2 className="text-xl font-semibold text-gray-100 mb-4">
+            Proctoring Summary
+          </h2>
 
-        {proctorLoading ? (
-          <div className="text-gray-400">Loading proctor data...</div>
-        ) : proctorError ? (
-          <div className="text-sm text-red-400">{proctorError}</div>
-        ) : !proctorSessions || proctorSessions.length === 0 ? (
-          <div className="text-sm text-gray-400">
-            No proctoring sessions found for this attempt.
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-neutral-900 rounded-lg">
-                <p className="text-sm text-gray-400">Risk Level</p>
-                <p className="mt-1 font-semibold text-gray-100">
-                  {proctorAggregate?.riskLevel}
-                </p>
-              </div>
-              <div className="p-4 bg-neutral-900 rounded-lg">
-                <p className="text-sm text-gray-400">Total Suspicion Score</p>
-                <p className="mt-1 font-semibold text-gray-100">
-                  {proctorAggregate?.totalSuspicionScore || 0}
-                </p>
-              </div>
-              <div className="p-4 bg-neutral-900 rounded-lg">
-                <p className="text-sm text-gray-400">Total Violations</p>
-                <p className="mt-1 font-semibold text-gray-100">
-                  {proctorAggregate?.totalViolations || 0}
-                </p>
-              </div>
-              <div className="p-4 bg-neutral-900 rounded-lg">
-                <p className="text-sm text-gray-400">Sessions</p>
-                <p className="mt-1 font-semibold text-gray-100">
-                  {proctorAggregate?.sessionCount || 0}
-                </p>
-              </div>
+          {proctorLoading ? (
+            <div className="text-gray-400">Loading proctor data...</div>
+          ) : proctorError ? (
+            <div className="text-sm text-red-400">{proctorError}</div>
+          ) : !proctorSessions || proctorSessions.length === 0 ? (
+            <div className="text-sm text-gray-400">
+              No proctoring sessions found for this attempt.
             </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="p-4 bg-neutral-900 rounded-lg">
+                  <p className="text-sm text-gray-400">Risk Level</p>
+                  <p className="mt-1 font-semibold text-gray-100">
+                    {proctorAggregate?.riskLevel}
+                  </p>
+                </div>
+                <div className="p-4 bg-neutral-900 rounded-lg">
+                  <p className="text-sm text-gray-400">Total Suspicion Score</p>
+                  <p className="mt-1 font-semibold text-gray-100">
+                    {(proctorAggregate?.totalSuspicionScore || 0).toFixed(1)}
+                  </p>
+                </div>
+                <div className="p-4 bg-neutral-900 rounded-lg">
+                  <p className="text-sm text-gray-400">Total Violations</p>
+                  <p className="mt-1 font-semibold text-gray-100">
+                    {proctorAggregate?.totalViolations || 0}
+                  </p>
+                </div>
+                <div className="p-4 bg-neutral-900 rounded-lg">
+                  <p className="text-sm text-gray-400">Sessions</p>
+                  <p className="mt-1 font-semibold text-gray-100">
+                    {proctorAggregate?.sessionCount || 0}
+                  </p>
+                </div>
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2 bg-neutral-900 p-4 rounded-lg">
-                <p className="text-sm text-gray-400 mb-2">
-                  Violation Breakdown
-                </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2 bg-neutral-900 p-4 rounded-lg">
+                  <p className="text-sm text-gray-400 mb-2">
+                    Violation Breakdown
+                  </p>
+                  <div className="space-y-2">
+                    {Object.keys(proctorAggregate?.mergedViolationCounts || {})
+                      .length === 0 && (
+                        <p className="text-sm text-gray-400">
+                          No violations recorded.
+                        </p>
+                      )}
+                    {Object.entries(
+                      proctorAggregate?.mergedViolationCounts || {},
+                    ).map(([k, v]) => (
+                      <div key={k} className="flex items-center justify-between">
+                        <p className="text-sm text-gray-200">
+                          {k.replace("_", " ")}
+                        </p>
+                        <p className="text-sm font-semibold text-gray-100">
+                          {Number(v)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-neutral-900 p-4 rounded-lg flex flex-col items-center">
+                  <p className="text-sm text-gray-400 mb-2">Identity Snapshot</p>
+                  {enrollmentImageUrl ? (
+                    <div className="w-40 h-40 bg-neutral-800 rounded-md overflow-hidden flex items-center justify-center">
+                      <img
+                        src={enrollmentImageUrl}
+                        alt="Enrollment Snapshot"
+                        className="w-full h-full object-cover object-center"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-40 h-40 bg-neutral-800 rounded-md flex items-center justify-center text-sm text-gray-500">
+                      Not available
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-400 mb-2">Sessions</p>
                 <div className="space-y-2">
-                  {Object.keys(proctorAggregate?.mergedViolationCounts || {})
-                    .length === 0 && (
-                      <p className="text-sm text-gray-400">
-                        No violations recorded.
-                      </p>
-                    )}
-                  {Object.entries(
-                    proctorAggregate?.mergedViolationCounts || {},
-                  ).map(([k, v]) => (
-                    <div key={k} className="flex items-center justify-between">
-                      <p className="text-sm text-gray-200">
-                        {k.replace("_", " ")}
-                      </p>
-                      <p className="text-sm font-semibold text-gray-100">
-                        {Number(v)}
-                      </p>
+                  {proctorSessions.map((s: ProctorSession) => (
+                    <div
+                      key={s._id || s.sessionId || s.id}
+                      className="p-3 bg-neutral-900 rounded-lg border border-neutral-700"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-gray-400">
+                            Status: {s.status || "UNKNOWN"}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            Score: {s.suspicionScore || 0}
+                          </p>
+                        </div>
+                        <div className="text-sm text-gray-200">
+                          Violations:{" "}
+                          {s.violationCounts
+                            ? Object.values(s.violationCounts).reduce(
+                              (a, b) => a + Number(b || 0),
+                              0,
+                            )
+                            : 0}
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
-
-              <div className="bg-neutral-900 p-4 rounded-lg flex flex-col items-center">
-                <p className="text-sm text-gray-400 mb-2">Identity Snapshot</p>
-                {enrollmentImageUrl ? (
-                  <div className="w-40 h-40 bg-neutral-800 rounded-md overflow-hidden flex items-center justify-center">
-                    <img
-                      src={enrollmentImageUrl}
-                      alt="Enrollment Snapshot"
-                      className="w-full h-full object-cover object-center"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-40 h-40 bg-neutral-800 rounded-md flex items-center justify-center text-sm text-gray-500">
-                    Not available
-                  </div>
-                )}
-              </div>
             </div>
+          )}
+        </div>)}
 
-            <div>
-              <p className="text-sm text-gray-400 mb-2">Sessions</p>
-              <div className="space-y-2">
-                {proctorSessions.map((s: ProctorSession) => (
-                  <div
-                    key={s._id || s.sessionId || s.id}
-                    className="p-3 bg-neutral-900 rounded-lg border border-neutral-700"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-300">
-                          Session: {s._id || s.sessionId || s.id}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          Status: {s.status || "UNKNOWN"}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          Score: {s.suspicionScore || 0}
-                        </p>
-                      </div>
-                      <div className="text-sm text-gray-200">
-                        Violations:{" "}
-                        {s.violationCounts
-                          ? Object.values(s.violationCounts).reduce(
-                            (a, b) => a + Number(b || 0),
-                            0,
-                          )
-                          : 0}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+      {(attempt.gradedAt) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-5">
+            <p className="text-sm text-gray-400">MCQ Marks</p>
+            <p className="mt-2 text-2xl font-bold text-gray-100">
+              {mcqBreakdown.obtained.toFixed(1)} / {mcqBreakdown.total}
+            </p>
           </div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-5">
-          <p className="text-sm text-gray-400">MCQ Marks</p>
-          <p className="mt-2 text-2xl font-bold text-gray-100">
-            {mcqBreakdown.obtained.toFixed(1)} / {mcqBreakdown.total}
-          </p>
-        </div>
-        <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-5">
-          <p className="text-sm text-gray-400">Coding Marks</p>
-          <p className="mt-2 text-2xl font-bold text-gray-100">
-            {codingBreakdown.obtained.toFixed(1)} / {codingBreakdown.total}
-          </p>
-        </div>
-        <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-5">
-          <p className="text-sm text-gray-400">Combined Marks</p>
-          <p className="mt-2 text-2xl font-bold text-gray-100">
-            {attempt.score.obtained.toFixed(1)} / {attempt.score.total}
-          </p>
-        </div>
-      </div>
+          <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-5">
+            <p className="text-sm text-gray-400">Coding Marks</p>
+            <p className="mt-2 text-2xl font-bold text-gray-100">
+              {codingBreakdown.obtained.toFixed(1)} / {codingBreakdown.total}
+            </p>
+          </div>
+          <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-5">
+            <p className="text-sm text-gray-400">Combined Marks</p>
+            <p className="mt-2 text-2xl font-bold text-gray-100">
+              {attempt.score.obtained.toFixed(1)} / {attempt.score.total}
+            </p>
+          </div>
+        </div>)}
 
       {/* MCQ Responses */}
       {attempt.responses?.mcqResponses &&
@@ -656,9 +649,6 @@ export default function AttemptDetailPage() {
               <FileText className="w-5 h-5 text-gray-400" />
               <div>
                 <p className="font-medium text-gray-100">Submitted File</p>
-                <p className="text-sm text-gray-400 break-all">
-                  {attempt.responses.assignmentFileUrl}
-                </p>
               </div>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -699,7 +689,7 @@ export default function AttemptDetailPage() {
       )}
 
       {/* Feedback */}
-      {attempt.feedback && (
+      {(proctorSessions && proctorSessions.length === 0) && (
         <div className="bg-neutral-800 rounded-lg border border-neutral-700 p-6">
           <h2 className="text-xl font-semibold text-gray-100 mb-4">
             {hasAssignmentFile ? "Feedback for Student" : "Feedback"}
