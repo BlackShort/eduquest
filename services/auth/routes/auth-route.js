@@ -19,7 +19,7 @@ import {
     deleteUser,
     updateUser
 } from '../controllers/auth-controller.js';
-import { verifyToken, verifyRole } from '../middlewares/verify-token.js';
+import { verifyToken} from '../middlewares/verify-token.js';
 
 export const authRouter = express.Router();
 

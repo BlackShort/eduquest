@@ -13,22 +13,12 @@ import problemRoutes from "./routes/problemRoute.js";
 
 export const app = express();
 
-// Middlewares
 if (process.env.NODE_ENV !== 'production') {
   app.use(cors({
     origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'cache-control',
-      'pragma',
-      'expires'
-    ]
   }));
-
-  app.options(/.*/, cors());
 }
 
 app.use(express.json());
